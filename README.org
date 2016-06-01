@@ -1,0 +1,5 @@
+#+TITLE: jmcm: Joint Mean-Covariance Models in ~R~
+#+AUTHOR: Yi Pan
+#+EMAIL: ypan1988@gmail.com
+
+* Installation
