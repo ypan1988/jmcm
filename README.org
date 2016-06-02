@@ -4,7 +4,7 @@
 * jmcm: Joint Mean-Covariance Models in ~R~
 
 #+ATTR_HTML: title="cran version"
-[[http://www.r-pkg.org/badges/version/jmcm][file:https://cran.r-project.org/web/packages/jmcm]]
+[[https://cran.r-project.org/web/packages/jmcm/][http://www.r-pkg.org/badges/version/lme4]]
 
 ** Features
 - Efficient for large data sets, using algorithms from the Armadillo linear
