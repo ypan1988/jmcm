@@ -3,7 +3,8 @@
 
 * jmcm: Joint Mean-Covariance Models in ~R~
 
-#+ATTR_HTML: :fallback http://www.r-pkg.org/badges/version/jmcm
+#+CAPTION: cran version
+#+NAME:   fig:jmcm-version
 [[https://cran.r-project.org/web/packages/jmcm/][file:http://www.r-pkg.org/badges/version/jmcm]]
 
 ** Features
