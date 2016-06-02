@@ -10,104 +10,115 @@
 
 namespace pan {
 
-    arma::mat VecToUpperTrimatCol(int n, const arma::vec& x, bool diag) {
-        arma::mat X = arma::eye<arma::mat>(n,n);
-    
-        // make empty matrices
-        arma::mat RowIdx(n, n, arma::fill::zeros);
-        arma::mat ColIdx(n, n, arma::fill::zeros);
-    
-        // fill matrices with integers
-        arma::vec idx = arma::linspace<arma::vec>(1,n,n);
-        RowIdx.each_col() += idx;
-        ColIdx.each_row() += trans(idx);
+arma::mat VecToUpperTrimatCol(int n, const arma::vec& x, bool diag) {
+  arma::mat X = arma::eye<arma::mat>(n, n);
 
-        // assign upper triangular elements
-        // the >= allows inclusion of diagonal elements
-        if(diag) X.elem(arma::find(RowIdx <= ColIdx)) = x;
-        else X.elem(arma::find(RowIdx < ColIdx)) = x;
-    
-        return X;
-    }
+  // make empty matrices
+  arma::mat RowIdx(n, n, arma::fill::zeros);
+  arma::mat ColIdx(n, n, arma::fill::zeros);
 
-    arma::mat VecToLowerTrimatCol(int n, const arma::vec& x, bool diag) {
-        arma::mat X = arma::eye<arma::mat>(n,n);
-    
-        // make empty matrices
-        arma::mat RowIdx(n, n, arma::fill::zeros);
-        arma::mat ColIdx(n, n, arma::fill::zeros);
-    
-        // fill matrices with integers
-        arma::vec idx = arma::linspace<arma::vec>(1,n,n);
-        RowIdx.each_col() += idx;
-        ColIdx.each_row() += trans(idx);
+  // fill matrices with integers
+  arma::vec idx = arma::linspace<arma::vec>(1, n, n);
+  RowIdx.each_col() += idx;
+  ColIdx.each_row() += trans(idx);
 
-        // assign upper triangular elements
-        // the >= allows inclusion of diagonal elements
-        if(diag) X.elem(arma::find(RowIdx >= ColIdx)) = x;
-        else X.elem(arma::find(RowIdx > ColIdx)) = x;
-    
-        return X;
-    }
+  // assign upper triangular elements
+  // the >= allows inclusion of diagonal elements
+  if (diag)
+    X.elem(arma::find(RowIdx <= ColIdx)) = x;
+  else
+    X.elem(arma::find(RowIdx < ColIdx)) = x;
 
-    arma::mat ltrimat(int n, const arma::vec& x, bool diag, bool byrow) {
-        arma::mat X;
-    
-        if (byrow) X = arma::trans(VecToUpperTrimatCol(n, x, diag));
-        else X = VecToLowerTrimatCol(n, x, diag);
-   
-        return X; 
-    }
+  return X;
+}
 
-    arma::vec UpperTrimatToVecCol(const arma::mat& X, bool diag) {
-        int n = X.n_rows;
-        arma::vec x;
-    
-        // make empty matrices
-        arma::mat RowIdx(n, n, arma::fill::zeros);
-        arma::mat ColIdx(n, n, arma::fill::zeros);
-    
-        // fill matrices with integers
-        arma::vec idx = arma::linspace<arma::vec>(1,n,n);
-        RowIdx.each_col() += idx;
-        ColIdx.each_row() += trans(idx);
+arma::mat VecToLowerTrimatCol(int n, const arma::vec& x, bool diag) {
+  arma::mat X = arma::eye<arma::mat>(n, n);
 
-        // assign upper triangular elements
-        // the >= allows inclusion of diagonal elements
-        if(diag) x = X.elem(arma::find(RowIdx <= ColIdx));
-        else x = X.elem(arma::find(RowIdx < ColIdx));
-    
-        return x;
-    }
+  // make empty matrices
+  arma::mat RowIdx(n, n, arma::fill::zeros);
+  arma::mat ColIdx(n, n, arma::fill::zeros);
 
-    arma::vec LowerTrimatToVecCol(const arma::mat& X, bool diag) {
-        int n = X.n_rows;
-        arma::vec x;
-    
-        // make empty matrices
-        arma::mat RowIdx(n, n, arma::fill::zeros);
-        arma::mat ColIdx(n, n, arma::fill::zeros);
-    
-        // fill matrices with integers
-        arma::vec idx = arma::linspace<arma::vec>(1,n,n);
-        RowIdx.each_col() += idx;
-        ColIdx.each_row() += trans(idx);
+  // fill matrices with integers
+  arma::vec idx = arma::linspace<arma::vec>(1, n, n);
+  RowIdx.each_col() += idx;
+  ColIdx.each_row() += trans(idx);
 
-        // assign upper triangular elements
-        // the >= allows inclusion of diagonal elements
-        if(diag) x = X.elem(arma::find(RowIdx >= ColIdx));
-        else x = X.elem(arma::find(RowIdx > ColIdx));
-    
-        return x;
-    }
+  // assign upper triangular elements
+  // the >= allows inclusion of diagonal elements
+  if (diag)
+    X.elem(arma::find(RowIdx >= ColIdx)) = x;
+  else
+    X.elem(arma::find(RowIdx > ColIdx)) = x;
 
-    arma::vec lvectorise(const arma::mat& X, bool diag, bool byrow) {
-        arma::vec x;
+  return X;
+}
 
-        if (byrow) x = UpperTrimatToVecCol(X.t(), diag);
-        else x = LowerTrimatToVecCol(X, diag);
+arma::mat ltrimat(int n, const arma::vec& x, bool diag, bool byrow) {
+  arma::mat X;
 
-        return x;
-    } 
+  if (byrow)
+    X = arma::trans(VecToUpperTrimatCol(n, x, diag));
+  else
+    X = VecToLowerTrimatCol(n, x, diag);
 
+  return X;
+}
+
+arma::vec UpperTrimatToVecCol(const arma::mat& X, bool diag) {
+  int n = X.n_rows;
+  arma::vec x;
+
+  // make empty matrices
+  arma::mat RowIdx(n, n, arma::fill::zeros);
+  arma::mat ColIdx(n, n, arma::fill::zeros);
+
+  // fill matrices with integers
+  arma::vec idx = arma::linspace<arma::vec>(1, n, n);
+  RowIdx.each_col() += idx;
+  ColIdx.each_row() += trans(idx);
+
+  // assign upper triangular elements
+  // the >= allows inclusion of diagonal elements
+  if (diag)
+    x = X.elem(arma::find(RowIdx <= ColIdx));
+  else
+    x = X.elem(arma::find(RowIdx < ColIdx));
+
+  return x;
+}
+
+arma::vec LowerTrimatToVecCol(const arma::mat& X, bool diag) {
+  int n = X.n_rows;
+  arma::vec x;
+
+  // make empty matrices
+  arma::mat RowIdx(n, n, arma::fill::zeros);
+  arma::mat ColIdx(n, n, arma::fill::zeros);
+
+  // fill matrices with integers
+  arma::vec idx = arma::linspace<arma::vec>(1, n, n);
+  RowIdx.each_col() += idx;
+  ColIdx.each_row() += trans(idx);
+
+  // assign upper triangular elements
+  // the >= allows inclusion of diagonal elements
+  if (diag)
+    x = X.elem(arma::find(RowIdx >= ColIdx));
+  else
+    x = X.elem(arma::find(RowIdx > ColIdx));
+
+  return x;
+}
+
+arma::vec lvectorise(const arma::mat& X, bool diag, bool byrow) {
+  arma::vec x;
+
+  if (byrow)
+    x = UpperTrimatToVecCol(X.t(), diag);
+  else
+    x = LowerTrimatToVecCol(X, diag);
+
+  return x;
+}
 }

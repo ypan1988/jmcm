@@ -14,23 +14,22 @@
 namespace pan {
 
 template <typename T>
-class LineSearch {      
- public:        
-  LineSearch();  // Constructor
-  ~LineSearch(); // Destructor
-        
-  void GetStep(T &func, arma::vec &x, arma::vec &p,
-               const double kStepMax);
+class LineSearch {
+ public:
+  LineSearch();   // Constructor
+  ~LineSearch();  // Destructor
+
+  void GetStep(T &func, arma::vec &x, arma::vec &p, const double kStepMax);
 
   void set_message(bool message) { message_ = message; }
 
  protected:
   bool message_;
   bool IsInfOrNaN(double x);
-}; // class LineSearch
-    
-#include "linesearch-impl.h"    
+};  // class LineSearch
 
-} // namespace pan
+#include "linesearch-impl.h"
 
-#endif // JMCM_LINESEARCH_H_
+}  // namespace pan
+
+#endif  // JMCM_LINESEARCH_H_
