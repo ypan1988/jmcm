@@ -1,11 +1,11 @@
 #+AUTHOR: Yi Pan
 #+EMAIL: ypan1988@gmail.com
 
-[![cran version](http://www.r-pkg.org/badges/version/jmcm)](https://cran.r-project.org/web/packages/jmcm)
-[![downloads](http://cranlogs.r-pkg.org/badges/jmcm)](http://cranlogs.r-pkg.org/badges/jmcm)
-[![total downloads](http://cranlogs.r-pkg.org/badges/grand-total/jmcm)](http://cranlogs.r-pkg.org/badges/grand-total/jmcm)
-
 * jmcm: Joint Mean-Covariance Models in ~R~
+
+[[https://cran.r-project.org/web/packages/jmcm][[[http://www.r-pkg.org/badges/version/jmcm]]]]
+[[http://cranlogs.r-pkg.org/badges/jmcm][[[http://cranlogs.r-pkg.org/badges/jmcm]]]]
+[[http://cranlogs.r-pkg.org/badges/grand-total/jmcm][[[http://cranlogs.r-pkg.org/badges/grand-total/jmcm]]]
 
 ** Features
 - Efficient for large data sets, using algorithms from the Armadillo linear
