@@ -15,3 +15,10 @@ decomposition (MCD), alternative Cholesky decomposition (ACD) and
 hyperpherical parameterization of Cholesky factor (HPC).
 
 ## Installation
+
+```R
+install.packages("devtools")
+library(devtools)
+devtools::install_github("ypan1988/jmcm", dependencies=TRUE)
+library(jmcm)
+```
