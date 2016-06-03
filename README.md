@@ -11,7 +11,7 @@ jmcm: Joint Mean-Covariance Models in R.
 [Armadillo](http://arma.sourceforge.net/) linear algebra package via the
 [RcppArmadillo](https://cran.r-project.org/web/packages/RcppArmadillo/index.html)
 interface layer.
-* Fits joint mean-covariance models based on three Cholesky decomposition-based
+* Fits joint mean-covariance models based on three Cholesky decomposition-type
 covariance structure modelling methods, namely modified Cholesky decomposition
 (MCD), alternative Cholesky decomposition (ACD) and hyperpherical
 parameterization of Cholesky factor (HPC).
