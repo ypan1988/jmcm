@@ -1,8 +1,7 @@
 Package: jmcm
 Type: Package
 Title: Joint Mean-Covariance Models using 'Armadillo' and S4
-Version: 0.1.3.0
-Date: 2016-05-01
+Version: 0.1.4.0
 Authors@R: c(person("Jianxin", "Pan", email = "Jianxin.Pan@manchester.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
@@ -19,10 +18,7 @@ Imports: Formula, methods, Rcpp (>= 0.11.6)
 LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 5.0.1
 NeedsCompilation: yes
-Packaged: 2016-05-13 13:54:35 UTC; yipan
 Author: Jianxin Pan [aut, cre],
   Yi Pan [aut]
 URL: https://github.com/ypan1988/jmcm/
 BugReports: https://github.com/ypan1988/jmcm/issues
-Repository: CRAN
-Date/Publication: 2016-05-14 00:33:15
