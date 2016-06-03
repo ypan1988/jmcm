@@ -20,12 +20,12 @@ namedList <- function(...) {
 #' function
 #' @param original.poly.order whether or not the original poly order p q d should 
 #' be used
-#' @param errorMsg whether or not the error message should be print
+#' @param errormsg whether or not the error message should be print
 #'
 #' @export jmcmControl
 jmcmControl <- function(trace = FALSE, profile = TRUE, 
-                        ignore.const.term = TRUE, original.poly.order = FALSE, errorMsg = FALSE)
+                        ignore.const.term = TRUE, original.poly.order = FALSE, errormsg = FALSE)
 {
-    structure(namedList(trace, profile, ignore.const.term, original.poly.order, errorMsg),
+    structure(namedList(trace, profile, ignore.const.term, original.poly.order, errormsg),
               class = "jmcmControl")
 }

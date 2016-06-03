@@ -5,7 +5,7 @@
 \title{Control of Joint Mean Covariance Model Fitting}
 \usage{
 jmcmControl(trace = FALSE, profile = TRUE, ignore.const.term = TRUE,
-  original.poly.order = FALSE, errorMsg = FALSE)
+  original.poly.order = FALSE, errormsg = FALSE)
 }
 \arguments{
 \item{trace}{whether or not the value of the objective function and the
@@ -21,7 +21,7 @@ function}
 \item{original.poly.order}{whether or not the original poly order p q d should 
 be used}
 
-\item{errorMsg}{whether or not the error message should be print}
+\item{errormsg}{whether or not the error message should be print}
 }
 \description{
 Construct control structures for joint mean covariance model

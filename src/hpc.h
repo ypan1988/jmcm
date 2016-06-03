@@ -1,12 +1,10 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
-//
 // hpc.h: implementation of joint mean-covariance models based on standard
 //        Cholesky decomposition of the correlation matrix R and the
 //        hyperspherical parametrization(HPC) of its Cholesky factor
 //
-// Copyright (C) 2015 Yi Pan and Jianxin Pan
+// Copyright (C) 2015-2016 The University of Manchester
 //
-// This file is part of jmcm.
+// Written by Yi Pan - ypan1988@gmail.com
 
 #ifndef JMCM_HPC_H_
 #define JMCM_HPC_H_

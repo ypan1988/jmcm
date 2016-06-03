@@ -248,7 +248,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       start <- c(bta0, lmd0, gma0)
     }
 
-    est <- mcd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errorMsg)
+    est <- mcd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
   }
 
   if (cov.method == 'acd') {
@@ -263,7 +263,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       start <- c(bta0, lmd0, gma0)
     }
 
-    est <- acd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errorMsg)
+    est <- acd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
   }
 
   if (cov.method == 'hpc') {
@@ -278,7 +278,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       start <- c(bta0, lmd0, gma0)
     }
 
-    est <- hpc_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errorMsg)
+    est <- hpc_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
   }
 
   if (!(control$ignore.const.term)) {

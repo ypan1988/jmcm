@@ -1,11 +1,9 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
-//
 // mcd.h: implementation of joint mean-covariance models based on
 //        modified Cholesky decomposition(M.CD) of the covariance matrix
 //
-// Copyright (C) 2015 Yi Pan and Jianxin Pan
+// Copyright (C) 2015-2016 The University of Manchester
 //
-// This file is part of jmcm.
+// Written by Yi Pan - ypan1988@gmail.com
 
 //#include <omp.h>
 #include "mcd.h"

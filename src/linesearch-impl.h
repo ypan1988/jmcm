@@ -1,6 +1,6 @@
-// linesearch-impl.h: implementation of Line Search algorithm
+// Copyright (C) 2015-2016 The University of Manchester
 //
-// This file is part of jmcm.
+// Written by Yi Pan - ypan1988@gmail.com
 
 template <typename T>
 LineSearch<T>::LineSearch() {}
@@ -43,7 +43,7 @@ void LineSearch<T>::GetStep(T &func, arma::vec &x, arma::vec &p,
 
   double slope = dot(grad, p);
   if (slope >= 0.0 && message_)
-    Rcpp::Rcout << "Roundoff problem in linesearch." << std::endl;
+    Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
 
   // Calculate the minimum step length
   double test = 0.0;

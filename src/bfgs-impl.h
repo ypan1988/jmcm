@@ -1,6 +1,6 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
+// Copyright (C) 2015-2016 The University of Manchester
 //
-// This file is part of jmcm.
+// Written by Yi Pan - ypan1988@gmail.com
 
 /**
  * Constructor
@@ -128,8 +128,8 @@ void BFGS<T>::Optimize(T &func, arma::vec &x, const double grad_tol) {
     // Calculate the next direction to go
     p = -hess_inv * grad;
   }
-  if (message_) {
-    Rcpp::Rcout << "too many iterations in bfgs" << std::endl;
+  if (this->message_) {
+    Rcpp::Rcerr << "too many iterations in bfgs" << std::endl;
   }
 }
 

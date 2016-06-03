@@ -1,10 +1,8 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
-//
 // arma_util.h: Utility functions for extension of Armadillo
 //
-// Copyright (C) 2015 Yi Pan and Jianxin Pan
+// Copyright (C) 2015-2016 The University of Manchester
 //
-// This file is part of jmcm.
+// Written by Yi Pan - ypan1988@gmail.com
 
 #ifndef JMCM_ARMA_UTIL_H_
 #define JMCM_ARMA_UTIL_H_

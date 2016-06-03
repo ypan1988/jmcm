@@ -5,7 +5,7 @@
 \title{Fit Joint Mean-Covariance Models based on MCD}
 \usage{
 mcd_estimation(m, Y, X, Z, W, start, trace = FALSE, profile = TRUE,
-  errorMsg = FALSE)
+  errormsg = FALSE)
 }
 \arguments{
 \item{m}{an integer vector of numbers of measurements for subject.}
@@ -20,17 +20,20 @@ mcd_estimation(m, Y, X, Z, W, start, trace = FALSE, profile = TRUE,
 
 \item{start}{starting values for the parameters in the model.}
 
-\item{trace}{the values of the objective function and the parameters are printed for all the trace'th iterations.}
+\item{trace}{the values of the objective function and the parameters are
+printed for all the trace'th iterations.}
 
-\item{profile}{whether parameters should be estimated sequentially using the idea of profile likelihood or not.}
+\item{profile}{whether parameters should be estimated sequentially using the
+idea of profile likelihood or not.}
 
-\item{errorMsg}{whether or not the error message should be print.}
+\item{errormsg}{whether or not the error message should be print.}
 }
 \description{
 Fit joint mean-covariance models based on MCD.
 }
 \seealso{
-\code{\link{acd_estimation}} for joint mean covariance model fitting based on ACD,
-\code{\link{hpc_estimation}} for joint mean covariance model fitting based on HPC.
+\code{\link{acd_estimation}} for joint mean covariance model fitting
+        based on ACD, \code{\link{hpc_estimation}} for joint mean covariance
+        model fitting based on HPC.
 }
 

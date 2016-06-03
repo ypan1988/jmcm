@@ -1,8 +1,8 @@
-// -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; tab-width: 8 -*-
-//
 // external.cpp: implementing some R functions in C++
 //
-// This file is part of jmcm.
+// Copyright (C) 2015-2016 The University of Manchester
+//
+// Written by Yi Pan - ypan1988@gmail.com
 
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
@@ -21,19 +21,18 @@
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
 //'@param trace the values of the objective function and the parameters are
-//printed for all the trace'th iterations.
+//'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
-//idea of profile likelihood or not.
-//'@param errorMsg whether or not the error message should be print.
+//'       idea of profile likelihood or not.
+//'@param errormsg whether or not the error message should be print.
 //'@seealso \code{\link{acd_estimation}} for joint mean covariance model fitting
-//based on ACD,
-//' \code{\link{hpc_estimation}} for joint mean covariance model fitting based
-//on HPC.
+//'         based on ACD, \code{\link{hpc_estimation}} for joint mean covariance
+//'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errorMsg = false) {
+                          bool profile = true, bool errormsg = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -50,6 +49,7 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   int n_iters = 0;
   if (profile) {
     bfgs.set_trace(trace);
+    bfgs.set_message(errormsg);
 
     if (debug) {
       Rcpp::Rcout << "Start profile opt ..." << std::endl;
@@ -175,7 +175,7 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
     }
   } else {
     bfgs.set_trace(trace);
-    bfgs.set_message(errorMsg);
+    bfgs.set_message(errormsg);
     bfgs.Optimize(mcd, x);
     f_min = bfgs.f_min();
     n_iters = bfgs.n_iters();
@@ -206,19 +206,18 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
 //'@param trace the values of the objective function and the parameters are
-//printed for all the trace'th iterations.
+//'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
-//idea of profile likelihood or not.
-//'@param errorMsg whether or not the error message should be print.
+//'       idea of profile likelihood or not.
+//'@param errormsg whether or not the error message should be print.
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
-//based on MCD,
-//' \code{\link{hpc_estimation}} for joint mean covariance model fitting based
-//on HPC.
+//'         based on MCD, \code{\link{hpc_estimation}} for joint mean covariance
+//'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errorMsg = false) {
+                          bool profile = true, bool errormsg = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -236,6 +235,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
   if (profile) {
     bfgs.set_trace(trace);
+    bfgs.set_message(errormsg);
 
     if (debug) {
       Rcpp::Rcout << "Start profile opt ..." << std::endl;
@@ -356,7 +356,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
     }
   } else {
     bfgs.set_trace(trace);
-    bfgs.set_message(errorMsg);
+    bfgs.set_message(errormsg);
     bfgs.Optimize(acd, x);
     f_min = bfgs.f_min();
     n_iters = bfgs.n_iters();
@@ -387,19 +387,18 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
 //'@param trace the values of the objective function and the parameters are
-//printed for all the trace'th iterations.
+//'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
-//idea of profile likelihood or not.
-//'@param errorMsg whether or not the error message should be print.
+//'       idea of profile likelihood or not.
+//'@param errormsg whether or not the error message should be print.
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
-//based on MCD,
-//' \code{\link{acd_estimation}} for joint mean covariance model fitting based
-//on ACD.
+//'         based on MCD, \code{\link{acd_estimation}} for joint mean covariance
+//'         model fitting based on ACD.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errorMsg = false) {
+                          bool profile = true, bool errormsg = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -416,6 +415,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   int n_iters = 0;
   if (profile) {
     bfgs.set_trace(trace);
+    bfgs.set_message(errormsg);
 
     if (debug) {
       Rcpp::Rcout << "Start profile opt ..." << std::endl;
@@ -536,7 +536,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
     }
   } else {
     bfgs.set_trace(trace);
-    bfgs.set_message(errorMsg);
+    bfgs.set_message(errormsg);
     bfgs.Optimize(hpc, x);
     f_min = bfgs.f_min();
     n_iters = bfgs.n_iters();
