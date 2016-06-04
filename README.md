@@ -23,7 +23,6 @@ Get the development version from github:
 install.packages("devtools")
 library(devtools)
 devtools::install_github("ypan1988/jmcm", dependencies=TRUE)
-library(jmcm)
 ```
 
 Or the released version from CRAN:
