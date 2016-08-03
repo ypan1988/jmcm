@@ -184,11 +184,28 @@ ldFormula <- function(formula, data = NULL, triple = c(3,3,3),
     triple[3] = tmp
   }
   
-  X <- X[index, ]
-  Z <- Z[index, ]
+  # covariates from rhs of the formula
+  # cat("dim(X) = ", dim(X), "\n")
+  # cat("dim(Z) = ", dim(Z), "\n")
+  Xtmp <- X[index, -1]
+  Ztmp <- Z[index, -1]
+  # cat("Xtmp = ", Xtmp, "\n")
+  # cat("Ztmp = ", Ztmp, "\n")
+  
+  # covariates based on polynomials of time
+  X <- rep(1, length(time))
+  Z <- rep(1, length(time))
   for (i in 1:triple[1]) X = cbind(X, time^i)
   for (i in 1:triple[2]) Z = cbind(Z, time^i)
-
+  # cat("X = ", X[2,], "\n")
+  # cat("Z = ", Z[2,], "\n")
+  
+  # combine two parts of the covariates
+  X <- cbind(X, Xtmp)
+  Z <- cbind(Z, Ztmp)
+  # cat("X = ", X[2,], "\n")
+  # cat("Z = ", Z[2,], "\n")
+  
   W <- NULL
   for (i in 1:length(m))
   {
@@ -246,6 +263,8 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       gma0 <- rep(0, lgma)
 
       start <- c(bta0, lmd0, gma0)
+      
+      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
     }
 
     est <- mcd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
@@ -261,6 +280,8 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       gma0 <- rep(0, lgma)
 
       start <- c(bta0, lmd0, gma0)
+      
+      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
     }
 
     est <- acd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
@@ -276,6 +297,8 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       gma0 <- rep(0, lgma); gma0[1] <- pi / 2
 
       start <- c(bta0, lmd0, gma0)
+      
+      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
     }
 
     est <- hpc_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
