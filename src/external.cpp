@@ -43,6 +43,8 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   jmcm::MCD mcd(m, Y, X, Z, W);
   pan::BFGS<jmcm::MCD> bfgs;
   pan::LineSearch<jmcm::MCD> linesearch;
+  linesearch.set_message(errormsg);
+  
   arma::vec x = start;
 
   double f_min = 0.0;
@@ -228,6 +230,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   jmcm::ACD acd(m, Y, X, Z, W);
   pan::BFGS<jmcm::ACD> bfgs;
   pan::LineSearch<jmcm::ACD> linesearch;
+  linesearch.set_message(errormsg);
   arma::vec x = start;
 
   double f_min = 0.0;
@@ -409,6 +412,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   jmcm::HPC hpc(m, Y, X, Z, W);
   pan::BFGS<jmcm::HPC> bfgs;
   pan::LineSearch<jmcm::HPC> linesearch;
+  linesearch.set_message(errormsg);
   arma::vec x = start;
 
   double f_min = 0.0;
