@@ -264,7 +264,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
 
       start <- c(bta0, lmd0, gma0)
       
-      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
+      if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
     est <- mcd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
@@ -281,7 +281,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
 
       start <- c(bta0, lmd0, gma0)
       
-      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
+      if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
     est <- acd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
@@ -298,7 +298,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
 
       start <- c(bta0, lmd0, gma0)
       
-      if(anyNA(start)) stop("failed to find an initial value for the parameters in the model.\n Change the model or Specify the starting value")
+      if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
     est <- hpc_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
