@@ -631,6 +631,17 @@ RcppExport SEXP MCD__get_T(SEXP xp, SEXP x_, SEXP i_) {
   return Rcpp::wrap(ptr->get_T(i));
 }
 
+RcppExport SEXP MCD__get_mu(SEXP xp, SEXP x_, SEXP i_) {
+  Rcpp::XPtr<jmcm::MCD> ptr(xp);
+
+  arma::vec x = Rcpp::as<arma::vec>(x_);
+  int i = Rcpp::as<int>(i_) - 1;
+
+  ptr->UpdateMCD(x);
+
+  return Rcpp::wrap(ptr->get_mu(i));
+}
+
 RcppExport SEXP MCD__get_Sigma(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::MCD> ptr(xp);
 
@@ -735,6 +746,17 @@ RcppExport SEXP ACD__get_T(SEXP xp, SEXP x_, SEXP i_) {
   return Rcpp::wrap(ptr->get_T(i));
 }
 
+RcppExport SEXP ACD__get_mu(SEXP xp, SEXP x_, SEXP i_) {
+  Rcpp::XPtr<jmcm::ACD> ptr(xp);
+
+  arma::vec x = Rcpp::as<arma::vec>(x_);
+  int i = Rcpp::as<int>(i_) - 1;
+
+  ptr->UpdateACD(x);
+
+  return Rcpp::wrap(ptr->get_mu(i));
+}
+
 RcppExport SEXP ACD__get_Sigma(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::ACD> ptr(xp);
 
@@ -837,6 +859,17 @@ RcppExport SEXP HPC__get_T(SEXP xp, SEXP x_, SEXP i_) {
   ptr->UpdateHPC(x);
 
   return Rcpp::wrap(ptr->get_T(i));
+}
+
+RcppExport SEXP HPC__get_mu(SEXP xp, SEXP x_, SEXP i_) {
+  Rcpp::XPtr<jmcm::HPC> ptr(xp);
+
+  arma::vec x = Rcpp::as<arma::vec>(x_);
+  int i = Rcpp::as<int>(i_) - 1;
+
+  ptr->UpdateHPC(x);
+
+  return Rcpp::wrap(ptr->get_mu(i));
 }
 
 RcppExport SEXP HPC__get_Sigma(SEXP xp, SEXP x_, SEXP i_) {

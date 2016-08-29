@@ -102,7 +102,7 @@ getJMCM.jmcmMod <- function(object,
       "loglik" = opt$loglik,
       "BIC"    = opt$BIC,
       "iter"   = opt$iter,
-      "triple" = object$triple,
+      "triple" = object@triple,
       "n2loglik" = obj$n2loglik(theta),
       "grad"     = obj$grad(theta))
   } else {
