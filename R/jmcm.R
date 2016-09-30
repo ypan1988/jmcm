@@ -267,7 +267,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- mcd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
+    est <- mcd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
   }
 
   if (cov.method == 'acd') {
@@ -284,7 +284,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- acd_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
+    est <- acd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
   }
 
   if (cov.method == 'hpc') {
@@ -301,7 +301,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- hpc_estimation(m, Y, X, Z, W, start, control$trace, control$profile, control$errormsg)
+    est <- hpc_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
   }
 
   if (!(control$ignore.const.term)) {

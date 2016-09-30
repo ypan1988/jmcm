@@ -314,6 +314,11 @@ class MCD {
   void UpdateLambda(const arma::vec& x);
   void UpdateGamma();
 
+  void set_mean(const arma::vec &mean) {
+    cov_only_ = true;
+    mean_ = mean;
+  }
+  
   // void CalcMeanCovmati(const arma::vec& x, int i,
   // 		     arma::vec& mui, arma::mat& Sigmai);
   // void SimResp(int n, const arma::vec& x, arma::mat& resp);
@@ -340,6 +345,9 @@ class MCD {
 
   int free_param_;
 
+  bool cov_only_;
+  arma::vec mean_;
+  
   arma::mat get_G(const int i) const {
     arma::mat Gi;
     if (i == 0)

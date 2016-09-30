@@ -20,19 +20,22 @@
 //'@param Z model matrix for the diagonal matrix.
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
+//'@param mean when covonly is true, it is used as the given mean.
 //'@param trace the values of the objective function and the parameters are
 //'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
+//'@param covonly estimate the covariance structure only, and use given mean.
 //'@seealso \code{\link{acd_estimation}} for joint mean covariance model fitting
 //'         based on ACD, \code{\link{hpc_estimation}} for joint mean covariance
 //'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
-                          arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errormsg = false) {
+                          arma::mat W, arma::vec start, arma::vec mean,
+			  bool trace = false, bool profile = true,
+			  bool errormsg = false, bool covonly = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -41,6 +44,13 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   int n_gma = W.n_cols;
 
   jmcm::MCD mcd(m, Y, X, Z, W);
+  if (covonly) {
+    if (Y.n_rows != mean.n_rows & errormsg)
+      Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
+		  << std::endl;
+    mcd.set_mean(mean);
+  }
+    
   pan::BFGS<jmcm::MCD> bfgs;
   pan::LineSearch<jmcm::MCD> linesearch;
   linesearch.set_message(errormsg);
@@ -145,7 +155,7 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
       }
 
       if (debug) Rcpp::Rcout << "Update beta..." << std::endl;
-      mcd.UpdateBeta();
+      if (!covonly) mcd.UpdateBeta();
 
       if (debug) Rcpp::Rcout << "Update lambda..." << std::endl;
       arma::vec lmd = x.rows(n_bta, n_bta + n_lmd - 1);
@@ -207,19 +217,22 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'@param Z model matrix for the diagonal matrix.
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
+//'@param mean when covonly is true, it is used as the given mean.
 //'@param trace the values of the objective function and the parameters are
 //'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
+//'@param covonly estimate the covariance structure only, and use given mean.
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 //'         based on MCD, \code{\link{hpc_estimation}} for joint mean covariance
 //'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
-                          arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errormsg = false) {
+                          arma::mat W, arma::vec start, arma::vec mean,
+			  bool trace = false, bool profile = true,
+			  bool errormsg = false, bool covonly = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -228,6 +241,13 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   int n_gma = W.n_cols;
 
   jmcm::ACD acd(m, Y, X, Z, W);
+  if (covonly) {
+    if (Y.n_rows != mean.n_rows & errormsg)
+      Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
+		  << std::endl;
+    acd.set_mean(mean);
+  }
+  
   pan::BFGS<jmcm::ACD> bfgs;
   pan::LineSearch<jmcm::ACD> linesearch;
   linesearch.set_message(errormsg);
@@ -389,19 +409,22 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'@param Z model matrix for the diagonal matrix.
 //'@param W model matrix for the lower triangular matrix.
 //'@param start starting values for the parameters in the model.
+//'@param mean when covonly is true, it is used as the given mean.
 //'@param trace the values of the objective function and the parameters are
 //'       printed for all the trace'th iterations.
 //'@param profile whether parameters should be estimated sequentially using the
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
+//'@param covonly estimate the covariance structure only, and use given mean.
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 //'         based on MCD, \code{\link{acd_estimation}} for joint mean covariance
 //'         model fitting based on ACD.
 //'@export
 // [[Rcpp::export]]
 Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
-                          arma::mat W, arma::vec start, bool trace = false,
-                          bool profile = true, bool errormsg = false) {
+                          arma::mat W, arma::vec start, arma::vec mean,
+			  bool trace = false, bool profile = true,
+			  bool errormsg = false, bool covonly = false) {
   int debug = 0;
   int debug2 = 0;
 
@@ -410,6 +433,13 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   int n_gma = W.n_cols;
 
   jmcm::HPC hpc(m, Y, X, Z, W);
+  if (covonly) {
+    if (Y.n_rows != mean.n_rows & errormsg)
+      Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
+		  << std::endl;
+    hpc.set_mean(mean);
+  }
+  
   pan::BFGS<jmcm::HPC> bfgs;
   pan::LineSearch<jmcm::HPC> linesearch;
   linesearch.set_message(errormsg);
@@ -513,7 +543,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
       }
 
       if (debug) Rcpp::Rcout << "Update beta..." << std::endl;
-      hpc.UpdateBeta();
+      if(!covonly) hpc.UpdateBeta();
 
       if (debug) Rcpp::Rcout << "Update lambda and gamma..." << std::endl;
       arma::vec lmdgma = x.rows(n_bta, n_bta + n_lmd + n_gma - 1);

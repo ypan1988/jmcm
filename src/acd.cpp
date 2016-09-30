@@ -38,6 +38,9 @@ ACD::ACD(arma::vec& m, arma::vec& Y, arma::mat& X, arma::mat& Z, arma::mat& W)
 
   free_param_ = 0;
 
+  cov_only_ = false;
+  mean_ = Y_;
+
   if (debug) Rcpp::Rcout << "ACD object created" << std::endl;
 }
 
@@ -417,7 +420,8 @@ void ACD::UpdateModel() {
 
   switch (free_param_) {
     case 0:
-      Xbta_ = X_ * beta_;
+      if (cov_only_) Xbta_ = mean_;
+      else Xbta_ = X_ * beta_;
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -428,7 +432,8 @@ void ACD::UpdateModel() {
       break;
 
     case 1:
-      Xbta_ = X_ * beta_;
+      if (cov_only_) Xbta_ = mean_;
+      else Xbta_ = X_ * beta_;
       Resid_ = Y_ - Xbta_;
 
       UpdateTDResid();

@@ -374,6 +374,11 @@ class HPC {
   void UpdateBeta();
   void UpdateLambdaGamma(const arma::vec& x);
 
+  void set_mean(const arma::vec &mean) {
+    cov_only_ = true;
+    mean_ = mean;
+  }
+
   // void CalcMeanCovmati(const arma::vec& x, int i,
   // 		     arma::vec& mui, arma::mat& Sigmai);
   // void SimResp(int n, const arma::vec& x, arma::mat& resp);
@@ -403,6 +408,9 @@ class HPC {
 
   int free_param_;
 
+  bool cov_only_;
+  arma::vec mean_;
+  
   arma::vec get_TDResid(const int i) const {
     arma::vec TiDiri;
     if (i == 0)

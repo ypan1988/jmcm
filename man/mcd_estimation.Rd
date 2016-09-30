@@ -4,8 +4,8 @@
 \alias{mcd_estimation}
 \title{Fit Joint Mean-Covariance Models based on MCD}
 \usage{
-mcd_estimation(m, Y, X, Z, W, start, trace = FALSE, profile = TRUE,
-  errormsg = FALSE)
+mcd_estimation(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE,
+  errormsg = FALSE, covonly = FALSE)
 }
 \arguments{
 \item{m}{an integer vector of numbers of measurements for subject.}
@@ -20,6 +20,8 @@ mcd_estimation(m, Y, X, Z, W, start, trace = FALSE, profile = TRUE,
 
 \item{start}{starting values for the parameters in the model.}
 
+\item{mean}{when covonly is true, it is used as the given mean.}
+
 \item{trace}{the values of the objective function and the parameters are
 printed for all the trace'th iterations.}
 
@@ -27,6 +29,8 @@ printed for all the trace'th iterations.}
 idea of profile likelihood or not.}
 
 \item{errormsg}{whether or not the error message should be print.}
+
+\item{covonly}{estimate the covariance structure only, and use given mean.}
 }
 \description{
 Fit joint mean-covariance models based on MCD.
