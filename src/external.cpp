@@ -45,7 +45,7 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
   jmcm::MCD mcd(m, Y, X, Z, W);
   if (covonly) {
-    if (Y.n_rows != mean.n_rows & errormsg)
+    if ((Y.n_rows != mean.n_rows) && errormsg)
       Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
 		  << std::endl;
     mcd.set_mean(mean);
@@ -242,7 +242,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
   jmcm::ACD acd(m, Y, X, Z, W);
   if (covonly) {
-    if (Y.n_rows != mean.n_rows & errormsg)
+    if ((Y.n_rows != mean.n_rows) && errormsg)
       Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
 		  << std::endl;
     acd.set_mean(mean);
@@ -434,7 +434,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
   jmcm::HPC hpc(m, Y, X, Z, W);
   if (covonly) {
-    if (Y.n_rows != mean.n_rows & errormsg)
+    if ((Y.n_rows != mean.n_rows) && errormsg)
       Rcpp::Rcerr << "The size of the responses Y does not match the size of the given mean"
 		  << std::endl;
     hpc.set_mean(mean);
