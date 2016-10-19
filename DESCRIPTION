@@ -1,7 +1,7 @@
 Package: jmcm
 Type: Package
 Title: Joint Mean-Covariance Models using 'Armadillo' and S4
-Version: 0.1.6.0
+Version: 0.1.7.0
 Authors@R: c(person("Jianxin", "Pan", email = "Jianxin.Pan@manchester.ac.uk",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
