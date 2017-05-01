@@ -50,11 +50,11 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 		  << std::endl;
     mcd.set_mean(mean);
   }
-    
+
   pan::BFGS<jmcm::MCD> bfgs;
   pan::LineSearch<jmcm::MCD> linesearch;
   linesearch.set_message(errormsg);
-  
+
   arma::vec x = start;
 
   double f_min = 0.0;
@@ -108,12 +108,20 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
       arma::vec x2 = x;  // Save the old point
 
+      if (debug) Rcpp::Rcout << "Before the linesearch" << std::endl;
+      if (debug) Rcpp::Rcout << "f = " << f << std::endl;
+      if (debug) Rcpp::Rcout << "Newton direction p = \n" << p << std::endl;
+
       linesearch.GetStep(mcd, x, p, kStepMax);
 
       f = mcd(x);  // Update function value
       p = x - x2;  // Update line direction
       x2 = x;
       f_min = f;
+
+      if (debug) Rcpp::Rcout << "After the linesearch" << std::endl;
+      if (debug) Rcpp::Rcout << "f = " << f << std::endl;
+      if (debug) Rcpp::Rcout << "Newton direction p = \n" << p << std::endl;
 
       if (trace) {
         Rcpp::Rcout << std::setw(5) << iter << ": " << std::setw(10) << mcd(x)
@@ -131,7 +139,9 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
       if (debug2) Rcpp::Rcout << "test1 = " << test << std::endl;
       if (test < kTolX) {
         if (debug)
-          Rcpp::Rcout << "Test for convergence on Delta x: converged."
+          Rcpp::Rcout << "test = " << test << std::endl
+                      << "kTolX = " << kTolX << std::endl
+                      << "Test for convergence on Delta x: converged."
                       << std::endl;
         break;
       }
@@ -247,7 +257,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 		  << std::endl;
     acd.set_mean(mean);
   }
-  
+
   pan::BFGS<jmcm::ACD> bfgs;
   pan::LineSearch<jmcm::ACD> linesearch;
   linesearch.set_message(errormsg);
@@ -439,7 +449,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 		  << std::endl;
     hpc.set_mean(mean);
   }
-  
+
   pan::BFGS<jmcm::HPC> bfgs;
   pan::LineSearch<jmcm::HPC> linesearch;
   linesearch.set_message(errormsg);
