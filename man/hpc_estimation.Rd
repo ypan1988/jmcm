@@ -40,4 +40,3 @@ Fit joint mean-covariance models based on HPC.
         based on MCD, \code{\link{acd_estimation}} for joint mean covariance
         model fitting based on ACD.
 }
-

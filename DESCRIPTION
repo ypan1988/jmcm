@@ -13,10 +13,11 @@ Description: Fit joint mean-covariance models for longitudinal data. The models
     for numerical linear algebra and 'RcppArmadillo' glue.
 License: GPL (>= 2)
 LazyData: TRUE
+SystemRequirements: C++11
 Depends: R (>= 3.2.2)
 Imports: Formula, methods, Rcpp (>= 0.11.6)
 LinkingTo: Rcpp, RcppArmadillo
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: yes
 Author: Jianxin Pan [aut, cre],
   Yi Pan [aut]

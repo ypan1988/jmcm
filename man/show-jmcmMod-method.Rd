@@ -14,4 +14,3 @@ typically the result of jmcm().}
 \description{
 Print information for jmcmMod-class
 }
-

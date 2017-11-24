@@ -65,6 +65,7 @@ a fitted joint mean covariance model from an object of class "jmcmMod".
 \item \code{jmcmMod}: Extract or Get Generalized Components from a Fitted Joint
 Mean Covariance Model
 }}
+
 \examples{
 fit.mcd <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
   triple = c(8, 1, 3), cov.method = 'mcd')
@@ -74,4 +75,3 @@ BIC  <- getJMCM(fit.mcd, "BIC")
 Di   <- getJMCM(fit.mcd, "D", 10)
 
 }
-

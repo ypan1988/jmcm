@@ -26,4 +26,3 @@ bootcurve(fit.mcd, nboot = 1000)
 }
 
 }
-

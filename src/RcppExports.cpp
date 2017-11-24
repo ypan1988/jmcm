@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // mcd_estimation
 Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly);
-RcppExport SEXP jmcm_mcd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
+RcppExport SEXP _jmcm_mcd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,7 +29,7 @@ END_RCPP
 }
 // acd_estimation
 Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly);
-RcppExport SEXP jmcm_acd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
+RcppExport SEXP _jmcm_acd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -50,7 +50,7 @@ END_RCPP
 }
 // hpc_estimation
 Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly);
-RcppExport SEXP jmcm_hpc_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
+RcppExport SEXP _jmcm_hpc_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;

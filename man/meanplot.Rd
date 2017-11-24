@@ -20,4 +20,3 @@ fit.mcd <- jmcm(weight | id | I(ceiling(day/14 + 1)) ~ 1 | 1, data=cattleA,
 meanplot(fit.mcd)
 
 }
-

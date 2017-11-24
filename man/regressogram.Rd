@@ -24,4 +24,3 @@ fit.mcd <- jmcm(weight | id | I(ceiling(day/14 + 1)) ~ 1 | 1, data=cattleA,
 regressogram(fit.mcd, time = 1:11)
 
 }
-

@@ -21,7 +21,7 @@
 #'         model fitting based on HPC.
 #'@export
 mcd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('jmcm_mcd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+    .Call('_jmcm_mcd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
 }
 
 #'@title Fit Joint Mean-Covariance Models based on ACD
@@ -44,7 +44,7 @@ mcd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = 
 #'         model fitting based on HPC.
 #'@export
 acd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('jmcm_acd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+    .Call('_jmcm_acd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
 }
 
 #'@title Fit Joint Mean-Covariance Models based on HPC
@@ -67,6 +67,6 @@ acd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = 
 #'         model fitting based on ACD.
 #'@export
 hpc_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('jmcm_hpc_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+    .Call('_jmcm_hpc_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
 }
 

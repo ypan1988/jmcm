@@ -84,9 +84,9 @@ getJMCM.jmcmMod <- function(object,
   W = args$W
   theta  = drop(opt$par)
 
-  if (devcomp$dims['MCD']) obj <- new("MCD", m, Y, X, Z, W)
-  if (devcomp$dims['ACD']) obj <- new("ACD", m, Y, X, Z, W)
-  if (devcomp$dims['HPC']) obj <- new("HPC", m, Y, X, Z, W)
+  if (devcomp$dims['MCD']) obj <- .Call("MCD__new", m, Y, X, Z, W)
+  if (devcomp$dims['ACD']) obj <- .Call("ACD__new", m, Y, X, Z, W)
+  if (devcomp$dims['HPC']) obj <- .Call("HPC__new", m, Y, X, Z, W)
 
   if(sub.num == 0) {
     switch(name,
@@ -102,20 +102,48 @@ getJMCM.jmcmMod <- function(object,
       "loglik" = opt$loglik,
       "BIC"    = opt$BIC,
       "iter"   = opt$iter,
-      "triple" = object@triple,
-      "n2loglik" = obj$n2loglik(theta),
-      "grad"     = obj$grad(theta))
+      "triple" = object@triple)
   } else {
-    switch(name,
-      "m" = obj$get_m(sub.num),
-      "Y" = obj$get_Y(sub.num),
-      "X" = obj$get_X(sub.num),
-      "Z" = obj$get_Z(sub.num),
-      "W" = obj$get_W(sub.num),
-      "D" = obj$get_D(theta, sub.num),
-      "T" = obj$get_T(theta, sub.num),
-      "Sigma" = obj$get_Sigma(theta, sub.num),
-      "mu" = obj$get_mu(theta, sub.num))
+    if (devcomp$dims['MCD']) {
+      switch(name,
+             "m" = .Call("MCD__get_m", obj, sub.num),
+             "Y" = .Call("MCD__get_Y", obj, sub.num),
+             "X" = .Call("MCD__get_X", obj, sub.num),
+             "Z" = .Call("MCD__get_Z", obj, sub.num),
+             "W" = .Call("MCD__get_W", obj, sub.num),
+             "D" = .Call("MCD__get_D", obj, theta, sub.num),
+             "T" = .Call("MCD__get_T", obj, theta, sub.num),
+             "Sigma"    = .Call("MCD__get_Sigma", obj, theta, sub.num),
+             "mu"       = .Call("MCD__get_mu", obj, theta, sub.num),
+             "n2loglik" = .Call("MCD__n2loglik", obj, theta),
+             "grad"     = .Call("MCD__grad", obj, theta))
+    } else if (devcomp$dims['ACD']) {
+      switch(name,
+             "m" = .Call("ACD__get_m", obj, sub.num),
+             "Y" = .Call("ACD__get_Y", obj, sub.num),
+             "X" = .Call("ACD__get_X", obj, sub.num),
+             "Z" = .Call("ACD__get_Z", obj, sub.num),
+             "W" = .Call("ACD__get_W", obj, sub.num),
+             "D" = .Call("ACD__get_D", obj, theta, sub.num),
+             "T" = .Call("ACD__get_T", obj, theta, sub.num),
+             "Sigma"    = .Call("ACD__get_Sigma", obj, theta, sub.num),
+             "mu"       = .Call("ACD__get_mu", obj, theta, sub.num),
+             "n2loglik" = .Call("ACD__n2loglik", obj, theta),
+             "grad"     = .Call("ACD__grad", obj, theta))
+    } else if (devcomp$dims['HPC']) {
+      switch(name,
+             "m" = .Call("HPC__get_m", obj, sub.num),
+             "Y" = .Call("HPC__get_Y", obj, sub.num),
+             "X" = .Call("HPC__get_X", obj, sub.num),
+             "Z" = .Call("HPC__get_Z", obj, sub.num),
+             "W" = .Call("HPC__get_W", obj, sub.num),
+             "D" = .Call("HPC__get_D", obj, theta, sub.num),
+             "T" = .Call("HPC__get_T", obj, theta, sub.num),
+             "Sigma"    = .Call("HPC__get_Sigma", obj, theta, sub.num),
+             "mu"       = .Call("HPC__get_mu", obj, theta, sub.num),
+             "n2loglik" = .Call("HPC__n2loglik", obj, theta),
+             "grad"     = .Call("HPC__grad", obj, theta))
+    }
   }
 }
 

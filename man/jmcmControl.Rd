@@ -27,4 +27,3 @@ be used}
 Construct control structures for joint mean covariance model
 fitting
 }
-
