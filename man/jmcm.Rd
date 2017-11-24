@@ -42,3 +42,6 @@ data=cattleA, triple = c(8, 4, 3), cov.method = 'mcd',
 control = jmcmControl(trace = TRUE, ignore.const.term = FALSE, 
 original.poly.order = TRUE))
 }
+\references{
+Pan J, Pan Y (2017). "jmcm: An R Package for Joint Mean-Covariance Modeling of Longitudinal Data." \emph{Journal of Statistical Software}, 82(9), 1--29.
+}

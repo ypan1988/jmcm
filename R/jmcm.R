@@ -77,6 +77,7 @@ NULL
 #' details.
 #' @param start starting values for the parameters in the model.
 #'
+#' @references Pan J, Pan Y (2017). "jmcm: An R Package for Joint Mean-Covariance Modeling of Longitudinal Data." \emph{Journal of Statistical Software}, 82(9), 1--29.
 #' @examples
 #' cattleA <- cattle[cattle$group=='A', ]
 #' fit.mcd <- jmcm(weight | id | I(ceiling(day/14 + 1)) ~ 1 | 1,
