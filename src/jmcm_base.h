@@ -39,20 +39,21 @@ class JmcmBase {
   arma::vec get_lambda() const { return lambda_; }
   arma::vec get_gamma() const { return gamma_; }
 
-  virtual double operator()(const arma::vec& x) = 0;
-  virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
-  virtual void UpdateJmcm(const arma::vec& x) = 0;
-
   virtual void UpdateBeta() {}
   virtual void UpdateLambda(const arma::vec&) {}
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
-
-  virtual arma::mat get_D(int i) const = 0;
-  virtual arma::mat get_T(int i) const = 0;
-  virtual arma::vec get_mu(int i) const = 0;
-  virtual arma::mat get_Sigma(int i) const = 0;
-  virtual arma::mat get_Sigma_inv(int i) const = 0;
+  
+  virtual arma::mat get_D(arma::uword i) const = 0;
+  virtual arma::mat get_T(arma::uword i) const = 0;
+  virtual arma::vec get_mu(arma::uword i) const = 0;
+  virtual arma::mat get_Sigma(arma::uword i) const = 0;
+  virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
+  virtual arma::vec get_Resid(arma::uword i) const = 0;
+  
+  virtual double operator()(const arma::vec& x) = 0;
+  virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
+  virtual void UpdateJmcm(const arma::vec& x) = 0;
 
  protected:
   arma::vec m_, Y_;

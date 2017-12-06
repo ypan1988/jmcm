@@ -25,7 +25,7 @@ class MCD : public JmcmBase {
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void set_free_param(const int n) { free_param_ = n; }
+  void set_free_param(arma::uword n) { free_param_ = n; }
   void set_theta(const arma::vec& x);
   void set_beta(const arma::vec& x);
   void set_lambda(const arma::vec& x);
@@ -35,17 +35,17 @@ class MCD : public JmcmBase {
   void UpdateLambda(const arma::vec& x);
   void UpdateGamma();
 
-  arma::mat get_D(const int i) const override;
-  arma::mat get_T(const int i) const override;
-  arma::vec get_mu(const int i) const override;
-  arma::mat get_Sigma(const int i) const override;
-  arma::mat get_Sigma_inv(const int i) const override;
-  arma::vec get_Resid(const int i) const;
+  arma::mat get_D(arma::uword i) const override;
+  arma::mat get_T(arma::uword i) const override;
+  arma::vec get_mu(arma::uword i) const override;
+  arma::mat get_Sigma(arma::uword i) const override;
+  arma::mat get_Sigma_inv(arma::uword i) const override;
+  arma::vec get_Resid(arma::uword i) const override;
 
-  void get_D(const int i, arma::mat& Di) const;
-  void get_T(const int i, arma::mat& Ti) const;
-  void get_Sigma_inv(const int i, arma::mat& Sigmai_inv) const;
-  void get_Resid(const int i, arma::vec& ri) const;
+  void get_D(arma::uword i, arma::mat& Di) const;
+  void get_T(arma::uword i, arma::mat& Ti) const;
+  void get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const;
+  void get_Resid(arma::uword i, arma::vec& ri) const;
 
   double operator()(const arma::vec& x);
   void Gradient(const arma::vec& x, arma::vec& grad);
@@ -70,10 +70,10 @@ class MCD : public JmcmBase {
   bool cov_only_;
   arma::vec mean_;
 
-  arma::mat get_G(const int i) const;
-  arma::vec get_TResid(const int i) const;
-  void get_G(const int i, arma::mat& Gi) const;
-  void get_TResid(const int i, arma::vec& Tiri) const;
+  arma::mat get_G(arma::uword i) const;
+  arma::vec get_TResid(arma::uword i) const;
+  void get_G(arma::uword i, arma::mat& Gi) const;
+  void get_TResid(arma::uword i, arma::vec& Tiri) const;
   void UpdateG();
   void UpdateTResid();
 
@@ -175,7 +175,7 @@ inline void MCD::UpdateGamma() {
   set_gamma(gamma);
 }
 
-inline arma::mat MCD::get_D(const int i) const {
+inline arma::mat MCD::get_D(arma::uword i) const {
   arma::mat Di = arma::eye(m_(i), m_(i));
   if (i == 0)
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1)));
@@ -186,7 +186,7 @@ inline arma::mat MCD::get_D(const int i) const {
   return Di;
 }
 
-inline void MCD::get_D(const int i, arma::mat& Di) const {
+inline void MCD::get_D(arma::uword i, arma::mat& Di) const {
   Di = arma::eye(m_(i), m_(i));
   if (i == 0)
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1)));
@@ -196,7 +196,7 @@ inline void MCD::get_D(const int i, arma::mat& Di) const {
   }
 }
 
-inline arma::mat MCD::get_T(const int i) const {
+inline arma::mat MCD::get_T(arma::uword i) const {
   arma::mat Ti = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
     if (i == 0) {
@@ -217,7 +217,7 @@ inline arma::mat MCD::get_T(const int i) const {
   return Ti;
 }
 
-inline void MCD::get_T(const int i, arma::mat& Ti) const {
+inline void MCD::get_T(arma::uword i, arma::mat& Ti) const {
   Ti = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
     if (i == 0) {
@@ -237,7 +237,7 @@ inline void MCD::get_T(const int i, arma::mat& Ti) const {
   }
 }
 
-inline arma::vec MCD::get_mu(const int i) const {
+inline arma::vec MCD::get_mu(arma::uword i) const {
   arma::vec mui;
   if (i == 0)
     mui = Xbta_.subvec(0, m_(0) - 1);
@@ -248,7 +248,7 @@ inline arma::vec MCD::get_mu(const int i) const {
   return mui;
 }
 
-inline arma::mat MCD::get_Sigma(const int i) const {
+inline arma::mat MCD::get_Sigma(arma::uword i) const {
   int debug = 0;
 
   arma::mat Ti = get_T(i);
@@ -262,7 +262,7 @@ inline arma::mat MCD::get_Sigma(const int i) const {
   return Ti_inv * Di * Ti_inv.t();
 }
 
-inline arma::mat MCD::get_Sigma_inv(const int i) const {
+inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
   int debug = 0;
 
   arma::mat Ti = get_T(i);
@@ -276,7 +276,7 @@ inline arma::mat MCD::get_Sigma_inv(const int i) const {
   return Ti.t() * Di_inv * Ti;
 }
 
-inline void MCD::get_Sigma_inv(const int i, arma::mat& Sigmai_inv) const {
+inline void MCD::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
   int debug = 0;
 
   arma::mat Ti;
@@ -292,7 +292,7 @@ inline void MCD::get_Sigma_inv(const int i, arma::mat& Sigmai_inv) const {
   Sigmai_inv = Ti.t() * Di_inv * Ti;
 }
 
-inline arma::vec MCD::get_Resid(const int i) const {
+inline arma::vec MCD::get_Resid(arma::uword i) const {
   arma::vec ri;
   if (i == 0)
     ri = Resid_.subvec(0, m_(0) - 1);
@@ -303,7 +303,7 @@ inline arma::vec MCD::get_Resid(const int i) const {
   return ri;
 }
 
-inline void MCD::get_Resid(const int i, arma::vec& ri) const {
+inline void MCD::get_Resid(arma::uword i, arma::vec& ri) const {
   if (i == 0)
     ri = Resid_.subvec(0, m_(0) - 1);
   else {
@@ -583,7 +583,7 @@ inline void MCD::UpdateModel() {
   }
 }
 
-inline arma::mat MCD::get_G(const int i) const {
+inline arma::mat MCD::get_G(arma::uword i) const {
   arma::mat Gi;
   if (i == 0)
     Gi = G_.rows(0, m_(0) - 1);
@@ -594,7 +594,7 @@ inline arma::mat MCD::get_G(const int i) const {
   return Gi;
 }
 
-inline void MCD::get_G(const int i, arma::mat& Gi) const {
+inline void MCD::get_G(arma::uword i, arma::mat& Gi) const {
   if (i == 0)
     Gi = G_.rows(0, m_(0) - 1);
   else {
@@ -603,7 +603,7 @@ inline void MCD::get_G(const int i, arma::mat& Gi) const {
   }
 }
 
-inline arma::vec MCD::get_TResid(const int i) const {
+inline arma::vec MCD::get_TResid(arma::uword i) const {
   arma::vec Tiri;
   if (i == 0)
     Tiri = TResid_.subvec(0, m_(0) - 1);
@@ -614,7 +614,7 @@ inline arma::vec MCD::get_TResid(const int i) const {
   return Tiri;
 }
 
-inline void MCD::get_TResid(const int i, arma::vec& Tiri) const {
+inline void MCD::get_TResid(arma::uword i, arma::vec& Tiri) const {
   if (i == 0)
     Tiri = TResid_.subvec(0, m_(0) - 1);
   else {
