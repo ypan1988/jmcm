@@ -7,6 +7,7 @@
 #ifndef JMCM_SRC_JMCM_BASE_H_
 #define JMCM_SRC_JMCM_BASE_H_
 
+#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
 namespace jmcm {
@@ -47,8 +48,8 @@ class JmcmBase {
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
 
-  virtual arma::mat get_T(int i) const = 0;
   virtual arma::mat get_D(int i) const = 0;
+  virtual arma::mat get_T(int i) const = 0;
   virtual arma::vec get_mu(int i) const = 0;
   virtual arma::mat get_Sigma(int i) const = 0;
   virtual arma::mat get_Sigma_inv(int i) const = 0;

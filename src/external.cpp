@@ -3,11 +3,11 @@
 //
 // Written by Yi Pan - ypan1988@gmail.com
 
+#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include "acd.h"
-#include "bfgs.h"
 #include "hpc.h"
 #include "jmcm_fit.h"
 #include "mcd.h"

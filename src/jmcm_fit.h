@@ -1,5 +1,10 @@
-#include "bfgs.h"
+#ifndef JMCM_SRC_JMCM_FIT_H_
+#define JMCM_SRC_JMCM_FIT_H_
+
+#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
+
+#include "bfgs.h"
 
 template <typename JMCM>
 class JmcmFit {
@@ -210,3 +215,5 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
   return x;
 }
+
+#endif  // JMCM_SRC_JMCM_FIT_H_

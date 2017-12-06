@@ -4,9 +4,10 @@
 //
 // Written by Yi Pan - ypan1988@gmail.com
 
-#ifndef JMCM_ARMA_UTIL_H_
-#define JMCM_ARMA_UTIL_H_
+#ifndef JMCM_SRC_ARMA_UTIL_H_
+#define JMCM_SRC_ARMA_UTIL_H_
 
+#define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
 namespace pan {
@@ -29,4 +30,4 @@ arma::vec LowerTrimatToVecCol(const arma::mat& X, bool diag = false);
 arma::vec lvectorise(const arma::mat& X, bool diag = false, bool byrow = true);
 }
 
-#endif  // JMCM_ARMA_UTIL_H_
+#endif  // JMCM_SRC_ARMA_UTIL_H_
