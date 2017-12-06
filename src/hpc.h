@@ -1,162 +1,68 @@
-// hpc.h: implementation of joint mean-covariance models based on standard
-//        Cholesky decomposition of the correlation matrix R and the
-//        hyperspherical parametrization(HPC) of its Cholesky factor
+// hpc.h: joint mean-covariance models based on standard Cholesky decomposition
+//        of the correlation matrix R and the hyperspherical parametrization
+//        (HPC) of its Cholesky factor
 //
-// Copyright (C) 2015-2016 The University of Manchester
+// Copyright (C) 2015-2017 Yi Pan
 //
-// Written by Yi Pan - ypan1988@gmail.com
+// This file is part of jmcm.
 
 #ifndef JMCM_HPC_H_
 #define JMCM_HPC_H_
 
 #define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
 #include "arma_util.h"
+#include "jmcm_base.h"
+#include <RcppArmadillo.h>
 
 namespace jmcm {
 
-class HPC {
+class HPC : public JmcmBase {
  public:
-  HPC(arma::vec& m, arma::vec& Y, arma::mat& X, arma::mat& Z, arma::mat& W);
+  HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+      const arma::mat& Z, const arma::mat& W);
   ~HPC();
-
-  arma::vec get_m() const { return m_; }
-  arma::vec get_Y() const { return Y_; }
-  arma::mat get_X() const { return X_; }
-  arma::mat get_Z() const { return Z_; }
-  arma::mat get_W() const { return W_; }
-
-  int get_m(const int i) const { return m_(i); }
-
-  arma::vec get_Y(const int i) const {
-    arma::vec Yi;
-    if (i == 0)
-      Yi = Y_.subvec(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Yi = Y_.subvec(index, index + m_(i) - 1);
-    }
-    return Yi;
-  }
-
-  void get_Y(const int i, arma::vec& Yi) const {
-    if (i == 0)
-      Yi = Y_.subvec(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Yi = Y_.subvec(index, index + m_(i) - 1);
-    }
-  }
-
-  arma::mat get_X(int i) const {
-    arma::mat Xi;
-    if (i == 0)
-      Xi = X_.rows(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Xi = X_.rows(index, index + m_(i) - 1);
-    }
-    return Xi;
-  }
-
-  void get_X(const int i, arma::mat& Xi) const {
-    if (i == 0)
-      Xi = X_.rows(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Xi = X_.rows(index, index + m_(i) - 1);
-    }
-  }
-
-  arma::mat get_Z(const int i) const {
-    arma::mat Zi;
-    if (i == 0)
-      Zi = Z_.rows(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Zi = Z_.rows(index, index + m_(i) - 1);
-    }
-    return Zi;
-  }
-
-  void get_Z(const int i, arma::mat& Zi) const {
-    if (i == 0)
-      Zi = Z_.rows(0, m_(0) - 1);
-    else {
-      int index = arma::sum(m_.subvec(0, i - 1));
-      Zi = Z_.rows(index, index + m_(i) - 1);
-    }
-  }
-
-  arma::mat get_W(const int i) const {
-    arma::mat Wi;
-    if (m_(i) != 1) {
-      if (i == 0) {
-        int first_index = 0;
-        int last_index = m_(0) * (m_(0) - 1) / 2 - 1;
-        Wi = W_.rows(first_index, last_index);
-      } else {
-        int first_index = 0;
-        for (int idx = 0; idx != i; ++idx) {
-          first_index += m_(idx) * (m_(idx) - 1) / 2;
-        }
-        int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
-
-        Wi = W_.rows(first_index, last_index);
-      }
-    }
-
-    return Wi;
-  }
-
-  void get_W(const int i, arma::mat& Wi) const {
-    if (m_(i) != 1) {
-      if (i == 0) {
-        int first_index = 0;
-        int last_index = m_(0) * (m_(0) - 1) / 2 - 1;
-        Wi = W_.rows(first_index, last_index);
-      } else {
-        int first_index = 0;
-        for (int idx = 0; idx != i; ++idx) {
-          first_index += m_(idx) * (m_(idx) - 1) / 2;
-        }
-        int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
-
-        Wi = W_.rows(first_index, last_index);
-      }
-    }
-  }
 
   void set_free_param(const int n) { free_param_ = n; }
 
   void set_theta(const arma::vec& x) {
     int fp2 = free_param_;
     free_param_ = 0;
-    UpdateHPC(x);
+    UpdateJmcm(x);
     free_param_ = fp2;
   }
-
-  arma::vec get_theta() const { return theta_; }
 
   void set_beta(const arma::vec& x) {
     int fp2 = free_param_;
     free_param_ = 1;
-    UpdateHPC(x);
+    UpdateJmcm(x);
     free_param_ = fp2;
   }
 
-  arma::vec get_beta() const { return beta_; }
+  void UpdateBeta() {
+    int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+    arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
+    arma::vec XSY = arma::zeros<arma::vec>(n_bta);
+
+    for (i = 0; i < n_sub; ++i) {
+      arma::mat Xi = get_X(i);
+      arma::vec Yi = get_Y(i);
+      arma::mat Sigmai_inv = get_Sigma_inv(i);
+
+      XSX += Xi.t() * Sigmai_inv * Xi;
+      XSY += Xi.t() * Sigmai_inv * Yi;
+    }
+
+    arma::vec beta = XSX.i() * XSY;
+
+    set_beta(beta);
+  }
 
   void set_lmdgma(const arma::vec& x) {
     int fp2 = free_param_;
     free_param_ = 2;
-    UpdateHPC(x);
+    UpdateJmcm(x);
     free_param_ = fp2;
   }
-
-  arma::vec get_lambda() const { return lambda_; }
-
-  arma::vec get_gamma() const { return gamma_; }
 
   arma::mat get_D(const int i) const {
     arma::mat Di = arma::eye(m_(i), m_(i));
@@ -299,14 +205,14 @@ class HPC {
     Ri = Ti * Ti.t();
   }
 
-  arma::mat get_Sigma(const int i) const {
+  arma::mat get_Sigma(const int i) const override {
     arma::mat Ti = get_T(i);
     arma::mat Di = get_D(i);
 
     return Di * Ti * Ti.t() * Di;
   }
 
-  arma::mat get_Sigma_inv(const int i) const {
+  arma::mat get_Sigma_inv(const int i) const override {
     arma::mat Ti = get_T(i);
     // arma::mat Ti_inv = arma::pinv(Ti);
     arma::mat Ti_inv = Ti.i();
@@ -367,14 +273,13 @@ class HPC {
   void Grad1(arma::vec& grad1);
   void Grad2(arma::vec& grad2);
 
-  void UpdateHPC(const arma::vec& x);
+  void UpdateJmcm(const arma::vec& x);
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 
-  void UpdateBeta();
   void UpdateLambdaGamma(const arma::vec& x);
 
-  void set_mean(const arma::vec &mean) {
+  void set_mean(const arma::vec& mean) {
     cov_only_ = true;
     mean_ = mean;
   }
@@ -384,24 +289,9 @@ class HPC {
   // void SimResp(int n, const arma::vec& x, arma::mat& resp);
 
  private:
-  arma::vec m_;
-  arma::vec Y_;
-  arma::mat X_;
-  arma::mat Z_;
-  arma::mat W_;
-
-  arma::vec theta_;
-  arma::vec beta_;
-  arma::vec lambda_;
-  arma::vec gamma_;
   arma::vec lmdgma_;
-
-  arma::vec Xbta_;
-  arma::vec Zlmd_;
-  arma::vec Wgma_;
   arma::vec Telem_;  // elements for the lower triangular matrix T
   arma::vec invTelem_;
-  arma::vec Resid_;
 
   arma::vec TDResid_;
   arma::vec TDResid2_;
@@ -410,7 +300,7 @@ class HPC {
 
   bool cov_only_;
   arma::vec mean_;
-  
+
   arma::vec get_TDResid(const int i) const {
     arma::vec TiDiri;
     if (i == 0)

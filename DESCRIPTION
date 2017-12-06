@@ -23,3 +23,5 @@ Author: Jianxin Pan [aut, cre],
   Yi Pan [aut]
 URL: https://github.com/ypan1988/jmcm/
 BugReports: https://github.com/ypan1988/jmcm/issues
+Suggests: 
+    testthat

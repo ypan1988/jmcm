@@ -5,13 +5,14 @@
 //
 // Written by Yi Pan - ypan1988@gmail.com
 
-#include <cmath>
 #include "acd.h"
+#include <cmath>
 
 namespace jmcm {
 
-ACD::ACD(arma::vec& m, arma::vec& Y, arma::mat& X, arma::mat& Z, arma::mat& W)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W) {
+ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+         const arma::mat& Z, const arma::mat& W)
+    : JmcmBase(m, Y, X, Z, W, 1) {
   int debug = 0;
 
   if (debug) Rcpp::Rcout << "Creating ACD object" << std::endl;
@@ -21,18 +22,8 @@ ACD::ACD(arma::vec& m, arma::vec& Y, arma::mat& X, arma::mat& Z, arma::mat& W)
   int n_lmd = Z_.n_cols;
   int n_gma = W_.n_cols;
 
-  theta_ = arma::zeros<arma::vec>(n_bta + n_lmd + n_gma);
-  beta_ = arma::zeros<arma::vec>(n_bta);
-  lambda_ = arma::zeros<arma::vec>(n_lmd);
-  gamma_ = arma::zeros<arma::vec>(n_gma);
   lmdgma_ = arma::zeros<arma::vec>(n_lmd + n_gma);
-
-  Xbta_ = arma::zeros<arma::vec>(N);
-  Zlmd_ = arma::zeros<arma::vec>(N);
-  Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
   invTelem_ = arma::zeros<arma::vec>(W_.n_rows + arma::sum(m_));
-  Resid_ = arma::zeros<arma::vec>(N);
-
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
 
@@ -48,10 +39,10 @@ ACD::~ACD() {}
 
 double ACD::operator()(const arma::vec& x) {
   int debug = 0;
-  if (debug) Rcpp::Rcout << "UpdateACD..." << std::endl;
-  UpdateACD(x);
+  if (debug) Rcpp::Rcout << "UpdateJmcm..." << std::endl;
+  UpdateJmcm(x);
 
-  if (debug) Rcpp::Rcout << "UpdateACD finished..." << std::endl;
+  if (debug) Rcpp::Rcout << "UpdateJmcm finished..." << std::endl;
 
   int i, n_sub = m_.n_elem;
   double result = 0.0;
@@ -155,7 +146,7 @@ double ACD::operator()(const arma::vec& x) {
 }
 
 void ACD::Gradient(const arma::vec& x, arma::vec& grad) {
-  UpdateACD(x);
+  UpdateJmcm(x);
 
   int n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
 
@@ -289,15 +280,13 @@ void ACD::Gradient(const arma::vec& x, arma::vec& grad) {
 void ACD::Grad1(arma::vec& grad1) {
   int debug = 0;
 
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  int n_sub = m_.n_elem, n_bta = X_.n_cols;
   grad1 = arma::zeros<arma::vec>(n_bta);
 
   if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
 
-  for (i = 0; i < n_sub; ++i) {
-    //	    arma::mat Xi = get_X(i);
-    arma::mat Xi;
-    get_X(i, Xi);
+  for (auto i = 0; i < n_sub; ++i) {
+    arma::mat Xi = get_X(i);
     //	    arma::vec ri = get_Resid(i);
     arma::vec ri;
     get_Resid(i, ri);
@@ -322,8 +311,7 @@ void ACD::Grad2(arma::vec& grad2) {
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
-    arma::mat Zi;
-    get_Z(i, Zi);
+    arma::mat Zi = get_Z(i);
     arma::vec hi;
     get_TDResid2(i, hi);
 
@@ -350,7 +338,7 @@ void ACD::Grad2(arma::vec& grad2) {
   grad2 *= -2;
 }
 
-void ACD::UpdateACD(const arma::vec& x) {
+void ACD::UpdateJmcm(const arma::vec& x) {
   int debug = 0;
   bool update = true;
 
@@ -420,8 +408,10 @@ void ACD::UpdateModel() {
 
   switch (free_param_) {
     case 0:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -432,8 +422,10 @@ void ACD::UpdateModel() {
       break;
 
     case 1:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Resid_ = Y_ - Xbta_;
 
       UpdateTDResid();
@@ -452,29 +444,6 @@ void ACD::UpdateModel() {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-}
-
-void ACD::UpdateBeta() {
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi;
-    get_X(i, Xi);
-    arma::vec Yi;
-    get_Y(i, Yi);
-    //	    arma::mat Sigmai_inv = get_Sigma_inv(i);
-    arma::mat Sigmai_inv;
-    get_Sigma_inv(i, Sigmai_inv);
-
-    XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
-  }
-
-  arma::vec beta = XSX.i() * XSY;
-
-  set_beta(beta);
 }
 
 void ACD::UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }

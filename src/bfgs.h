@@ -10,8 +10,8 @@
 #include <iomanip>
 #include <limits>
 
-#include <RcppArmadillo.h>
 #include "linesearch.h"
+#include <RcppArmadillo.h>
 
 namespace pan {
 

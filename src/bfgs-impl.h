@@ -6,8 +6,7 @@
  * Constructor
  */
 template <typename T>
-BFGS<T>::BFGS()
-    : LineSearch<T>() {}
+BFGS<T>::BFGS() : LineSearch<T>() {}
 
 /**
  * Destructor

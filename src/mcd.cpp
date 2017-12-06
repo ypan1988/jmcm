@@ -10,26 +10,18 @@
 
 namespace jmcm {
 
-MCD::MCD(arma::vec& m, arma::vec& Y, arma::mat& X, arma::mat& Z, arma::mat& W)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W) {
+MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+         const arma::mat& Z, const arma::mat& W)
+    : JmcmBase(m, Y, X, Z, W, 0) {
   int debug = 0;
 
   if (debug) Rcpp::Rcout << "Creating MCD object" << std::endl;
+  // m_.print("m = ");
 
   int N = Y_.n_rows;
   int n_bta = X_.n_cols;
   int n_lmd = Z_.n_cols;
   int n_gma = W_.n_cols;
-
-  theta_ = arma::zeros<arma::vec>(n_bta + n_lmd + n_gma);
-  beta_ = arma::zeros<arma::vec>(n_bta);
-  lambda_ = arma::zeros<arma::vec>(n_lmd);
-  gamma_ = arma::zeros<arma::vec>(n_gma);
-
-  Xbta_ = arma::zeros<arma::vec>(N);
-  Zlmd_ = arma::zeros<arma::vec>(N);
-  Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
-  Resid_ = arma::zeros<arma::vec>(N);
 
   G_ = arma::zeros<arma::mat>(N, n_gma);
   TResid_ = arma::zeros<arma::vec>(N);
@@ -47,8 +39,8 @@ MCD::~MCD() {}
 double MCD::operator()(const arma::vec& x) {
   int debug = 0;
 
-  if (debug) Rcpp::Rcout << "UpdateMCD(x)" << std::endl;
-  UpdateMCD(x);
+  if (debug) Rcpp::Rcout << "UpdateJmcm(x)" << std::endl;
+  UpdateJmcm(x);
 
   int i, n_sub = m_.n_elem;
   double result = 0.0;
@@ -199,7 +191,7 @@ double MCD::operator()(const arma::vec& x) {
 }
 
 void MCD::Gradient(const arma::vec& x, arma::vec& grad) {
-  UpdateMCD(x);
+  UpdateJmcm(x);
 
   int n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
 
@@ -324,8 +316,7 @@ void MCD::Grad1(arma::vec& grad1) {
   if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi;
-    get_X(i, Xi);
+    arma::mat Xi = get_X(i);
     arma::vec ri;
     get_Resid(i, ri);
     arma::mat Sigmai_inv;
@@ -346,8 +337,7 @@ void MCD::Grad2(arma::vec& grad2) {
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
-    arma::mat Zi;
-    get_Z(i, Zi);
+    arma::mat Zi = get_Z(i);
     //	    arma::mat Gi = get_G(i);
 
     arma::mat Di;
@@ -393,7 +383,7 @@ void MCD::Grad3(arma::vec& grad3) {
   grad3 *= -2;
 }
 
-void MCD::UpdateMCD(const arma::vec& x) {
+void MCD::UpdateJmcm(const arma::vec& x) {
   int debug = 0;
   bool update = true;
 
@@ -471,8 +461,10 @@ void MCD::UpdateModel() {
 
   switch (free_param_) {
     case 0:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -486,8 +478,10 @@ void MCD::UpdateModel() {
       break;
 
     case 1:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Resid_ = Y_ - Xbta_;
 
       UpdateG();
@@ -510,28 +504,6 @@ void MCD::UpdateModel() {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-}
-
-void MCD::UpdateBeta() {
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi;
-    get_X(i, Xi);
-    arma::vec Yi;
-    get_Y(i, Yi);
-    arma::mat Sigmai_inv;
-    get_Sigma_inv(i, Sigmai_inv);
-
-    XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
-  }
-
-  arma::vec beta = XSX.i() * XSY;
-
-  set_beta(beta);
 }
 
 void MCD::UpdateLambda(const arma::vec& x) { set_lambda(x); }
@@ -565,8 +537,7 @@ void MCD::UpdateG() {
   for (i = 0; i < n_sub; ++i) {
     arma::mat Gi = arma::zeros<arma::mat>(m_(i), W_.n_cols);
 
-    arma::mat Wi;
-    get_W(i, Wi);
+    arma::mat Wi = get_W(i);
     arma::vec ri;
     get_Resid(i, ri);
     for (j = 1; j != m_(i); ++j) {

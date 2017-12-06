@@ -6,13 +6,14 @@
 //
 // Written by Yi Pan - ypan1988@gmail.com
 
-#include <cmath>
 #include "hpc.h"
+#include <cmath>
 
 namespace jmcm {
 
-HPC::HPC(arma::vec &m, arma::vec &Y, arma::mat &X, arma::mat &Z, arma::mat &W)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W) {
+HPC::HPC(const arma::vec &m, const arma::vec &Y, const arma::mat &X,
+         const arma::mat &Z, const arma::mat &W)
+    : JmcmBase(m, Y, X, Z, W, 2) {
   int debug = 0;
 
   if (debug) Rcpp::Rcout << "Creating HPC object" << std::endl;
@@ -22,18 +23,9 @@ HPC::HPC(arma::vec &m, arma::vec &Y, arma::mat &X, arma::mat &Z, arma::mat &W)
   int n_lmd = Z_.n_cols;
   int n_gma = W_.n_cols;
 
-  theta_ = arma::zeros<arma::vec>(n_bta + n_lmd + n_gma);
-  beta_ = arma::zeros<arma::vec>(n_bta);
-  lambda_ = arma::zeros<arma::vec>(n_lmd);
-  gamma_ = arma::zeros<arma::vec>(n_gma);
   lmdgma_ = arma::zeros<arma::vec>(n_lmd + n_gma);
-
-  Xbta_ = arma::zeros<arma::vec>(N);
-  Zlmd_ = arma::zeros<arma::vec>(N);
-  Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
   Telem_ = arma::zeros<arma::vec>(W_.n_rows + arma::sum(m_));
   invTelem_ = arma::zeros<arma::vec>(W_.n_rows + arma::sum(m_));
-  Resid_ = arma::zeros<arma::vec>(N);
 
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
@@ -49,7 +41,7 @@ HPC::HPC(arma::vec &m, arma::vec &Y, arma::mat &X, arma::mat &Z, arma::mat &W)
 HPC::~HPC() {}
 
 double HPC::operator()(const arma::vec &x) {
-  UpdateHPC(x);
+  UpdateJmcm(x);
 
   int i, n_sub = m_.n_elem;
   double result = 0.0;
@@ -185,7 +177,7 @@ double HPC::operator()(const arma::vec &x) {
 }
 
 void HPC::Gradient(const arma::vec &x, arma::vec &grad) {
-  UpdateHPC(x);
+  UpdateJmcm(x);
 
   int n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
 
@@ -338,9 +330,7 @@ void HPC::Grad1(arma::vec &grad1) {
   if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
-    // arma::mat Xi = get_X(i);
-    arma::mat Xi;
-    get_X(i, Xi);
+    arma::mat Xi = get_X(i);
     // arma::vec ri = get_Resid(i);
     arma::vec ri;
     get_Resid(i, ri);
@@ -365,9 +355,7 @@ void HPC::Grad2(arma::vec &grad2) {
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
-    // arma::mat Zi = get_Z(i);
-    arma::mat Zi;
-    get_Z(i, Zi);
+    arma::mat Zi = get_Z(i);
     // arma::vec hi = get_TDResid2(i);
     arma::vec hi;
     get_TDResid2(i, hi);
@@ -401,7 +389,7 @@ void HPC::Grad2(arma::vec &grad2) {
   grad2 *= -2;
 }
 
-void HPC::UpdateHPC(const arma::vec &x) {
+void HPC::UpdateJmcm(const arma::vec &x) {
   int debug = 0;
   bool update = true;
 
@@ -470,8 +458,10 @@ void HPC::UpdateModel() {
 
   switch (free_param_) {
     case 0:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -482,8 +472,10 @@ void HPC::UpdateModel() {
       break;
 
     case 1:
-      if (cov_only_) Xbta_ = mean_;
-      else Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
       Resid_ = Y_ - Xbta_;
       UpdateTDResid();
 
@@ -501,31 +493,6 @@ void HPC::UpdateModel() {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-}
-
-void HPC::UpdateBeta() {
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    // arma::mat Xi = get_X(i);
-    // arma::vec Yi = get_Y(i);
-    // arma::mat Sigmai_inv = get_Sigma_inv(i);
-    arma::mat Xi;
-    get_X(i, Xi);
-    arma::vec Yi;
-    get_Y(i, Yi);
-    arma::mat Sigmai_inv;
-    get_Sigma_inv(i, Sigmai_inv);
-
-    XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
-  }
-
-  arma::vec beta = XSX.i() * XSY;
-
-  set_beta(beta);
 }
 
 void HPC::UpdateLambdaGamma(const arma::vec &x) { set_lmdgma(x); }
