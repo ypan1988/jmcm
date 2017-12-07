@@ -66,7 +66,7 @@ class MCD : public JmcmBase {
   arma::mat G_;
   arma::vec TResid_;
 
-  int free_param_;
+  arma::uword free_param_;
   bool cov_only_;
   arma::vec mean_;
 
@@ -82,15 +82,15 @@ class MCD : public JmcmBase {
 inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 0) {
-  int debug = 0;
+  arma::uword debug = 0;
 
   if (debug) Rcpp::Rcout << "Creating MCD object" << std::endl;
   // m_.print("m = ");
 
-  int N = Y_.n_rows;
-  int n_bta = X_.n_cols;
-  int n_lmd = Z_.n_cols;
-  int n_gma = W_.n_cols;
+  arma::uword N = Y_.n_rows;
+  //arma::uword n_bta = X_.n_cols;
+  //arma::uword n_lmd = Z_.n_cols;
+  arma::uword n_gma = W_.n_cols;
 
   G_ = arma::zeros<arma::mat>(N, n_gma);
   TResid_ = arma::zeros<arma::vec>(N);
@@ -104,35 +104,35 @@ inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
 }
 
 inline void MCD::set_theta(const arma::vec& x) {
-  int fp2 = free_param_;
+  arma::uword fp2 = free_param_;
   free_param_ = 0;
   UpdateJmcm(x);
   free_param_ = fp2;
 }
 
 inline void MCD::set_beta(const arma::vec& x) {
-  int fp2 = free_param_;
+  arma::uword fp2 = free_param_;
   free_param_ = 1;
   UpdateJmcm(x);
   free_param_ = fp2;
 }
 
 inline void MCD::set_lambda(const arma::vec& x) {
-  int fp2 = free_param_;
+  arma::uword fp2 = free_param_;
   free_param_ = 2;
   UpdateJmcm(x);
   free_param_ = fp2;
 }
 
 inline void MCD::set_gamma(const arma::vec& x) {
-  int fp2 = free_param_;
+  arma::uword fp2 = free_param_;
   free_param_ = 3;
   UpdateJmcm(x);
   free_param_ = fp2;
 }
 
 inline void MCD::UpdateBeta() {
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
   arma::vec XSY = arma::zeros<arma::vec>(n_bta);
 
@@ -153,7 +153,7 @@ inline void MCD::UpdateBeta() {
 inline void MCD::UpdateLambda(const arma::vec& x) { set_lambda(x); }
 
 inline void MCD::UpdateGamma() {
-  int i, n_sub = m_.n_elem, n_gma = W_.n_cols;
+  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
   arma::mat GDG = arma::zeros<arma::mat>(n_gma, n_gma);
   arma::vec GDr = arma::zeros<arma::vec>(n_gma);
 
@@ -180,7 +180,7 @@ inline arma::mat MCD::get_D(arma::uword i) const {
   if (i == 0)
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1)));
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(index, index + m_(i) - 1)));
   }
   return Di;
@@ -191,7 +191,7 @@ inline void MCD::get_D(arma::uword i, arma::mat& Di) const {
   if (i == 0)
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1)));
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Di = arma::diagmat(arma::exp(Zlmd_.subvec(index, index + m_(i) - 1)));
   }
 }
@@ -200,16 +200,16 @@ inline arma::mat MCD::get_T(arma::uword i) const {
   arma::mat Ti = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
     if (i == 0) {
-      int first_index = 0;
-      int last_index = m_(0) * (m_(0) - 1) / 2 - 1;
+      arma::uword first_index = 0;
+      arma::uword last_index = m_(0) * (m_(0) - 1) / 2 - 1;
 
       Ti = pan::ltrimat(m_(0), -Wgma_.subvec(first_index, last_index));
     } else {
-      int first_index = 0;
-      for (int idx = 0; idx != i; ++idx) {
+      arma::uword first_index = 0;
+      for (arma::uword idx = 0; idx != i; ++idx) {
         first_index += m_(idx) * (m_(idx) - 1) / 2;
       }
-      int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
+      arma::uword last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
 
       Ti = pan::ltrimat(m_(i), -Wgma_.subvec(first_index, last_index));
     }
@@ -221,16 +221,16 @@ inline void MCD::get_T(arma::uword i, arma::mat& Ti) const {
   Ti = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
     if (i == 0) {
-      int first_index = 0;
-      int last_index = m_(0) * (m_(0) - 1) / 2 - 1;
+      arma::uword first_index = 0;
+      arma::uword last_index = m_(0) * (m_(0) - 1) / 2 - 1;
 
       Ti = pan::ltrimat(m_(0), -Wgma_.subvec(first_index, last_index));
     } else {
-      int first_index = 0;
-      for (int idx = 0; idx != i; ++idx) {
+      arma::uword first_index = 0;
+      for (arma::uword idx = 0; idx != i; ++idx) {
         first_index += m_(idx) * (m_(idx) - 1) / 2;
       }
-      int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
+      arma::uword last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
 
       Ti = pan::ltrimat(m_(i), -Wgma_.subvec(first_index, last_index));
     }
@@ -242,14 +242,14 @@ inline arma::vec MCD::get_mu(arma::uword i) const {
   if (i == 0)
     mui = Xbta_.subvec(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     mui = Xbta_.subvec(index, index + m_(i) - 1);
   }
   return mui;
 }
 
 inline arma::mat MCD::get_Sigma(arma::uword i) const {
-  int debug = 0;
+  arma::uword debug = 0;
 
   arma::mat Ti = get_T(i);
   arma::mat Ti_inv = arma::pinv(Ti);
@@ -263,7 +263,7 @@ inline arma::mat MCD::get_Sigma(arma::uword i) const {
 }
 
 inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
-  int debug = 0;
+  arma::uword debug = 0;
 
   arma::mat Ti = get_T(i);
   arma::mat Di = get_D(i);
@@ -277,7 +277,7 @@ inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
 }
 
 inline void MCD::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
-  int debug = 0;
+  arma::uword debug = 0;
 
   arma::mat Ti;
   get_T(i, Ti);
@@ -297,7 +297,7 @@ inline arma::vec MCD::get_Resid(arma::uword i) const {
   if (i == 0)
     ri = Resid_.subvec(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     ri = Resid_.subvec(index, index + m_(i) - 1);
   }
   return ri;
@@ -307,18 +307,18 @@ inline void MCD::get_Resid(arma::uword i, arma::vec& ri) const {
   if (i == 0)
     ri = Resid_.subvec(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     ri = Resid_.subvec(index, index + m_(i) - 1);
   }
 }
 
 inline double MCD::operator()(const arma::vec& x) {
-  int debug = 0;
+  arma::uword debug = 0;
 
   if (debug) Rcpp::Rcout << "UpdateJmcm(x)" << std::endl;
   UpdateJmcm(x);
 
-  int i, n_sub = m_.n_elem;
+  arma::uword i, n_sub = m_.n_elem;
   double result = 0.0;
 
   // arma::wall_clock timer;
@@ -349,7 +349,7 @@ inline double MCD::operator()(const arma::vec& x) {
 inline void MCD::Gradient(const arma::vec& x, arma::vec& grad) {
   UpdateJmcm(x);
 
-  int n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
+  arma::uword n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
 
   arma::vec grad1, grad2, grad3;
 
@@ -385,9 +385,9 @@ inline void MCD::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void MCD::Grad1(arma::vec& grad1) {
-  int debug = 0;
+  arma::uword debug = 0;
 
-  int i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   grad1 = arma::zeros<arma::vec>(n_bta);
 
   if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
@@ -405,9 +405,9 @@ inline void MCD::Grad1(arma::vec& grad1) {
 }
 
 inline void MCD::Grad2(arma::vec& grad2) {
-  int debug = 0;
+  arma::uword debug = 0;
 
-  int i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
+  arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
   grad2 = arma::zeros<arma::vec>(n_lmd);
 
   if (debug) Rcpp::Rcout << "Update grad2" << std::endl;
@@ -432,9 +432,9 @@ inline void MCD::Grad2(arma::vec& grad2) {
 }
 
 inline void MCD::Grad3(arma::vec& grad3) {
-  int debug = 0;
+  arma::uword debug = 0;
 
-  int i, n_sub = m_.n_elem, n_gma = W_.n_cols;
+  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
   grad3 = arma::zeros<arma::vec>(n_gma);
 
   if (debug) Rcpp::Rcout << "Update grad3" << std::endl;
@@ -461,7 +461,7 @@ inline void MCD::Grad3(arma::vec& grad3) {
 }
 
 inline void MCD::UpdateJmcm(const arma::vec& x) {
-  int debug = 0;
+  arma::uword debug = 0;
   bool update = true;
 
   switch (free_param_) {
@@ -499,9 +499,9 @@ inline void MCD::UpdateJmcm(const arma::vec& x) {
 }
 
 inline void MCD::UpdateParam(const arma::vec& x) {
-  int n_bta = X_.n_cols;
-  int n_lmd = Z_.n_cols;
-  int n_gma = W_.n_cols;
+  arma::uword n_bta = X_.n_cols;
+  arma::uword n_lmd = Z_.n_cols;
+  arma::uword n_gma = W_.n_cols;
 
   switch (free_param_) {
     case 0:
@@ -532,7 +532,7 @@ inline void MCD::UpdateParam(const arma::vec& x) {
 }
 
 inline void MCD::UpdateModel() {
-  int debug = 0;
+  arma::uword debug = 0;
 
   if (debug) Rcpp::Rcout << "update Xbta Zlmd Wgam r" << std::endl;
 
@@ -588,7 +588,7 @@ inline arma::mat MCD::get_G(arma::uword i) const {
   if (i == 0)
     Gi = G_.rows(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Gi = G_.rows(index, index + m_(i) - 1);
   }
   return Gi;
@@ -598,7 +598,7 @@ inline void MCD::get_G(arma::uword i, arma::mat& Gi) const {
   if (i == 0)
     Gi = G_.rows(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Gi = G_.rows(index, index + m_(i) - 1);
   }
 }
@@ -608,7 +608,7 @@ inline arma::vec MCD::get_TResid(arma::uword i) const {
   if (i == 0)
     Tiri = TResid_.subvec(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Tiri = TResid_.subvec(index, index + m_(i) - 1);
   }
   return Tiri;
@@ -618,13 +618,13 @@ inline void MCD::get_TResid(arma::uword i, arma::vec& Tiri) const {
   if (i == 0)
     Tiri = TResid_.subvec(0, m_(0) - 1);
   else {
-    int index = arma::sum(m_.subvec(0, i - 1));
+    arma::uword index = arma::sum(m_.subvec(0, i - 1));
     Tiri = TResid_.subvec(index, index + m_(i) - 1);
   }
 }
 
 inline void MCD::UpdateG() {
-  int i, j, n_sub = m_.n_elem;
+  arma::uword i, j, n_sub = m_.n_elem;
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Gi = arma::zeros<arma::mat>(m_(i), W_.n_cols);
@@ -633,25 +633,25 @@ inline void MCD::UpdateG() {
     arma::vec ri;
     get_Resid(i, ri);
     for (j = 1; j != m_(i); ++j) {
-      int index = 0;
+      arma::uword index = 0;
       if (j == 1)
         index = 0;
       else {
-        for (int idx = 1; idx < j; ++idx) index += idx;
+        for (arma::uword idx = 1; idx < j; ++idx) index += idx;
       }
       Gi.row(j) = ri.subvec(0, j - 1).t() * Wi.rows(index, index + j - 1);
     }
     if (i == 0)
       G_.rows(0, m_(0) - 1) = Gi;
     else {
-      int index = arma::sum(m_.subvec(0, i - 1));
+      arma::uword index = arma::sum(m_.subvec(0, i - 1));
       G_.rows(index, index + m_(i) - 1) = Gi;
     }
   }
 }
 
 inline void MCD::UpdateTResid() {
-  int i, n_sub = m_.n_elem;
+  arma::uword i, n_sub = m_.n_elem;
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec ri;
@@ -662,7 +662,7 @@ inline void MCD::UpdateTResid() {
     if (i == 0)
       TResid_.subvec(0, m_(0) - 1) = Tiri;
     else {
-      int index = arma::sum(m_.subvec(0, i - 1));
+      arma::uword index = arma::sum(m_.subvec(0, i - 1));
       TResid_.subvec(index, index + m_(i) - 1) = Tiri;
     }
   }

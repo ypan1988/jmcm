@@ -119,7 +119,7 @@ inline arma::mat JmcmBase::get_Z(arma::uword i) const {
   return Zi;
 }
 
-inline arma::mat JmcmBase::get_W(const arma::uword i) const {
+inline arma::mat JmcmBase::get_W(arma::uword i) const {
   arma::mat Wi;
   if (m_(i) != 1) {
     if (i == 0) {
@@ -128,7 +128,7 @@ inline arma::mat JmcmBase::get_W(const arma::uword i) const {
       Wi = W_.rows(first_index, last_index);
     } else {
       int first_index = 0;
-      for (int idx = 0; idx != i; ++idx) {
+      for (arma::uword idx = 0; idx != i; ++idx) {
         first_index += m_(idx) * (m_(idx) - 1) / 2;
       }
       int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
