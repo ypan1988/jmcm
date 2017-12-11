@@ -25,13 +25,6 @@ class MCD : public JmcmBase {
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void set_free_param(arma::uword n) { free_param_ = n; }
-  void set_theta(const arma::vec& x);
-  void set_beta(const arma::vec& x);
-  void set_lambda(const arma::vec& x);
-  void set_gamma(const arma::vec& x);
-
-  void UpdateBeta();
   void UpdateLambda(const arma::vec& x);
   void UpdateGamma();
 
@@ -57,18 +50,9 @@ class MCD : public JmcmBase {
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 
-  void set_mean(const arma::vec& mean) {
-    cov_only_ = true;
-    mean_ = mean;
-  }
-
  private:
   arma::mat G_;
   arma::vec TResid_;
-
-  arma::uword free_param_;
-  bool cov_only_;
-  arma::vec mean_;
 
   arma::mat get_G(arma::uword i) const;
   arma::vec get_TResid(arma::uword i) const;
@@ -85,69 +69,14 @@ inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
   arma::uword debug = 0;
 
   if (debug) Rcpp::Rcout << "Creating MCD object" << std::endl;
-  // m_.print("m = ");
 
   arma::uword N = Y_.n_rows;
-  //arma::uword n_bta = X_.n_cols;
-  //arma::uword n_lmd = Z_.n_cols;
   arma::uword n_gma = W_.n_cols;
 
   G_ = arma::zeros<arma::mat>(N, n_gma);
   TResid_ = arma::zeros<arma::vec>(N);
 
-  free_param_ = 0;
-
-  cov_only_ = false;
-  mean_ = Y_;
-
   if (debug) Rcpp::Rcout << "MCD object created" << std::endl;
-}
-
-inline void MCD::set_theta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 0;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void MCD::set_beta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 1;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void MCD::set_lambda(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 2;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void MCD::set_gamma(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 3;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void MCD::UpdateBeta() {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi = get_X(i);
-    arma::vec Yi = get_Y(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-
-    XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
-  }
-
-  arma::vec beta = XSX.i() * XSY;
-
-  set_beta(beta);
 }
 
 inline void MCD::UpdateLambda(const arma::vec& x) { set_lambda(x); }

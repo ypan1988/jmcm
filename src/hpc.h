@@ -28,12 +28,6 @@ class HPC : public JmcmBase {
   HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void set_free_param(arma::uword n) { free_param_ = n; }
-  void set_theta(const arma::vec& x);
-  void set_beta(const arma::vec& x);
-  void set_lmdgma(const arma::vec& x);
-
-  void UpdateBeta();
   void UpdateLambdaGamma(const arma::vec& x);
 
   arma::mat get_Phi(arma::uword i) const;
@@ -64,21 +58,11 @@ class HPC : public JmcmBase {
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 
-  void set_mean(const arma::vec& mean) {
-    cov_only_ = true;
-    mean_ = mean;
-  }
-
  private:
-  arma::vec lmdgma_;
   arma::vec Telem_;  // elements for the lower triangular matrix T
   arma::vec invTelem_;
   arma::vec TDResid_;
   arma::vec TDResid2_;
-
-  arma::uword free_param_;
-  bool cov_only_;
-  arma::vec mean_;
 
   arma::vec get_TDResid(arma::uword i) const;
   arma::vec get_TDResid2(arma::uword i) const;
@@ -104,63 +88,14 @@ inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
   if (debug) Rcpp::Rcout << "Creating HPC object" << std::endl;
 
   arma::uword N = Y_.n_rows;
-  //arma::uword n_bta = X_.n_cols;
-  arma::uword n_lmd = Z_.n_cols;
-  arma::uword n_gma = W_.n_cols;
 
-  lmdgma_ = arma::zeros<arma::vec>(n_lmd + n_gma);
-  Telem_ = arma::zeros<arma::vec>(W_.n_rows + arma::sum(m_));
-  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + arma::sum(m_));
+  Telem_ = arma::zeros<arma::vec>(W_.n_rows + N);
+  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N);
 
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
 
-  free_param_ = 0;
-
-  cov_only_ = false;
-  mean_ = Y_;
-
   if (debug) Rcpp::Rcout << "HPC object created" << std::endl;
-}
-
-inline void HPC::set_theta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 0;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void HPC::set_beta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 1;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void HPC::set_lmdgma(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 2;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void HPC::UpdateBeta() {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi = get_X(i);
-    arma::vec Yi = get_Y(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-
-    XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
-  }
-
-  arma::vec beta = XSX.i() * XSY;
-
-  set_beta(beta);
 }
 
 inline void HPC::UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
@@ -414,7 +349,7 @@ inline void HPC::Gradient(const arma::vec& x, arma::vec& grad) {
       Grad1(grad);
       break;
 
-    case 2:
+    case 23:
       Grad2(grad);
       break;
 
@@ -504,7 +439,7 @@ inline void HPC::UpdateJmcm(const arma::vec& x) {
       if (arma::min(x == beta_) == 1) update = false;
       break;
 
-    case 2:
+    case 23:
       if (arma::min(x == lmdgma_) == 1) update = false;
       break;
 
@@ -541,7 +476,7 @@ inline void HPC::UpdateParam(const arma::vec& x) {
       beta_ = x;
       break;
 
-    case 2:
+    case 23:
       theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
       lambda_ = x.rows(0, n_lmd - 1);
       gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
@@ -583,7 +518,7 @@ inline void HPC::UpdateModel() {
 
       break;
 
-    case 2:
+    case 23:
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
 

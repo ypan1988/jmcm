@@ -38,8 +38,17 @@ class JmcmBase {
   arma::vec get_beta() const { return beta_; }
   arma::vec get_lambda() const { return lambda_; }
   arma::vec get_gamma() const { return gamma_; }
+  arma::uword get_free_param() const { return free_param_; }
+  
+  void set_theta(const arma::vec& x);
+  void set_beta(const arma::vec& x);
+  void set_lambda(const arma::vec& x);
+  void set_gamma(const arma::vec& x);
+  void set_lmdgma(const arma::vec& x);
+  void set_free_param(arma::uword n) { free_param_ = n; }
 
-  virtual void UpdateBeta() {}
+  // virtual void UpdateBeta() {}
+  void UpdateBeta();
   virtual void UpdateLambda(const arma::vec&) {}
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
@@ -54,20 +63,36 @@ class JmcmBase {
   virtual double operator()(const arma::vec& x) = 0;
   virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
   virtual void UpdateJmcm(const arma::vec& x) = 0;
-
+  
+  void set_mean(const arma::vec& mean) {
+    cov_only_ = true;
+    mean_ = mean;
+  }
+  
  protected:
   arma::vec m_, Y_;
   arma::mat X_, Z_, W_;
   arma::uword method_id_;
 
-  arma::vec theta_, beta_, lambda_, gamma_;
+  arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
+  
+  // free_param_ == 0  ---- beta + lambda + gamma
+  // free_param_ == 1  ---- beta
+  // free_param_ == 2  ---- lambda
+  // free_param_ == 3  ---- gamma
+  // free_param_ == 23 -----lambda + gamma
+  arma::uword free_param_;
+  
+  bool cov_only_;
+  arma::vec mean_;
 };
 
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), method_id_(method_id) {
+    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), method_id_(method_id),
+      free_param_(0), cov_only_(false), mean_(Y) {
   arma::uword N = Y_.n_rows;
   arma::uword n_bta = X_.n_cols;
   arma::uword n_lmd = Z_.n_cols;
@@ -77,6 +102,7 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   beta_ = arma::zeros<arma::vec>(n_bta);
   lambda_ = arma::zeros<arma::vec>(n_lmd);
   gamma_ = arma::zeros<arma::vec>(n_gma);
+  lmdgma_ = arma::zeros<arma::vec>(n_lmd + n_gma);
 
   Xbta_ = arma::zeros<arma::vec>(N);
   Zlmd_ = arma::zeros<arma::vec>(N);
@@ -138,6 +164,63 @@ inline arma::mat JmcmBase::get_W(arma::uword i) const {
   }
 
   return Wi;
+}
+
+inline void JmcmBase::set_theta(const arma::vec& x) {
+  arma::uword fp2 = free_param_;
+  free_param_ = 0;
+  UpdateJmcm(x);
+  free_param_ = fp2;
+}
+
+inline void JmcmBase::set_beta(const arma::vec& x) {
+  arma::uword fp2 = free_param_;
+  free_param_ = 1;
+  UpdateJmcm(x);
+  free_param_ = fp2;
+}
+
+inline void JmcmBase::set_lambda(const arma::vec& x) {
+  arma::uword fp2 = free_param_;
+  free_param_ = 2;
+  UpdateJmcm(x);
+  free_param_ = fp2;
+}
+
+inline void JmcmBase::set_gamma(const arma::vec& x) {
+  arma::uword fp2 = free_param_;
+  free_param_ = 3;
+  UpdateJmcm(x);
+  free_param_ = fp2;
+}
+
+inline void JmcmBase::set_lmdgma(const arma::vec& x) {
+  arma::uword fp2 = free_param_;
+  free_param_ = 23;
+  UpdateJmcm(x);
+  free_param_ = fp2;
+}
+
+inline void JmcmBase::UpdateBeta() {
+  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
+  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
+  
+  for (i = 0; i < n_sub; ++i) {
+    arma::mat Xi = get_X(i);
+    arma::vec Yi = get_Y(i);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    
+    XSX += Xi.t() * Sigmai_inv * Xi;
+    XSY += Xi.t() * Sigmai_inv * Yi;
+  }
+  
+  arma::vec beta = XSX.i() * XSY;
+  
+  arma::uword fp2 = free_param_;
+  free_param_ = 1;
+  UpdateJmcm(beta);  // template method
+  free_param_ = fp2;
 }
 
 }  // namespace jmcm

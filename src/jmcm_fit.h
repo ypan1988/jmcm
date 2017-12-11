@@ -190,7 +190,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
             default: {}
           }
         }
-        jmcm_.set_free_param(2);
+        jmcm_.set_free_param(23);
         bfgs.Optimize(jmcm_, lmdgma);
         jmcm_.set_free_param(0);
         if (trace_) {
