@@ -25,8 +25,8 @@ class MCD : public JmcmBase {
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void UpdateLambda(const arma::vec& x);
-  void UpdateGamma();
+  void UpdateLambda(const arma::vec& x) override;
+  void UpdateGamma() override;
 
   arma::mat get_D(arma::uword i) const override;
   arma::mat get_T(arma::uword i) const override;
@@ -40,13 +40,13 @@ class MCD : public JmcmBase {
   void get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const;
   void get_Resid(arma::uword i, arma::vec& ri) const;
 
-  double operator()(const arma::vec& x);
-  void Gradient(const arma::vec& x, arma::vec& grad);
+  double operator()(const arma::vec& x) override;
+  void Gradient(const arma::vec& x, arma::vec& grad) override;
   void Grad1(arma::vec& grad1);
   void Grad2(arma::vec& grad2);
   void Grad3(arma::vec& grad3);
 
-  void UpdateJmcm(const arma::vec& x);
+  void UpdateJmcm(const arma::vec& x) override;
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 

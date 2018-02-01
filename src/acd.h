@@ -26,7 +26,7 @@ class ACD : public JmcmBase {
       const arma::mat& Z, const arma::mat& W);
 
   //void UpdateBeta();
-  void UpdateLambdaGamma(const arma::vec& x);
+  void UpdateLambdaGamma(const arma::vec& x) override;
 
   arma::mat get_D(arma::uword i) const override;
   arma::mat get_T(arma::uword i) const override;
@@ -40,12 +40,12 @@ class ACD : public JmcmBase {
   void get_invT(arma::uword i, arma::mat& Ti_inv) const;
   void get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv);
 
-  double operator()(const arma::vec& x);
-  void Gradient(const arma::vec& x, arma::vec& grad);
+  double operator()(const arma::vec& x) override;
+  void Gradient(const arma::vec& x, arma::vec& grad) override;
   void Grad1(arma::vec& grad1);
   void Grad2(arma::vec& grad2);
 
-  void UpdateJmcm(const arma::vec& x);
+  void UpdateJmcm(const arma::vec& x) override;
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 

@@ -28,7 +28,7 @@ class HPC : public JmcmBase {
   HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void UpdateLambdaGamma(const arma::vec& x);
+  void UpdateLambdaGamma(const arma::vec& x) override;
 
   arma::mat get_Phi(arma::uword i) const;
   arma::mat get_R(arma::uword i) const;
@@ -49,12 +49,12 @@ class HPC : public JmcmBase {
   void get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const;
   void get_Resid(arma::uword i, arma::vec& ri) const;
 
-  double operator()(const arma::vec& x);
-  void Gradient(const arma::vec& x, arma::vec& grad);
+  double operator()(const arma::vec& x) override;
+  void Gradient(const arma::vec& x, arma::vec& grad) override;
   void Grad1(arma::vec& grad1);
   void Grad2(arma::vec& grad2);
 
-  void UpdateJmcm(const arma::vec& x);
+  void UpdateJmcm(const arma::vec& x) override;
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
 
