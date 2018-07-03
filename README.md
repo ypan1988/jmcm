@@ -24,17 +24,17 @@ Pan J and Pan Y (2017). “jmcm: An R Package for Joint Mean-Covariance Modeling
 
 Corresponding BibTeX entry:
 
-  @Article{,
-    title = {{jmcm}: An {R} Package for Joint Mean-Covariance Modeling
-      of Longitudinal Data},
-    author = {Jianxin Pan and Yi Pan},
-    journal = {Journal of Statistical Software},
-    year = {2017},
-    volume = {82},
-    number = {9},
-    pages = {1--29},
-    doi = {10.18637/jss.v082.i09},
-  }
+    @Article{,
+      title = {{jmcm}: An {R} Package for Joint Mean-Covariance Modeling
+        of Longitudinal Data},
+      author = {Jianxin Pan and Yi Pan},
+      journal = {Journal of Statistical Software},
+      year = {2017},
+      volume = {82},
+      number = {9},
+      pages = {1--29},
+      doi = {10.18637/jss.v082.i09},
+    }
 
 ## Installation
 
