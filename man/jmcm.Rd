@@ -5,7 +5,8 @@
 \title{Fit Joint Mean-Covariance Models}
 \usage{
 jmcm(formula, data = NULL, triple = c(3, 3, 3), cov.method = c("mcd",
-  "acd", "hpc"), control = jmcmControl(), start = NULL)
+  "acd", "hpc"), optim.method = c("default", "BFGS"),
+  control = jmcmControl(), start = NULL)
 }
 \arguments{
 \item{formula}{a two-sided linear formula object describing the covariates
@@ -24,6 +25,8 @@ structure, variances and angles when 'hpc' is specified for cov.method.}
 \item{cov.method}{covariance structure modelling method,
 choose 'mcd' (Pourahmadi 1999), 'acd' (Chen and Dunson 2013) or 'hpc'
 (Zhang et al. 2015).}
+
+\item{optim.method}{optimization method, choose 'default' or 'BFGS' (vmmin in R)}
 
 \item{control}{a list (of correct class, resulting from jmcmControl())
 containing control parameters, see the *jmcmControl documentation for

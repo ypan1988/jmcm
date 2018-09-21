@@ -34,7 +34,7 @@ class BFGS : public LineSearch<T> {
   double f_min_;
 };  // class BFGS
 
-#include "bfgs-impl.h"
+#include "bfgs_impl.h"
 
 }  // namespace pan
 

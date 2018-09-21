@@ -1,8 +1,20 @@
-// jmcm_base.h: base class for three joint mean-covariance models (MCD/ACD/HPC)
+//  jmcm_base.h: base class for three joint mean-covariance models (MCD/ACD/HPC)
+//  This file is part of jmcm.
 //
-// Copyright (C) 2015-2017 Yi Pan
+//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
 //
-// This file is part of jmcm.
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  A copy of the GNU General Public License is available at
+//  https://www.R-project.org/Licenses/
 
 #ifndef JMCM_SRC_JMCM_BASE_H_
 #define JMCM_SRC_JMCM_BASE_H_
@@ -10,8 +22,11 @@
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
+#include "roptim.h"
+
 namespace jmcm {
-class JmcmBase {
+
+class JmcmBase : public roptim::Functor {
  public:
   JmcmBase() = delete;
   JmcmBase(const JmcmBase&) = delete;
@@ -39,7 +54,7 @@ class JmcmBase {
   arma::vec get_lambda() const { return lambda_; }
   arma::vec get_gamma() const { return gamma_; }
   arma::uword get_free_param() const { return free_param_; }
-  
+
   void set_theta(const arma::vec& x);
   void set_beta(const arma::vec& x);
   void set_lambda(const arma::vec& x);
@@ -60,15 +75,15 @@ class JmcmBase {
   virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
   virtual arma::vec get_Resid(arma::uword i) const = 0;
 
-  virtual double operator()(const arma::vec& x) = 0;
+  // virtual double operator()(const arma::vec& x) = 0;
   virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
   virtual void UpdateJmcm(const arma::vec& x) = 0;
-  
+
   void set_mean(const arma::vec& mean) {
     cov_only_ = true;
     mean_ = mean;
   }
-  
+
  protected:
   arma::vec m_, Y_;
   arma::mat X_, Z_, W_;
@@ -76,14 +91,14 @@ class JmcmBase {
 
   arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
-  
+
   // free_param_ == 0  ---- beta + lambda + gamma
   // free_param_ == 1  ---- beta
   // free_param_ == 2  ---- lambda
   // free_param_ == 3  ---- gamma
   // free_param_ == 23 -----lambda + gamma
   arma::uword free_param_;
-  
+
   bool cov_only_;
   arma::vec mean_;
 };
@@ -91,8 +106,15 @@ class JmcmBase {
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), method_id_(method_id),
-      free_param_(0), cov_only_(false), mean_(Y) {
+    : m_(m),
+      Y_(Y),
+      X_(X),
+      Z_(Z),
+      W_(W),
+      method_id_(method_id),
+      free_param_(0),
+      cov_only_(false),
+      mean_(Y) {
   arma::uword N = Y_.n_rows;
   arma::uword n_bta = X_.n_cols;
   arma::uword n_lmd = Z_.n_cols;
@@ -205,18 +227,18 @@ inline void JmcmBase::UpdateBeta() {
   arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
   arma::vec XSY = arma::zeros<arma::vec>(n_bta);
-  
+
   for (i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec Yi = get_Y(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
-    
+
     XSX += Xi.t() * Sigmai_inv * Xi;
     XSY += Xi.t() * Sigmai_inv * Yi;
   }
-  
+
   arma::vec beta = XSX.i() * XSY;
-  
+
   arma::uword fp2 = free_param_;
   free_param_ = 1;
   UpdateJmcm(beta);  // template method

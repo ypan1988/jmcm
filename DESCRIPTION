@@ -16,7 +16,7 @@ LazyData: TRUE
 SystemRequirements: C++11
 Depends: R (>= 3.2.2)
 Imports: Formula, methods, Rcpp (>= 0.12.14)
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, roptim
 RoxygenNote: 6.0.1
 NeedsCompilation: yes
 Author: Jianxin Pan [aut, cre],

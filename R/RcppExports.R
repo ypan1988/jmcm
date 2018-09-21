@@ -16,12 +16,14 @@
 #'       idea of profile likelihood or not.
 #'@param errormsg whether or not the error message should be print.
 #'@param covonly estimate the covariance structure only, and use given mean.
+#'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+#'       R).
 #'@seealso \code{\link{acd_estimation}} for joint mean covariance model fitting
 #'         based on ACD, \code{\link{hpc_estimation}} for joint mean covariance
 #'         model fitting based on HPC.
 #'@export
-mcd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('_jmcm_mcd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+mcd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE, optim_method = "default") {
+    .Call('_jmcm_mcd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly, optim_method)
 }
 
 #'@title Fit Joint Mean-Covariance Models based on ACD
@@ -39,12 +41,14 @@ mcd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = 
 #'       idea of profile likelihood or not.
 #'@param errormsg whether or not the error message should be print.
 #'@param covonly estimate the covariance structure only, and use given mean.
+#'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+#'       R).
 #'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 #'         based on MCD, \code{\link{hpc_estimation}} for joint mean covariance
 #'         model fitting based on HPC.
 #'@export
-acd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('_jmcm_acd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+acd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE, optim_method = "default") {
+    .Call('_jmcm_acd_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly, optim_method)
 }
 
 #'@title Fit Joint Mean-Covariance Models based on HPC
@@ -62,11 +66,13 @@ acd_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = 
 #'       idea of profile likelihood or not.
 #'@param errormsg whether or not the error message should be print.
 #'@param covonly estimate the covariance structure only, and use given mean.
+#'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+#'       R).
 #'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 #'         based on MCD, \code{\link{acd_estimation}} for joint mean covariance
 #'         model fitting based on ACD.
 #'@export
-hpc_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE) {
-    .Call('_jmcm_hpc_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly)
+hpc_estimation <- function(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE, errormsg = FALSE, covonly = FALSE, optim_method = "default") {
+    .Call('_jmcm_hpc_estimation', PACKAGE = 'jmcm', m, Y, X, Z, W, start, mean, trace, profile, errormsg, covonly, optim_method)
 }
 

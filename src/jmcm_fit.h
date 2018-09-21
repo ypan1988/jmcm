@@ -1,3 +1,22 @@
+//  jmcm_base.h: model fitting for three joint mean-covariance models
+//               (MCD/ACD/HPC)
+//  This file is part of jmcm.
+//
+//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  A copy of the GNU General Public License is available at
+//  https://www.R-project.org/Licenses/
+
 #ifndef JMCM_SRC_JMCM_FIT_H_
 #define JMCM_SRC_JMCM_FIT_H_
 
@@ -5,6 +24,7 @@
 #include <RcppArmadillo.h>
 
 #include "bfgs.h"
+#include "roptim.h"
 
 template <typename JMCM>
 class JmcmFit {
@@ -16,14 +36,16 @@ class JmcmFit {
   JmcmFit(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
           const arma::mat& Z, const arma::mat& W, arma::vec start,
           arma::vec mean, bool trace = false, bool profile = true,
-          bool errormsg = false, bool covonly = false)
+          bool errormsg = false, bool covonly = false,
+          std::string optim_method = "default")
       : jmcm_(m, Y, X, Z, W),
         start_(start),
         mean_(mean),
         trace_(trace),
         profile_(profile),
         errormsg_(errormsg),
-        covonly_(covonly) {
+        covonly_(covonly),
+        optim_method_(optim_method) {
     method_id_ = jmcm_.get_method_id();
     f_min_ = 0.0;
     n_iters_ = 0;
@@ -38,6 +60,7 @@ class JmcmFit {
   arma::uword method_id_;
   arma::vec start_, mean_;
   bool trace_, profile_, errormsg_, covonly_;
+  std::string optim_method_;
 
   double f_min_;
   arma::uword n_iters_;
@@ -61,14 +84,21 @@ arma::vec JmcmFit<JMCM>::Optimize() {
   pan::LineSearch<JMCM> linesearch;
   linesearch.set_message(errormsg_);
 
-  arma::vec x = start_;
+  roptim::Roptim<JMCM> optim;
 
-  // double f_min = 0.0;
-  // int n_iters = 0;
+  if (optim_method_ == "default") {
+  } else if (optim_method_ == "Nelder-Mead" || optim_method_ == "BFGS" ||
+             optim_method_ == "CG" || optim_method_ == "L-BFGS-B") {
+    optim.set_method(optim_method_);
+  }
+
+  arma::vec x = start_;
 
   if (profile_) {
     bfgs.set_trace(trace_);
     bfgs.set_message(errormsg_);
+
+    optim.control.trace = trace_;
 
     // Maximum number of iterations
     const int kIterMax = 200;
@@ -157,7 +187,10 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         }
 
         jmcm_.set_free_param(2);
-        bfgs.Optimize(jmcm_, lmd);
+        if (optim_method_ == "default")
+          bfgs.Optimize(jmcm_, lmd);
+        else
+          optim.minimize(jmcm_, lmd);
         jmcm_.set_free_param(0);
 
         if (trace_) {
@@ -191,7 +224,10 @@ arma::vec JmcmFit<JMCM>::Optimize() {
           }
         }
         jmcm_.set_free_param(23);
-        bfgs.Optimize(jmcm_, lmdgma);
+        if (optim_method_ == "default")
+          bfgs.Optimize(jmcm_, lmdgma);
+        else
+          optim.minimize(jmcm_, lmdgma);
         jmcm_.set_free_param(0);
         if (trace_) {
           Rcpp::Rcout << "--------------------------------------------------"
@@ -206,11 +242,17 @@ arma::vec JmcmFit<JMCM>::Optimize() {
       p = xnew - x;
     }
   } else {
-    bfgs.set_trace(trace_);
-    bfgs.set_message(errormsg_);
-    bfgs.Optimize(jmcm_, x);
-    f_min_ = bfgs.f_min();
-    n_iters_ = bfgs.n_iters();
+    if (optim_method_ == "default") {
+      bfgs.set_trace(trace_);
+      bfgs.set_message(errormsg_);
+      bfgs.Optimize(jmcm_, x);
+      f_min_ = bfgs.f_min();
+      n_iters_ = bfgs.n_iters();
+    } else {
+      optim.control.trace = trace_;
+      optim.minimize(jmcm_, x);
+      f_min_ = optim.value();
+    }
   }
 
   return x;

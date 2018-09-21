@@ -22,7 +22,7 @@
 # - Build the LLVM tools from source. See the documentation at <http://llvm.org>.
 
 # Change this if your clang-format executable is somewhere else
-CLANG_FORMAT="/usr/bin/clang-format"
+CLANG_FORMAT="/usr/local/bin/clang-format"
 
 for DIRECTORY in src
 do

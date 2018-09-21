@@ -1,7 +1,20 @@
+//  external.cpp: externally .Call'able functions in jmcm
+//  This file is part of jmcm.
 //
-// Copyright (C) 2015-2016 The University of Manchester
+//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
 //
-// Written by Yi Pan - ypan1988@gmail.com
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  A copy of the GNU General Public License is available at
+//  https://www.R-project.org/Licenses/
 
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
@@ -27,6 +40,8 @@
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
 //'@param covonly estimate the covariance structure only, and use given mean.
+//'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+//'       R).
 //'@seealso \code{\link{acd_estimation}} for joint mean covariance model fitting
 //'         based on ACD, \code{\link{hpc_estimation}} for joint mean covariance
 //'         model fitting based on HPC.
@@ -35,9 +50,10 @@
 Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
-                          bool errormsg = false, bool covonly = false) {
+                          bool errormsg = false, bool covonly = false,
+                          std::string optim_method = "default") {
   JmcmFit<jmcm::MCD> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly);
+                         covonly, optim_method);
   arma::vec x = fit.Optimize();
   double f_min = fit.get_f_min();
   arma::uword n_iters = fit.get_n_iters();
@@ -77,6 +93,8 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
 //'@param covonly estimate the covariance structure only, and use given mean.
+//'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+//'       R).
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 //'         based on MCD, \code{\link{hpc_estimation}} for joint mean covariance
 //'         model fitting based on HPC.
@@ -85,9 +103,10 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
-                          bool errormsg = false, bool covonly = false) {
+                          bool errormsg = false, bool covonly = false,
+                          std::string optim_method = "default") {
   JmcmFit<jmcm::ACD> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly);
+                         covonly, optim_method);
   arma::vec x = fit.Optimize();
   double f_min = fit.get_f_min();
   arma::uword n_iters = fit.get_n_iters();
@@ -127,6 +146,8 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'       idea of profile likelihood or not.
 //'@param errormsg whether or not the error message should be print.
 //'@param covonly estimate the covariance structure only, and use given mean.
+//'@param optim_method optimization method, choose "default" or "BFGS"(vmmin in
+//'       R).
 //'@seealso \code{\link{mcd_estimation}} for joint mean covariance model fitting
 //'         based on MCD, \code{\link{acd_estimation}} for joint mean covariance
 //'         model fitting based on ACD.
@@ -135,9 +156,10 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
-                          bool errormsg = false, bool covonly = false) {
+                          bool errormsg = false, bool covonly = false,
+                          std::string optim_method = "default") {
   JmcmFit<jmcm::HPC> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly);
+                         covonly, optim_method);
   arma::vec x = fit.Optimize();
   double f_min = fit.get_f_min();
   arma::uword n_iters = fit.get_n_iters();

@@ -28,7 +28,7 @@ class LineSearch {
   bool IsInfOrNaN(double x);
 };  // class LineSearch
 
-#include "linesearch-impl.h"
+#include "linesearch_impl.h"
 
 }  // namespace pan
 

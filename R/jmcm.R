@@ -72,6 +72,7 @@ NULL
 #' @param cov.method covariance structure modelling method,
 #' choose 'mcd' (Pourahmadi 1999), 'acd' (Chen and Dunson 2013) or 'hpc'
 #' (Zhang et al. 2015).
+#' @param optim.method optimization method, choose 'default' or 'BFGS' (vmmin in R)
 #' @param control a list (of correct class, resulting from jmcmControl())
 #' containing control parameters, see the *jmcmControl documentation for
 #' details.
@@ -87,12 +88,16 @@ NULL
 #' @export
 jmcm <- function(formula, data = NULL, triple = c(3, 3, 3),
                  cov.method = c('mcd', 'acd', 'hpc'),
+                 optim.method = c('default','BFGS'),
                  control = jmcmControl(), start = NULL)
 {
   mc <- mcout <- match.call()
 
   if (missing(cov.method))
     stop("cov.method must be specified")
+  
+  if (missing(optim.method))
+    optim.method = "default"    
 
   missCtrl <- missing(control)
   if (!missCtrl && !inherits(control, "jmcmControl"))
@@ -108,9 +113,9 @@ jmcm <- function(formula, data = NULL, triple = c(3, 3, 3),
   args <- eval(mc, parent.frame(1L))
 
   opt <- do.call(optimizeJmcm,
-    c(args, cov.method, list(control=control, start=start)))
+    c(args, cov.method, optim.method, list(control=control, start=start)))
 
-  mkJmcmMod(opt=opt, args=args, triple=triple, cov.method=cov.method, mc=mcout)
+  mkJmcmMod(opt=opt, args=args, triple=triple, cov.method=cov.method, optim.method=optim.method, mc=mcout)
 }
 
 #' @title Modular Functions for Joint Mean Covariance Model Fits
@@ -130,6 +135,7 @@ jmcm <- function(formula, data = NULL, triple = c(3, 3, 3),
 #' @param cov.method covariance structure modelling method,
 #' choose 'mcd' (Pourahmadi 1999), 'acd' (Chen and Dunson 2013) or 'hpc'
 #' (Zhang et al. 2015).
+#' @param optim.method optimization method, choose 'default' or 'BFGS' (vmmin in R)
 #' @param control a list (of correct class, resulting from jmcmControl())
 #' containing control parameters, see the *jmcmControl documentation for
 #' details.
@@ -152,6 +158,7 @@ NULL
 #' @export
 ldFormula <- function(formula, data = NULL, triple = c(3,3,3),
                       cov.method = c('mcd', 'acd', 'hpc'),
+                      optim.method = c("default", "BFGS"),
                       control = jmcmControl(), start = NULL)
 {
   mf <- mc <- match.call()
@@ -243,7 +250,7 @@ ldFormula <- function(formula, data = NULL, triple = c(3,3,3),
 
 #' @rdname modular
 #' @export
-optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
+optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, optim.method, control, start)
 {
   missStart <- is.null(start)
 
@@ -268,7 +275,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- mcd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
+    est <- mcd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg, FALSE, optim.method)
   }
 
   if (cov.method == 'acd') {
@@ -285,7 +292,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- acd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
+    est <- acd_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg, FALSE, optim.method)
   }
 
   if (cov.method == 'hpc') {
@@ -302,7 +309,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
       if(anyNA(start)) stop("failed to find an initial value with lm(). NA detected.")
     }
 
-    est <- hpc_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg)
+    est <- hpc_estimation(m, Y, X, Z, W, start, Y, control$trace, control$profile, control$errormsg, FALSE, optim.method)
   }
 
   if (!(control$ignore.const.term)) {
@@ -316,7 +323,7 @@ optimizeJmcm <- function(m, Y, X, Z, W, time, cov.method, control, start)
 
 #' @rdname modular
 #' @export
-mkJmcmMod <- function(opt, args, triple, cov.method, mc)
+mkJmcmMod <- function(opt, args, triple, cov.method, optim.method, mc)
 {
   if(missing(mc))
     mc <- match.call()

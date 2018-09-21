@@ -5,7 +5,7 @@
 \title{Fit Joint Mean-Covariance Models based on ACD}
 \usage{
 acd_estimation(m, Y, X, Z, W, start, mean, trace = FALSE, profile = TRUE,
-  errormsg = FALSE, covonly = FALSE)
+  errormsg = FALSE, covonly = FALSE, optim_method = "default")
 }
 \arguments{
 \item{m}{an integer vector of numbers of measurements for subject.}
@@ -31,6 +31,9 @@ idea of profile likelihood or not.}
 \item{errormsg}{whether or not the error message should be print.}
 
 \item{covonly}{estimate the covariance structure only, and use given mean.}
+
+\item{optim_method}{optimization method, choose "default" or "BFGS"(vmmin in
+R).}
 }
 \description{
 Fit joint mean-covariance models based on ACD.
