@@ -20,6 +20,8 @@
 #ifndef JMCM_SRC_ACD_H_
 #define JMCM_SRC_ACD_H_
 
+#include <algorithm>  // std::equal
+
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
@@ -82,17 +84,11 @@ class ACD : public JmcmBase {
 inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 1) {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "Creating ACD object" << std::endl;
-
   arma::uword N = Y_.n_rows;
 
   invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N);
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
-
-  if (debug) Rcpp::Rcout << "ACD object created" << std::endl;
 }
 
 inline void ACD::UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
@@ -236,27 +232,17 @@ inline void ACD::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) {
 }
 
 inline double ACD::operator()(const arma::vec& x) {
-  arma::uword debug = 0;
-  if (debug) Rcpp::Rcout << "UpdateJmcm..." << std::endl;
   UpdateJmcm(x);
-
-  if (debug) Rcpp::Rcout << "UpdateJmcm finished..." << std::endl;
 
   arma::uword i, n_sub = m_.n_elem;
   double result = 0.0;
 
-  //#pragma omp parallel for reduction(+:result)
   for (i = 0; i < n_sub; ++i) {
     arma::vec ri = get_Resid(i);
-    //	    arma::mat Sigmai_inv = get_Sigma_inv(i);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
     result += arma::as_scalar(ri.t() * Sigmai_inv * ri);
-    if (result < 0) {
-      Rcpp::Rcout << "result = " << result << std::endl;
-    }
   }
-  if (debug) Rcpp::Rcout << "After for loop" << std::endl;
 
   result += 2 * arma::sum(arma::log(arma::exp(Zlmd_ / 2)));
 
@@ -296,17 +282,12 @@ inline void ACD::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void ACD::Grad1(arma::vec& grad1) {
-  arma::uword debug = 0;
-
   arma::uword n_sub = m_.n_elem, n_bta = X_.n_cols;
   grad1 = arma::zeros<arma::vec>(n_bta);
-
-  if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
 
   for (arma::uword i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
-    // arma::mat Sigmai_inv = get_Sigma_inv(i);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
     grad1 += Xi.t() * Sigmai_inv * ri;
@@ -316,14 +297,10 @@ inline void ACD::Grad1(arma::vec& grad1) {
 }
 
 inline void ACD::Grad2(arma::vec& grad2) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
   grad2 = arma::zeros<arma::vec>(n_lmd + n_gma);
   arma::vec grad2_lmd = arma::zeros<arma::vec>(n_lmd);
   arma::vec grad2_gma = arma::zeros<arma::vec>(n_gma);
-
-  if (debug) Rcpp::Rcout << "Update grad2" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
@@ -376,11 +353,8 @@ inline void ACD::UpdateJmcm(const arma::vec& x) {
   }
 
   if (update) {
-    if (debug) Rcpp::Rcout << "UpdateParam..." << std::endl;
     UpdateParam(x);
-    if (debug) Rcpp::Rcout << "UpdateModel..." << std::endl;
     UpdateModel();
-    if (debug) Rcpp::Rcout << "Update Finished..." << std::endl;
   } else {
     if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
   }
@@ -418,16 +392,13 @@ inline void ACD::UpdateParam(const arma::vec& x) {
 }
 
 inline void ACD::UpdateModel() {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "update Xbta Zlmd Wgam r" << std::endl;
-
   switch (free_param_) {
     case 0:
       if (cov_only_)
         Xbta_ = mean_;
       else
         Xbta_ = X_ * beta_;
+
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;

@@ -23,6 +23,8 @@
 
 #include <cmath>
 
+#include <algorithm>  // std::equal
+
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
@@ -95,10 +97,6 @@ class HPC : public JmcmBase {
 inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 2) {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "Creating HPC object" << std::endl;
-
   arma::uword N = Y_.n_rows;
 
   Telem_ = arma::zeros<arma::vec>(W_.n_rows + N);
@@ -106,8 +104,6 @@ inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
 
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
-
-  if (debug) Rcpp::Rcout << "HPC object created" << std::endl;
 }
 
 inline void HPC::UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
@@ -371,19 +367,13 @@ inline void HPC::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void HPC::Grad1(arma::vec& grad1) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   grad1 = arma::zeros<arma::vec>(n_bta);
 
-  if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
-
   for (i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
-    // arma::vec ri = get_Resid(i);
     arma::vec ri;
     get_Resid(i, ri);
-    // arma::mat Sigmai_inv = get_Sigma_inv(i);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
     grad1 += Xi.t() * Sigmai_inv * ri;
@@ -393,25 +383,19 @@ inline void HPC::Grad1(arma::vec& grad1) {
 }
 
 inline void HPC::Grad2(arma::vec& grad2) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
   grad2 = arma::zeros<arma::vec>(n_lmd + n_gma);
   arma::vec grad2_lmd = arma::zeros<arma::vec>(n_lmd);
   arma::vec grad2_gma = arma::zeros<arma::vec>(n_gma);
 
-  if (debug) Rcpp::Rcout << "Update grad2" << std::endl;
-
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
-    // arma::vec hi = get_TDResid2(i);
     arma::vec hi;
     get_TDResid2(i, hi);
 
     grad2_lmd += 0.5 * Zi.t() * (hi - one);
 
-    // arma::mat Phii = get_Phi(i);
     arma::mat Phii;
     get_Phi(i, Phii);
     // arma::mat Ti = get_T(i);
@@ -460,9 +444,7 @@ inline void HPC::UpdateJmcm(const arma::vec& x) {
   }
 
   if (update) {
-    if (debug) Rcpp::Rcout << "UpdateParam..." << std::endl;
     UpdateParam(x);
-    if (debug) Rcpp::Rcout << "UpdateModel..." << std::endl;
     UpdateModel();
   } else {
     if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
@@ -501,16 +483,13 @@ inline void HPC::UpdateParam(const arma::vec& x) {
 }
 
 inline void HPC::UpdateModel() {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "update Xbta Zlmd Wgam r" << std::endl;
-
   switch (free_param_) {
     case 0:
       if (cov_only_)
         Xbta_ = mean_;
       else
         Xbta_ = X_ * beta_;
+
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -525,6 +504,7 @@ inline void HPC::UpdateModel() {
         Xbta_ = mean_;
       else
         Xbta_ = X_ * beta_;
+
       Resid_ = Y_ - Xbta_;
       UpdateTDResid();
 

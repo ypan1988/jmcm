@@ -20,7 +20,7 @@
 #ifndef JMCM_SRC_MCD_H_
 #define JMCM_SRC_MCD_H_
 
-#include <algorithm>
+#include <algorithm>  // std::equal
 
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
@@ -80,17 +80,11 @@ class MCD : public JmcmBase {
 inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 0) {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "Creating MCD object" << std::endl;
-
   arma::uword N = Y_.n_rows;
   arma::uword n_gma = W_.n_cols;
 
   G_ = arma::zeros<arma::mat>(N, n_gma);
   TResid_ = arma::zeros<arma::vec>(N);
-
-  if (debug) Rcpp::Rcout << "MCD object created" << std::endl;
 }
 
 inline void MCD::UpdateLambda(const arma::vec& x) { set_lambda(x); }
@@ -192,46 +186,28 @@ inline arma::vec MCD::get_mu(arma::uword i) const {
 }
 
 inline arma::mat MCD::get_Sigma(arma::uword i) const {
-  arma::uword debug = 0;
-
   arma::mat Ti = get_T(i);
   arma::mat Ti_inv = arma::pinv(Ti);
   arma::mat Di = get_D(i);
 
-  if (debug) {
-    Ti.print("Ti = ");
-    Di.print("Di = ");
-  }
   return Ti_inv * Di * Ti_inv.t();
 }
 
 inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
-  arma::uword debug = 0;
-
   arma::mat Ti = get_T(i);
   arma::mat Di = get_D(i);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
-  if (debug) {
-    Ti.print("Ti = ");
-    Di.print("Di = ");
-  }
   return Ti.t() * Di_inv * Ti;
 }
 
 inline void MCD::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
-  arma::uword debug = 0;
-
   arma::mat Ti;
   get_T(i, Ti);
   arma::mat Di;
   get_D(i, Di);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
-  if (debug) {
-    Ti.print("Ti = ");
-    Di.print("Di = ");
-  }
   Sigmai_inv = Ti.t() * Di_inv * Ti;
 }
 
@@ -256,36 +232,19 @@ inline void MCD::get_Resid(arma::uword i, arma::vec& ri) const {
 }
 
 inline double MCD::operator()(const arma::vec& x) {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "UpdateJmcm(x)" << std::endl;
   UpdateJmcm(x);
 
   arma::uword i, n_sub = m_.n_elem;
   double result = 0.0;
-
-  // arma::wall_clock timer;
-  // timer.tic();
-
-  if (debug) Rcpp::Rcout << "before for loop" << std::endl;
-  //	#pragma omp parallel for reduction(+:result)
   for (i = 0; i < n_sub; ++i) {
-    // arma::vec ri = get_Resid(i);
     arma::vec ri;
     get_Resid(i, ri);
-    // arma::mat Sigmai_inv = get_Sigma_inv(i);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
     result += arma::as_scalar(ri.t() * Sigmai_inv * ri);
   }
 
-  if (debug) Rcpp::Rcout << "after for loop" << std::endl;
-
   result += arma::sum(arma::log(arma::exp(Zlmd_)));
-
-  // double n = timer.toc();
-  // Rcpp::Rcout << "number of seconds: " << n << std::endl;
-
   return result;
 }
 
@@ -328,12 +287,8 @@ inline void MCD::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void MCD::Grad1(arma::vec& grad1) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   grad1 = arma::zeros<arma::vec>(n_bta);
-
-  if (debug) Rcpp::Rcout << "Update grad1" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
@@ -348,24 +303,17 @@ inline void MCD::Grad1(arma::vec& grad1) {
 }
 
 inline void MCD::Grad2(arma::vec& grad2) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
   grad2 = arma::zeros<arma::vec>(n_lmd);
-
-  if (debug) Rcpp::Rcout << "Update grad2" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
-    //	    arma::mat Gi = get_G(i);
 
     arma::mat Di;
     get_D(i, Di);
     arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
-    //	    arma::vec ri = get_Resid(i);
-    //      arma::vec ei = arma::pow(ri - Gi * gamma_, 2);
     arma::vec ei = arma::pow(get_TResid(i), 2);
 
     grad2 += 0.5 * Zi.t() * (Di_inv * ei - one);
@@ -375,12 +323,8 @@ inline void MCD::Grad2(arma::vec& grad2) {
 }
 
 inline void MCD::Grad3(arma::vec& grad3) {
-  arma::uword debug = 0;
-
   arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
   grad3 = arma::zeros<arma::vec>(n_gma);
-
-  if (debug) Rcpp::Rcout << "Update grad3" << std::endl;
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Gi;
@@ -389,10 +333,6 @@ inline void MCD::Grad3(arma::vec& grad3) {
     arma::mat Di;
     get_D(i, Di);
     arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
-    // arma::vec ri = get_Resid(i);
-
-    // grad3 += Gi.t() * Di_inv * (ri - Gi * gamma_);
 
     arma::vec Tiri;
     get_TResid(i, Tiri);
@@ -431,7 +371,6 @@ inline void MCD::UpdateJmcm(const arma::vec& x) {
   if (update) {
     UpdateParam(x);
     UpdateModel();
-
   } else {
     if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
   }
@@ -471,25 +410,19 @@ inline void MCD::UpdateParam(const arma::vec& x) {
 }
 
 inline void MCD::UpdateModel() {
-  arma::uword debug = 0;
-
-  if (debug) Rcpp::Rcout << "update Xbta Zlmd Wgam r" << std::endl;
-
   switch (free_param_) {
     case 0:
       if (cov_only_)
         Xbta_ = mean_;
       else
         Xbta_ = X_ * beta_;
+
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
 
-      if (debug) Rcpp::Rcout << "UpdateG(x)" << std::endl;
       UpdateG();
-      if (debug) Rcpp::Rcout << "UpdateTResid(x)" << std::endl;
       UpdateTResid();
-      if (debug) Rcpp::Rcout << "Update Finished.." << std::endl;
 
       break;
 
@@ -498,6 +431,7 @@ inline void MCD::UpdateModel() {
         Xbta_ = mean_;
       else
         Xbta_ = X_ * beta_;
+
       Resid_ = Y_ - Xbta_;
 
       UpdateG();
