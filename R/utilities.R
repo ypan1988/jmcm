@@ -42,6 +42,9 @@
 #'   \item{\code{"T"}}{the estimated lower triangular matrix for subject i}
 #'   \item{\code{"Sigma"}}{the estimated covariance matrix for subject i}
 #'   \item{\code{"mu"}}{the estimated mean for subject i}
+#'   \item{\code{"n2loglik"}}{the estimated -2l(theta)}
+#'   \item{\code{"grad"}}{the estimated gradient}
+#'   \item{\code{"hess"}}{the estimated Hessian matrix}
 #' }
 #'
 #' @param sub.num refer to i's subject
@@ -61,9 +64,8 @@ getJMCM <- function(object, name, sub.num) UseMethod("getJMCM")
 #' Mean Covariance Model
 #' @export
 getJMCM.jmcmMod <- function(object,
-  name = c("m", "Y", "X", "Z", "W", "D", "T", "Sigma", "mu",
-    "theta", "beta", "lambda", "gamma", "loglik", "BIC", "iter",
-    "triple"),
+  name = c("m", "Y", "X", "Z", "W", "D", "T", "Sigma", "mu", "n2loglik", "grad",
+    "hess", "theta", "beta", "lambda", "gamma", "loglik", "BIC", "iter", "triple"),
   sub.num = 0)
 {
   if(missing(name)) stop("'name' must not be missing")
@@ -102,7 +104,10 @@ getJMCM.jmcmMod <- function(object,
       "loglik" = opt$loglik,
       "BIC"    = opt$BIC,
       "iter"   = opt$iter,
-      "triple" = object@triple)
+      "triple" = object@triple,
+      "n2loglik" = .Call("n2loglik", obj, theta),
+      "grad"     = .Call("grad", obj, theta),
+      "hess"     = .Call("hess", obj, theta))
   } else {
     switch(name,
       "m" = .Call("get_m", obj, sub.num),
@@ -113,49 +118,7 @@ getJMCM.jmcmMod <- function(object,
       "D" = .Call("get_D", obj, theta, sub.num),
       "T" = .Call("get_T", obj, theta, sub.num),
       "Sigma"    = .Call("get_Sigma", obj, theta, sub.num),
-      "mu"       = .Call("get_mu", obj, theta, sub.num),
-      "n2loglik" = .Call("n2loglik", obj, theta),
-      "grad"     = .Call("grad", obj, theta))
-
-    #   switch(name,
-    #          "m" = .Call("MCD__get_m", obj, sub.num),
-    #          "Y" = .Call("MCD__get_Y", obj, sub.num),
-    #          "X" = .Call("MCD__get_X", obj, sub.num),
-    #          "Z" = .Call("MCD__get_Z", obj, sub.num),
-    #          "W" = .Call("MCD__get_W", obj, sub.num),
-    #          "D" = .Call("MCD__get_D", obj, theta, sub.num),
-    #          "T" = .Call("MCD__get_T", obj, theta, sub.num),
-    #          "Sigma"    = .Call("MCD__get_Sigma", obj, theta, sub.num),
-    #          "mu"       = .Call("MCD__get_mu", obj, theta, sub.num),
-    #          "n2loglik" = .Call("MCD__n2loglik", obj, theta),
-    #          "grad"     = .Call("MCD__grad", obj, theta))
-    # } else if (devcomp$dims['ACD']) {
-    #   switch(name,
-    #          "m" = .Call("ACD__get_m", obj, sub.num),
-    #          "Y" = .Call("ACD__get_Y", obj, sub.num),
-    #          "X" = .Call("ACD__get_X", obj, sub.num),
-    #          "Z" = .Call("ACD__get_Z", obj, sub.num),
-    #          "W" = .Call("ACD__get_W", obj, sub.num),
-    #          "D" = .Call("ACD__get_D", obj, theta, sub.num),
-    #          "T" = .Call("ACD__get_T", obj, theta, sub.num),
-    #          "Sigma"    = .Call("ACD__get_Sigma", obj, theta, sub.num),
-    #          "mu"       = .Call("ACD__get_mu", obj, theta, sub.num),
-    #          "n2loglik" = .Call("ACD__n2loglik", obj, theta),
-    #          "grad"     = .Call("ACD__grad", obj, theta))
-    # } else if (devcomp$dims['HPC']) {
-    #   switch(name,
-    #          "m" = .Call("HPC__get_m", obj, sub.num),
-    #          "Y" = .Call("HPC__get_Y", obj, sub.num),
-    #          "X" = .Call("HPC__get_X", obj, sub.num),
-    #          "Z" = .Call("HPC__get_Z", obj, sub.num),
-    #          "W" = .Call("HPC__get_W", obj, sub.num),
-    #          "D" = .Call("HPC__get_D", obj, theta, sub.num),
-    #          "T" = .Call("HPC__get_T", obj, theta, sub.num),
-    #          "Sigma"    = .Call("HPC__get_Sigma", obj, theta, sub.num),
-    #          "mu"       = .Call("HPC__get_mu", obj, theta, sub.num),
-    #          "n2loglik" = .Call("HPC__n2loglik", obj, theta),
-    #          "grad"     = .Call("HPC__grad", obj, theta))
-    # }
+      "mu"       = .Call("get_mu", obj, theta, sub.num))
   }
 }
 

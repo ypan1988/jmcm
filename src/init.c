@@ -22,6 +22,7 @@ extern SEXP get_mu(SEXP, SEXP, SEXP);
 extern SEXP get_Sigma(SEXP, SEXP, SEXP);
 extern SEXP n2loglik(SEXP, SEXP);
 extern SEXP grad(SEXP, SEXP);
+extern SEXP hess(SEXP, SEXP);
 extern SEXP _jmcm_mcd_estimation(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _jmcm_acd_estimation(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP _jmcm_hpc_estimation(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
@@ -41,6 +42,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"get_Sigma",            (DL_FUNC) &get_Sigma,             3},
     {"n2loglik",             (DL_FUNC) &n2loglik,              2},
     {"grad",                 (DL_FUNC) &grad,                  2},
+    {"hess",                 (DL_FUNC) &hess,                  2},
     {"_jmcm_mcd_estimation", (DL_FUNC) &_jmcm_mcd_estimation, 12},
     {"_jmcm_acd_estimation", (DL_FUNC) &_jmcm_acd_estimation, 12},
     {"_jmcm_hpc_estimation", (DL_FUNC) &_jmcm_hpc_estimation, 12},

@@ -9,8 +9,8 @@ Covariance Model}
 getJMCM(object, name, sub.num)
 
 \method{getJMCM}{jmcmMod}(object, name = c("m", "Y", "X", "Z", "W", "D", "T",
-  "Sigma", "mu", "theta", "beta", "lambda", "gamma", "loglik", "BIC", "iter",
-  "triple"), sub.num = 0)
+  "Sigma", "mu", "n2loglik", "grad", "hess", "theta", "beta", "lambda", "gamma",
+  "loglik", "BIC", "iter", "triple"), sub.num = 0)
 }
 \arguments{
 \item{object}{a fitted joint mean covariance model of class "jmcmMod", i.e.,
@@ -52,6 +52,9 @@ When sub.num is specified, possible values are:
   \item{\code{"T"}}{the estimated lower triangular matrix for subject i}
   \item{\code{"Sigma"}}{the estimated covariance matrix for subject i}
   \item{\code{"mu"}}{the estimated mean for subject i}
+  \item{\code{"n2loglik"}}{the estimated -2l(theta)}
+  \item{\code{"grad"}}{the estimated gradient}
+  \item{\code{"hess"}}{the estimated Hessian matrix}
 }}
 
 \item{sub.num}{refer to i's subject}
