@@ -360,15 +360,15 @@ inline void ACD::UpdateJmcm(const arma::vec& x) {
 
   switch (free_param_) {
     case 0:
-      if (arma::min(x == theta_) == 1) update = false;
+      if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
       break;
 
     case 1:
-      if (arma::min(x == beta_) == 1) update = false;
+      if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
       break;
 
     case 23:
-      if (arma::min(x == lmdgma_) == 1) update = false;
+      if (std::equal(x.cbegin(), x.cend(), lmdgma_.cbegin())) update = false;
       break;
 
     default:

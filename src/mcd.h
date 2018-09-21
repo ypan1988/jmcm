@@ -20,6 +20,8 @@
 #ifndef JMCM_SRC_MCD_H_
 #define JMCM_SRC_MCD_H_
 
+#include <algorithm>
+
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
@@ -407,23 +409,19 @@ inline void MCD::UpdateJmcm(const arma::vec& x) {
 
   switch (free_param_) {
     case 0:
-      if (arma::min(x == theta_) == 1) update = false;
-
+      if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
       break;
 
     case 1:
-      if (arma::min(x == beta_) == 1) update = false;
-
+      if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
       break;
 
     case 2:
-      if (arma::min(x == lambda_) == 1) update = false;
-
+      if (std::equal(x.cbegin(), x.cend(), lambda_.cbegin())) update = false;
       break;
 
     case 3:
-      if (arma::min(x == gamma_) == 1) update = false;
-
+      if (std::equal(x.cbegin(), x.cend(), gamma_.cbegin())) update = false;
       break;
 
     default:
