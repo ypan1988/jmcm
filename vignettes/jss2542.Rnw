@@ -6,6 +6,13 @@
 \usepackage{graphics}
 
 \newcommand{\CORR}{\mathsf{CORR}}
+<<preliminaries,include=FALSE,cache=FALSE,message=FALSE>>=
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE)
+library("knitr")
+library("jmcm")
+library("lattice")
+cattleA <- cattle[cattle$group=='A', ]
+@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -407,25 +414,21 @@ respectively, and $1_{m_i}$ is the $m_i \times 1$ vector of 1's.
 The initial guess $\beta^{(0)}$ can be set by employing a simple linear
 regression:
 
-\begin{CodeChunk}
-\begin{CodeInput}
-R> lm.obj <- lm(Y ~ X - 1)
-R> bta0 <- coef(lm.obj)
-\end{CodeInput}
-\end{CodeChunk}	
+<<mcd-beta-start-value, eval=FALSE>>=
+lm.obj <- lm(Y ~ X - 1)
+bta0 <- coef(lm.obj)
+@
 
 After we exact residuals from the linear model, the starting value
 $\lambda^{(0)}$ is obtained by fitting its linear regression model in
 (\ref{eq:mcdmod}) while $\gamma^{(0)}$ is simply assumed to be a vector of 0's
 so that $T_i$ is constructed as an identity matrix :
 
-\begin{CodeChunk}
-\begin{CodeInput}
-R> resid(lm.obj) -> res
-R> lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
-R> gma0 <- rep(0, lgma)
-\end{CodeInput}
-\end{CodeChunk}
+<<mcd-lambda-gamma-start-value, eval=FALSE>>=
+resid(lm.obj) -> res
+lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
+gma0 <- rep(0, lgma)
+@
 
 We then estimate $\theta$ by minimizing expression in (\ref{eq:n2l1}) via the
 iterative quasi-Newton algorithm, as explained in Section~\ref{subsec:bfgs},
@@ -569,15 +572,13 @@ Since covariance structure of MCD and ACD are quite close, the initial guess of
 parameters $\beta^{(0)}$, $\lambda^{(0)}$ and $\gamma^{(0)}$ in ACD can be
 obtained using the same approach described in initial parameter setting of MCD:
 
-\begin{CodeChunk}
-\begin{CodeInput}
-R> lm.obj <- lm(Y ~ X - 1)
-R> bta0 <- coef(lm.obj)
-R> resid(lm.obj) -> res
-R> lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
-R> gma0 <- rep(0, lgma)
-\end{CodeInput}
-\end{CodeChunk}
+<<acd-start-value, eval=FALSE>>=
+lm.obj <- lm(Y ~ X - 1)
+bta0 <- coef(lm.obj)
+resid(lm.obj) -> res
+lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
+gma0 <- rep(0, lgma)
+@
 
 We then estimate $\theta$ by minimizing expression in (\ref{eq:n2l2}) via the
 iterative quasi-Newton algorithm, as explained in Section~\ref{subsec:bfgs},
@@ -729,12 +730,10 @@ $I_{m_i}$ is an $m_i \times m_i$ identity matrix.
 
 The initial guess $\beta^{(0)}$ can be set by employing a simple linear regression:
 
-\begin{CodeChunk}
-\begin{CodeInput}
-R> lm.obj <- lm(Y ~ X - 1)
-R> bta0 <- coef(lm.obj)
-\end{CodeInput}	
-\end{CodeChunk}
+<<hpc-beta-start-value, eval=FALSE>>=
+lm.obj <- lm(Y ~ X - 1)
+bta0 <- coef(lm.obj)
+@
 
 After we exact residuals from the linear model, the starting value
 $\lambda^{(0)}$ is obtained by fitting its linear regression model in
@@ -742,13 +741,11 @@ $\lambda^{(0)}$ is obtained by fitting its linear regression model in
 first element is $\frac{1}{2}\pi$ and followed by 0's so that $B_i$ is
 constructed as an identity matrix :
 
-\begin{CodeChunk}
-\begin{CodeInput}
-R> resid(lm.obj) -> res
-R> lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
-R> gma0 <- c(pi / 2, rep(0, lgma-1))
-\end{CodeInput}	
-\end{CodeChunk}
+<<hpc-lambda-gamma-start-value, eval=FALSE>>=
+resid(lm.obj) -> res
+lmd0 <- coef(lm(log(res ^ 2) ~ Z - 1))
+gma0 <- c(pi / 2, rep(0, lgma-1))
+@
 
 We then estimate $\theta$ by minimizing expression in (\ref{eq:n2l3}) via the
 iterative quasi-Newton algorithm, as explained in Section~\ref{subsec:bfgs},
@@ -857,22 +854,11 @@ later. Since no observation was missing, it is considered to be a balanced
 longitudinal dataset. The data is loaded simply using the \code{data()}
 instruction:
 
-\begin{CodeChunk}
-\begin{CodeInput}	
-R> library("jmcm")
-R> data("cattle", package = "jmcm")
-R> head(cattle)
-\end{CodeInput}
-\begin{CodeOutput}			
-  id day group weight
-1  1   0     A    233
-2  1  14     A    224
-3  1  28     A    245
-4  1  42     A    258
-5  1  56     A    271
-6  1  70     A    287
-\end{CodeOutput}
-\end{CodeChunk}
+<<cattle-data-head>>=
+library("jmcm")
+data("cattle", package = "jmcm")
+head(cattle)
+@
 
 We present in Figure~\ref{fig:cattledata} the subject-specific longitudinal
 profiles of the cattle data using following code:
@@ -916,31 +902,13 @@ The basic use of \code{jmcm} is to indicate the model formula, data, choice of
 poly(p, d, q) and covariance structure model. For example, a joint
 mean-covariance model based on modified Cholesky decomposition (MCD) are
 estimated using:
-\begin{CodeChunk}
-\begin{CodeInput}
-R> cattleA <- cattle[cattle$group=='A', ]
-R> fit1 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA,
-+    triple = c(8, 3, 4), cov.method = 'mcd')
-R> fit1
-\end{CodeInput}
-\begin{CodeOutput}	
-Joint mean-covariance model based on MCD ['jmcmMod']
-Formula: weight | id | I(day/14 + 1) ~ 1 | 1
-Poly: c(8, 3, 4)
-Data: cattleA
-	
-logLik: -771.0007
-BIC: 53.4408
-	
-Mean Parameters:
-[1]   1.832e+02   1.244e+02  -1.403e+02   7.881e+01  -2.362e+01   4.071e+00
-[7]  -4.052e-01   2.162e-02  -4.787e-04
-Innovation Variance Parameters:
-[1]   5.366409  -0.878890   0.132427  -0.006371
-Autoregressive Parameters:
-[1]   0.297055   0.619888  -0.396189   0.069150  -0.003696	
-\end{CodeOutput}
-\end{CodeChunk}
+
+<<fit1>>=
+cattleA <- cattle[cattle$group=='A', ]
+fit1 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA, 
+             triple = c(8, 3, 4), cov.method = 'mcd')
+fit1
+@
 
 The \proglang{R} package \pkg{Formula} of \cite{zeileis2010extended} is
 used to extract information from a two-sided linear formula object which
@@ -1000,30 +968,11 @@ on ACD for cattle data. The covariance structure option should be specified as
 MCD modelling, we clearly see that ACD method produces a larger likelihood
 $\hat{l}_{max} = -747.6994$ and a smaller BIC-value 51.8873.
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> fit2 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA,
-+    triple = c(8, 3, 4), cov.method = 'acd')
-R> fit2
-  \end{CodeInput}
-  \begin{CodeOutput}
-Joint mean-covariance model based on ACD ['jmcmMod']
-Formula: weight | id | I(day/14 + 1) ~ 1 | 1
-Poly: c(8, 3, 4)
-Data: cattleA
-	
-logLik: -747.6994
-BIC: 51.8873
-	
-Mean Parameters:
-[1]   1.784e+02   1.360e+02  -1.511e+02   8.400e+01  -2.503e+01   4.299e+00
-[7]  -4.267e-01   2.272e-02  -5.020e-04
-Innovation Variance Parameters:
-[1]   4.959622  -0.625990   0.084538  -0.003963
-Moving Average Parameters:
-[1]   0.5216849   0.4795778  -0.1049448   0.0105871  -0.0003623
-  \end{CodeOutput}
-\end{CodeChunk}
+<<fit2>>=
+fit2 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA,
+             triple = c(8, 3, 4), cov.method = 'acd')
+fit2
+@
 
 Regressograms for ACD can be produced by the same command:
 \begin{CodeChunk}
@@ -1057,30 +1006,11 @@ log variance and angles respectively. More specifically, the optimal triple
 ploy(8, 2, 2) of HPC model fitting reported in \cite{zhang2015joint} can be
 reproduced using the following command:
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> fit3 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA,
-+    triple = c(8, 2, 2), cov.method = 'hpc')
-R> fit3
-  \end{CodeInput}
-  \begin{CodeOutput}
-Joint mean-covariance model based on HPC ['jmcmMod']
-Formula: weight | id | I(day/14 + 1) ~ 1 | 1
-Poly: c(8, 2, 2)
-Data: cattleA
-
-logLik: -746.9001
-BIC: 51.4939
-
-Mean Parameters:
-[1]   1.781e+02   1.373e+02  -1.528e+02   8.500e+01  -2.535e+01   4.359e+00
-[7]  -4.330e-01   2.307e-02  -5.101e-04
-Variance Parameters:
-[1]   4.0263   0.3148  -0.0113
-Angle Parameters:
-[1]   0.729414   0.092111  -0.004424
-  \end{CodeOutput}
-\end{CodeChunk}
+<<fit3>>=
+fit3 <- jmcm(weight | id | I(day/14 + 1) ~ 1 | 1, data = cattleA,
+             triple = c(8, 2, 2), cov.method = 'hpc')
+fit3
+@
 
 A slightly better result with $\hat{l}_{max}$ = -746.9001 and BIC = 51.4939 is
 produced compared to reported $\hat{l}_{max}$ = -755.00 and BIC =
@@ -1201,21 +1131,10 @@ number of measurement $m_i$ for each individual varies from 1 to 12 and the
 times are not equally spaced. The CD4+ cell data are highly unbalanced and
 included in the package.
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> data("aids", package = "jmcm")
-R> head(aids)
-  \end{CodeInput}
-  \begin{CodeOutput}
-       time cd4  age packs drugs sex cesd    id
-1 -0.741958 548 6.57     0     0   5    8 10002
-2 -0.246407 893 6.57     0     1   5    2 10002
-3  0.243669 657 6.57     0     1   5   -1 10002
-4 -2.729637 464 6.95     0     1   5    4 10005
-5 -2.250513 845 6.95     0     1   5   -4 10005
-6 -0.221766 752 6.95     0     1   5   -5 10005
-  \end{CodeOutput}
-\end{CodeChunk}
+<<aids-data-head>>=
+data("aids", package = "jmcm")
+head(aids)
+@
 
 We present in Figure~\ref{fig:aidsdata} the scatter plot of CD4+ cell counts
 against time, with the first six individuals profiles superimposed:
@@ -1252,30 +1171,11 @@ make the response variable closer to the Normal distribution. The optimal
 triplet poly(8, 1, 3) of MCD method reported in \cite{zhang2015joint} is fitted
 using the following command:
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> fit4 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
-+    triple = c(8, 1, 3), cov.method = 'mcd')	
-R> fit4
-  \end{CodeInput}
-  \begin{CodeOutput}
-Joint mean-covariance model based on MCD ['jmcmMod']
-Formula: I(sqrt(cd4)) | id | time ~ 1 | 1
-Poly: c(8, 1, 3)
-Data: aids
-	
-logLik: -4979.193
-BIC: 27.2278
-
-Mean Parameters:
-[1]  29.217447  -4.100596  -1.279396   1.073685   0.195578  -0.166439
-[7]  -0.001842   0.009407  -0.001020
-Innovation Variance Parameters:
-[1]   3.2646  -0.0886
-Autoregressive Parameters:
-[1]   0.67990  -0.57684   0.17741  -0.01815
-  \end{CodeOutput}
-\end{CodeChunk}
+<<fit4>>=
+fit4 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
+             triple = c(8, 1, 3), cov.method = 'mcd')	
+fit4
+@
 
 Here the CD4 data is again re-analysed with MCD based joint mean-covariance
 model using time as the main covariates and values of $\hat{l}_{max}$ =
@@ -1328,30 +1228,11 @@ The same triple poly(8,1,3) is used in joint mean-covariance model fitting based
 on ACD for aids data, and we clearly see that ACD method produces a larger
 likelihood $\hat{l}_{max}$ = -4927.492 and a smaller BIC-value 26.9476.
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> fit5 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
-+    triple = c(8, 1, 3), cov.method = 'acd')
-R> fit5
-  \end{CodeInput}
-  \begin{CodeOutput}
-Joint mean-covariance model based on ACD ['jmcmMod']
-Formula: I(sqrt(cd4)) | id | time ~ 1 | 1
-Poly: c(8, 1, 3)
-Data: aids
-
-logLik: -4927.492
-BIC: 26.9476
-
-Mean Parameters:
-[1]  29.0395978  -4.0577291  -1.0767686   0.9747427   0.1479554  -0.1416514
-[7]  -0.0002373   0.0076762  -0.0008416
-Innovation Variance Parameters:
-[1]   3.2441  -0.1163
-Moving Average Parameters:
-[1]   0.580633  -0.151159   0.056772  -0.006433
-  \end{CodeOutput}
-\end{CodeChunk}
+<<fit5>>=
+fit5 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
+             triple = c(8, 1, 3), cov.method = 'acd')
+fit5
+@
 
 Fitted curves for ACD can be produced by the same command:
 \begin{CodeChunk}
@@ -1378,30 +1259,11 @@ When the optimal triplet poly(8, 1, 1) of HPC approach reported in
 and $\hat{l}_{max}$ = -4892.68, producing the best model among the three
 proposed covariance and correlation structure modelling methods.
 
-\begin{CodeChunk}
-  \begin{CodeInput}
-R> fit6 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
-+    triple = c(8, 1, 1), cov.method = 'hpc')
-R> fit6
-  \end{CodeInput}
-  \begin{CodeOutput}
-Joint mean-covariance model based on HPC ['jmcmMod']
-Formula: I(sqrt(cd4)) | id | time ~ 1 | 1
-Poly: c(8, 1, 1)
-Data: aids
-
-logLik: -4892.68
-BIC: 26.7268
-
-Mean Parameters:
-[1]  29.0352214  -4.1553878  -0.9452119   0.9969254   0.1066325  -0.1394301
-[7]   0.0026802   0.0072015  -0.0008294
-Variance Parameters:
-[1]  3.64089  0.03252
-Angle Parameters:
-[1]  1.06980  0.05357
-  \end{CodeOutput}
-\end{CodeChunk}
+<<fit6>>=
+fit6 <- jmcm(I(sqrt(cd4)) | id | time ~ 1 | 1, data = aids,
+             triple = c(8, 1, 1), cov.method = 'hpc')
+fit6
+@
 
 Similarly, model fitting can be checked by plot the fitted curves using
 \begin{CodeChunk}
