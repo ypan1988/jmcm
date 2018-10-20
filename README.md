@@ -5,6 +5,7 @@ jmcm: Joint Mean-Covariance Models in R.
 [![cran version](http://www.r-pkg.org/badges/version/jmcm)](https://cran.r-project.org/web/packages/jmcm)
 [![downloads](http://cranlogs.r-pkg.org/badges/jmcm)](http://cranlogs.r-pkg.org/badges/jmcm)
 [![total downloads](http://cranlogs.r-pkg.org/badges/grand-total/jmcm)](http://cranlogs.r-pkg.org/badges/grand-total/jmcm)
+[![Research software impact](http://depsy.org/api/package/cran/jmcm/badge.svg)](http://depsy.org/package/r/jmcm)
 
 ## Features
 
