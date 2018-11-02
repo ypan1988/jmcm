@@ -24,4 +24,6 @@ Author: Jianxin Pan [aut, cre],
 URL: https://github.com/ypan1988/jmcm/
 BugReports: https://github.com/ypan1988/jmcm/issues
 Suggests:
-    testthat
+    testthat,
+    R.rsp
+VignetteBuilder: R.rsp
