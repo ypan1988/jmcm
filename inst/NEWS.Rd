@@ -2,6 +2,11 @@
 \title{jmcm News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.2.1}{
+  \subsection{USER-VISIBLE CHANGES}
+  \item add the JSS paper as vignette in package jmcm
+}
+
 \section{CHANGES IN VERSION 0.2.0}{
   \subsection{USER-VISIBLE CHANGES}{
     \itemize{
