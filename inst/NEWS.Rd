@@ -5,7 +5,7 @@
 \section{CHANGES IN VERSION 0.2.1}{
   \subsection{USER-VISIBLE CHANGES}{
     \itemize{
-      \item add the JSS paper as vignette in package jmcm
+      \item add the JSS paper as vignette in package jmcm.
     }
   }
 }
