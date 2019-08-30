@@ -181,8 +181,8 @@ inline arma::vec HPC::get_mu(arma::uword i) const {
 inline arma::mat HPC::get_Sigma(arma::uword i) const {
   arma::mat Ti = get_T(i);
   arma::mat Di = get_D(i);
-
-  return Di * Ti * Ti.t() * Di;
+  Di = Di * Ti;
+  return Di * Di.t();
 }
 
 inline arma::mat HPC::get_Sigma_inv(arma::uword i) const {
@@ -192,8 +192,8 @@ inline arma::mat HPC::get_Sigma_inv(arma::uword i) const {
 
   arma::mat Di = get_D(i);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
-  return Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  Di_inv = Ti_inv * Di_inv;
+  return Di_inv.t() * Di_inv;
 }
 
 inline arma::vec HPC::get_Resid(arma::uword i) const {
@@ -294,9 +294,9 @@ inline void HPC::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
 
   arma::mat Di;
   get_D(i, Di);
-  arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
-  Sigmai_inv = Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  arma::mat Di_inv = arma::diagmat(1/Di.diag());
+  Di_inv=Ti_inv * Di_inv;
+  Sigmai_inv = Di_inv.t() * Di_inv;
 }
 
 inline void HPC::get_Resid(arma::uword i, arma::vec& ri) const {
@@ -376,7 +376,7 @@ inline void HPC::Grad1(arma::vec& grad1) {
     get_Resid(i, ri);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
-    grad1 += Xi.t() * Sigmai_inv * ri;
+    grad1 += Xi.t() * (Sigmai_inv * ri);
   }
 
   grad1 *= -2;
@@ -576,12 +576,12 @@ inline void HPC::UpdateTelem() {
     Ti(0, 0) = 1;
     for (arma::uword j = 1; j != m_(i); ++j) {
       Ti(j, 0) = std::cos(Phii(j, 0));
-      Ti(j, j) = arma::prod(arma::prod(arma::sin(Phii.submat(j, 0, j, j - 1))));
+      double cumsin=std::sin(Phii(j, 0));
       for (arma::uword l = 1; l != j; ++l) {
-        Ti(j, l) =
-            std::cos(Phii(j, l)) *
-            arma::prod(arma::prod(arma::sin(Phii.submat(j, 0, j, l - 1))));
+        Ti(j, l) = std::cos(Phii(j, l)) * cumsin;
+        cumsin *= std::sin(Phii(j, l));
       }
+      Ti(j, j) = cumsin;
     }
 
     // Ti_inv = Ti.i();
@@ -646,25 +646,13 @@ inline void HPC::UpdateTDResid() {
 }
 
 inline arma::vec HPC::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  arma::uword n_sub = m_.n_rows;
-  arma::uword n_gma = W_.n_cols;
-
   arma::uword W_rowindex = 0;
-  bool indexfound = false;
-  arma::vec result = arma::zeros<arma::vec>(n_gma);
-  for (arma::uword ii = 0; ii != n_sub && !indexfound; ++ii) {
-    for (arma::uword jj = 0; jj != m_(ii) && !indexfound; ++jj) {
-      for (arma::uword kk = 0; kk != jj && !indexfound; ++kk) {
-        if (ii == i && jj == j && kk == k) {
-          indexfound = true;
-          result = W_.row(W_rowindex).t();
-        }
-        ++W_rowindex;
-      }
-    }
+  for (arma::uword ii = 0; ii <i ; ++ii) {
+    W_rowindex+=m_(i)*(m_(i)-1)/2;
   }
-  return result;
+  return W_.row(W_rowindex+j*(j-1)/2+k).t();
 }
+
 
 inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
                                     const arma::mat& Phii,
