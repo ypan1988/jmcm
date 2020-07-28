@@ -407,8 +407,8 @@ bootcurve <- function(object, nboot)
 
     control <- jmcmControl()
 
-    opt <-optimizeJmcm(m.boot, Y.boot, X.boot, Z.boot, W.boot,
-      cov.method = cov.method, control = control, start = theta)
+    opt <- optimizeJmcm(m.boot, Y.boot, X.boot, Z.boot, W.boot,
+      cov.method = cov.method, optim.method = 'default', control = control, start = theta)
 
     result <- rbind(result, drop(opt$par))
     cat("iter ", iter, ": ", format(round(result[iter, ], 4), nsmall=4), "\n")

@@ -2,6 +2,16 @@
 \title{jmcm News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.2.2}{
+  \subsection{BUG FIXES}{
+    \itemize{
+      \item fix function \code{bootcurve()}: argument
+      \code{optim.method} was missing to call function
+      \code{optimizeJmcm()}, and now it is set to 'default'.
+    }
+  }
+}
+
 \section{CHANGES IN VERSION 0.2.1}{
   \subsection{USER-VISIBLE CHANGES}{
     \itemize{
