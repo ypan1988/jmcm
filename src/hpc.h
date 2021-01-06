@@ -646,24 +646,11 @@ inline void HPC::UpdateTDResid() {
 }
 
 inline arma::vec HPC::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  arma::uword n_sub = m_.n_rows;
-  arma::uword n_gma = W_.n_cols;
-
   arma::uword W_rowindex = 0;
-  bool indexfound = false;
-  arma::vec result = arma::zeros<arma::vec>(n_gma);
-  for (arma::uword ii = 0; ii != n_sub && !indexfound; ++ii) {
-    for (arma::uword jj = 0; jj != m_(ii) && !indexfound; ++jj) {
-      for (arma::uword kk = 0; kk != jj && !indexfound; ++kk) {
-        if (ii == i && jj == j && kk == k) {
-          indexfound = true;
-          result = W_.row(W_rowindex).t();
-        }
-        ++W_rowindex;
-      }
-    }
+  for (arma::uword ii = 0; ii < i; ++ii) {
+    W_rowindex += m_(ii) * (m_(ii) - 1) / 2;
   }
-  return result;
+  return W_.row(W_rowindex + j * (j - 1) / 2 + k).t();
 }
 
 inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
