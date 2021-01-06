@@ -3,7 +3,7 @@
 //         (HPC) of its Cholesky factor
 //  This file is part of jmcm.
 //
-//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
+//  Copyright (C) 2015-2021 Yi Pan <ypan1988@gmail.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -179,21 +179,17 @@ inline arma::vec HPC::get_mu(arma::uword i) const {
 }
 
 inline arma::mat HPC::get_Sigma(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  arma::mat Di = get_D(i);
+  arma::mat DiTi = get_D(i) * get_T(i);
 
-  return Di * Ti * Ti.t() * Di;
+  return DiTi * DiTi.t();
 }
 
 inline arma::mat HPC::get_Sigma_inv(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  // arma::mat Ti_inv = arma::pinv(Ti);
-  arma::mat Ti_inv = Ti.i();
-
   arma::mat Di = get_D(i);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
+  arma::mat Ti_inv_Di_inv = get_T(i).i() * Di_inv;
 
-  return Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
 inline arma::vec HPC::get_Resid(arma::uword i) const {
@@ -288,7 +284,6 @@ inline void HPC::get_invT(arma::uword i, arma::mat& Ti_inv) const {
 inline void HPC::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
   arma::mat Ti;
   get_T(i, Ti);
-  //	    arma::mat Ti_inv = arma::pinv(Ti);
   arma::mat Ti_inv;
   get_invT(i, Ti_inv);
 
@@ -296,7 +291,9 @@ inline void HPC::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) const {
   get_D(i, Di);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
-  Sigmai_inv = Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  arma::mat Ti_inv_Di_inv = Ti_inv * Di_inv;
+
+  Sigmai_inv = Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
 inline void HPC::get_Resid(arma::uword i, arma::vec& ri) const {
@@ -376,7 +373,7 @@ inline void HPC::Grad1(arma::vec& grad1) {
     get_Resid(i, ri);
     arma::mat Sigmai_inv;
     get_Sigma_inv(i, Sigmai_inv);
-    grad1 += Xi.t() * Sigmai_inv * ri;
+    grad1 += Xi.t() * (Sigmai_inv * ri);
   }
 
   grad1 *= -2;
