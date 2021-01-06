@@ -2,6 +2,21 @@
 \title{jmcm News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.2.3}{
+  \subsection{BUG FIXES}{
+    \itemize{
+      \item fix the warning on order() suggested by Kurt Hornik.
+      \item remove lattice from Imports.
+      \item fix a bug on model order (GH #1).
+    }
+  }
+  \subsection{USER-VISIBLE CHANGES}{
+    \itemize{
+      \item speedup hpc method (GH #2, @Neutron3529).
+    }
+  }
+}
+
 \section{CHANGES IN VERSION 0.2.2}{
   \subsection{BUG FIXES}{
     \itemize{
