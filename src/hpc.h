@@ -576,12 +576,12 @@ inline void HPC::UpdateTelem() {
     Ti(0, 0) = 1;
     for (arma::uword j = 1; j != m_(i); ++j) {
       Ti(j, 0) = std::cos(Phii(j, 0));
-      Ti(j, j) = arma::prod(arma::prod(arma::sin(Phii.submat(j, 0, j, j - 1))));
+      double cumsin=std::sin(Phii(j, 0));
       for (arma::uword l = 1; l != j; ++l) {
-        Ti(j, l) =
-            std::cos(Phii(j, l)) *
-            arma::prod(arma::prod(arma::sin(Phii.submat(j, 0, j, l - 1))));
+        Ti(j, l) = std::cos(Phii(j, l)) * cumsin;
+        cumsin *= std::sin(Phii(j, l));
       }
+      Ti(j, j) = cumsin;
     }
 
     // Ti_inv = Ti.i();
