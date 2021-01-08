@@ -48,11 +48,7 @@ class ACD : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
   arma::vec get_Resid(arma::uword i) const override;
-
-  void get_D(arma::uword i, arma::mat& Di) const;
-  void get_T(arma::uword i, arma::mat& Ti) const;
-  void get_invT(arma::uword i, arma::mat& Ti_inv) const;
-  void get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv);
+  arma::mat get_invT(arma::uword i) const;
 
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
@@ -70,8 +66,6 @@ class ACD : public JmcmBase {
 
   arma::vec get_TDResid(arma::uword i) const;
   arma::vec get_TDResid2(arma::uword i) const;
-  void get_TDResid(arma::uword i, arma::vec& TiDiri) const;
-  void get_TDResid2(arma::uword i, arma::vec& TiDiri2) const;
 
   void UpdateTelem();
   void UpdateTDResid();
@@ -94,141 +88,62 @@ inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
 inline void ACD::UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
 
 inline arma::mat ACD::get_D(arma::uword i) const {
-  arma::mat Di = arma::eye(m_(i), m_(i));
-  if (i == 0)
-    Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1) / 2));
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    Di = arma::diagmat(arma::exp(Zlmd_.subvec(index, index + m_(i) - 1) / 2));
-  }
-  return Di;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return arma::diagmat(arma::exp(Zlmd_.subvec(first_index, last_index) / 2));
 }
 
 inline arma::mat ACD::get_T(arma::uword i) const {
-  arma::mat Ti = arma::ones<arma::mat>(m_(i), m_(i));
+  arma::mat Ti = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
-    if (i == 0) {
-      arma::uword first_index = 0;
-      arma::uword last_index = m_(0) * (m_(0) - 1) / 2 - 1;
+    arma::uword first_index = cumsum_trim_(i);
+    arma::uword last_index = cumsum_trim_(i+1) - 1;
 
-      Ti = pan::ltrimat(m_(0), Wgma_.subvec(first_index, last_index), false);
-    } else {
-      arma::uword first_index = 0;
-      for (arma::uword idx = 0; idx != i; ++idx) {
-        first_index += m_(idx) * (m_(idx) - 1) / 2;
-      }
-      arma::uword last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
-
-      Ti = pan::ltrimat(m_(i), Wgma_.subvec(first_index, last_index), false);
-    }
+    Ti = pan::ltrimat(m_(i), Wgma_.subvec(first_index, last_index), false);
   }
   return Ti;
 }
 
 inline arma::vec ACD::get_mu(arma::uword i) const {
-  arma::vec mui;
-  if (i == 0)
-    mui = Xbta_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    mui = Xbta_.subvec(index, index + m_(i) - 1);
-  }
-  return mui;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Xbta_.subvec(first_index, last_index);
 }
 
 inline arma::mat ACD::get_Sigma(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  arma::mat Di = get_D(i);
+  arma::mat DiTi = get_D(i) * get_T(i);
 
-  return Di * Ti * Ti.t() * Di;
+  return DiTi * DiTi.t();
 }
 
 inline arma::mat ACD::get_Sigma_inv(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  //	    arma::mat Ti_inv = arma::pinv(Ti);
-  arma::mat Ti_inv = Ti.i();
-
   arma::mat Di = get_D(i);
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
+  arma::mat Ti_inv = get_invT(i);
+  arma::mat Ti_inv_Di_inv = Ti_inv * Di_inv;
 
-  return Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
 inline arma::vec ACD::get_Resid(arma::uword i) const {
-  arma::vec ri;
-  if (i == 0)
-    ri = Resid_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    ri = Resid_.subvec(index, index + m_(i) - 1);
-  }
-  return ri;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Resid_.subvec(first_index, last_index);
 }
 
-inline void ACD::get_D(arma::uword i, arma::mat& Di) const {
-  Di = arma::eye(m_(i), m_(i));
-  if (i == 0)
-    Di = arma::diagmat(arma::exp(Zlmd_.subvec(0, m_(0) - 1) / 2));
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    Di = arma::diagmat(arma::exp(Zlmd_.subvec(index, index + m_(i) - 1) / 2));
-  }
-}
-
-inline void ACD::get_T(arma::uword i, arma::mat& Ti) const {
-  Ti = arma::eye<arma::mat>(m_(i), m_(i));
+inline arma::mat ACD::get_invT(arma::uword i) const {
+  arma::mat Ti_inv = arma::eye(m_(i), m_(i));
   if (m_(i) != 1) {
-    if (i == 0) {
-      arma::uword first_index = 0;
-      arma::uword last_index = m_(0) * (m_(0) - 1) / 2 - 1;
+    arma::uword first_index = cumsum_trim2_(i);
+    arma::uword last_index = cumsum_trim2_(i+1) - 1;
 
-      Ti = pan::ltrimat(m_(0), Wgma_.subvec(first_index, last_index), false);
-    } else {
-      arma::uword first_index = 0;
-      for (arma::uword idx = 0; idx != i; ++idx) {
-        first_index += m_(idx) * (m_(idx) - 1) / 2;
-      }
-      arma::uword last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
-
-      Ti = pan::ltrimat(m_(i), Wgma_.subvec(first_index, last_index), false);
-    }
+    Ti_inv = pan::ltrimat(m_(i), invTelem_.subvec(first_index, last_index), true);
   }
-}
 
-inline void ACD::get_invT(arma::uword i, arma::mat& Ti_inv) const {
-  Ti_inv = arma::eye(m_(i), m_(i));
-  if (m_(i) != 1) {
-    if (i == 0) {
-      arma::uword first_index = 0;
-      arma::uword last_index = m_(0) * (m_(0) + 1) / 2 - 1;
-
-      Ti_inv =
-          pan::ltrimat(m_(0), invTelem_.subvec(first_index, last_index), true);
-    } else {
-      arma::uword first_index = 0;
-      for (arma::uword idx = 0; idx != i; ++idx) {
-        first_index += m_(idx) * (m_(idx) + 1) / 2;
-      }
-      arma::uword last_index = first_index + m_(i) * (m_(i) + 1) / 2 - 1;
-
-      Ti_inv =
-          pan::ltrimat(m_(i), invTelem_.subvec(first_index, last_index), true);
-    }
-  }
-}
-
-inline void ACD::get_Sigma_inv(arma::uword i, arma::mat& Sigmai_inv) {
-  arma::mat Ti;
-  get_T(i, Ti);
-  //	    arma::mat Ti_inv = arma::pinv(Ti);
-  arma::mat Ti_inv;
-  get_invT(i, Ti_inv);
-
-  arma::mat Di;
-  get_D(i, Di);
-  arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
-  Sigmai_inv = Di_inv * Ti_inv.t() * Ti_inv * Di_inv;
+  return Ti_inv;
 }
 
 inline double ACD::operator()(const arma::vec& x) {
@@ -239,9 +154,8 @@ inline double ACD::operator()(const arma::vec& x) {
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv;
-    get_Sigma_inv(i, Sigmai_inv);
-    result += arma::as_scalar(ri.t() * Sigmai_inv * ri);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
   }
 
   result += 2 * arma::sum(arma::log(arma::exp(Zlmd_ / 2)));
@@ -288,8 +202,7 @@ inline void ACD::Grad1(arma::vec& grad1) {
   for (arma::uword i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv;
-    get_Sigma_inv(i, Sigmai_inv);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
     grad1 += Xi.t() * Sigmai_inv * ri;
   }
 
@@ -305,20 +218,14 @@ inline void ACD::Grad2(arma::vec& grad2) {
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
-    arma::vec hi;
-    get_TDResid2(i, hi);
+    arma::vec hi = get_TDResid2(i);
 
     grad2_lmd += 0.5 * Zi.t() * (hi - one);
 
-    arma::mat Ti;
-    get_T(i, Ti);
-    //	    arma::mat Ti_inv = arma::pinv(Ti);
-    // arma::mat Ti_inv = Ti.i();
-    arma::mat Ti_inv;
-    get_invT(i, Ti_inv);
+    arma::mat Ti = get_T(i);
+    arma::mat Ti_inv = get_invT(i);
 
-    arma::vec ei;
-    get_TDResid(i, ei);
+    arma::vec ei = get_TDResid(i);
 
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i);
 
@@ -434,73 +341,30 @@ inline void ACD::UpdateModel() {
 }
 
 inline arma::vec ACD::get_TDResid(arma::uword i) const {
-  arma::vec TiDiri;
-  if (i == 0)
-    TiDiri = TDResid_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    TiDiri = TDResid_.subvec(index, index + m_(i) - 1);
-  }
-  return TiDiri;
-}
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
 
-inline void ACD::get_TDResid(arma::uword i, arma::vec& TiDiri) const {
-  if (i == 0)
-    TiDiri = TDResid_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    TiDiri = TDResid_.subvec(index, index + m_(i) - 1);
-  }
+  return TDResid_.subvec(first_index, last_index);
 }
 
 inline arma::vec ACD::get_TDResid2(arma::uword i) const {
-  arma::vec TiDiri2;
-  if (i == 0)
-    TiDiri2 = TDResid2_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    TiDiri2 = TDResid2_.subvec(index, index + m_(i) - 1);
-  }
-  return TiDiri2;
-}
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
 
-inline void ACD::get_TDResid2(arma::uword i, arma::vec& TiDiri2) const {
-  if (i == 0)
-    TiDiri2 = TDResid2_.subvec(0, m_(0) - 1);
-  else {
-    arma::uword index = arma::sum(m_.subvec(0, i - 1));
-    TiDiri2 = TDResid2_.subvec(index, index + m_(i) - 1);
-  }
+  return TDResid2_.subvec(first_index, last_index);
 }
 
 inline void ACD::UpdateTelem() {
   arma::uword i, n_sub = m_.n_elem;
 
   for (i = 0; i < n_sub; ++i) {
-    arma::mat Ti;
-    get_T(i, Ti);
-    // arma::mat Ti_inv = arma::pinv(Ti);
-    // arma::mat Ti_inv = Ti.i();
-    // arma::mat Ti_inv = pinv(Ti);
+    arma::mat Ti = get_T(i);
     arma::mat Ti_inv;
-    // bool is_Ti_pd = arma::inv(Ti_inv, Ti);
-    // if (!is_Ti_pd) Ti_inv = arma::pinv(Ti);
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
 
-    if (i == 0) {
-      arma::uword first_index = 0;
-      arma::uword last_index = m_(0) * (m_(0) + 1) / 2 - 1;
-
-      invTelem_.subvec(first_index, last_index) = pan::lvectorise(Ti_inv, true);
-    } else {
-      arma::uword first_index = 0;
-      for (arma::uword idx = 0; idx != i; ++idx) {
-        first_index += m_(idx) * (m_(idx) + 1) / 2;
-      }
-      arma::uword last_index = first_index + m_(i) * (m_(i) + 1) / 2 - 1;
-
-      invTelem_.subvec(first_index, last_index) = pan::lvectorise(Ti_inv, true);
-    }
+    arma::uword first_index = cumsum_trim2_(i);
+    arma::uword last_index = cumsum_trim2_(i+1)  - 1;
+    invTelem_.subvec(first_index, last_index) = pan::lvectorise(Ti_inv, true);
   }
 }
 
@@ -511,10 +375,7 @@ inline void ACD::UpdateTDResid() {
     arma::vec ri = get_Resid(i);
 
     arma::mat Ti = get_T(i);
-    //	    arma::mat Ti_inv = arma::pinv(Ti);
-    // arma::mat Ti_inv = Ti.i();
-    arma::mat Ti_inv;
-    get_invT(i, Ti_inv);
+    arma::mat Ti_inv = get_invT(i);
 
     arma::mat Di = get_D(i);
     arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
@@ -523,14 +384,11 @@ inline void ACD::UpdateTDResid() {
     arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * Ti_inv * Di_inv * ri *
                                       ri.t() * Di_inv);  // hi
 
-    if (i == 0) {
-      TDResid_.subvec(0, m_(0) - 1) = TiDiri;
-      TDResid2_.subvec(0, m_(0) - 1) = TiDiri2;
-    } else {
-      arma::uword index = arma::sum(m_.subvec(0, i - 1));
-      TDResid_.subvec(index, index + m_(i) - 1) = TiDiri;
-      TDResid2_.subvec(index, index + m_(i) - 1) = TiDiri2;
-    }
+    arma::uword first_index = cumsum_m_(i);
+    arma::uword last_index = cumsum_m_(i+1) - 1;
+
+    TDResid_.subvec(first_index, last_index) = TiDiri;
+    TDResid2_.subvec(first_index, last_index) = TiDiri2;
   }
 }
 
