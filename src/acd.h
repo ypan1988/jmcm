@@ -535,31 +535,13 @@ inline void ACD::UpdateTDResid() {
 }
 
 inline arma::vec ACD::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  arma::uword n_sub = m_.n_rows;
-  arma::uword n_gma = W_.n_cols;
-
-  arma::uword W_rowindex = 0;
-  bool indexfound = false;
-  arma::vec result = arma::zeros<arma::vec>(n_gma);
-  for (arma::uword ii = 0; ii != n_sub && !indexfound; ++ii) {
-    for (arma::uword jj = 0; jj != m_(ii) && !indexfound; ++jj) {
-      for (arma::uword kk = 0; kk != jj && !indexfound; ++kk) {
-        if (ii == i && jj == j && kk == k) {
-          indexfound = true;
-          result = W_.row(W_rowindex).t();
-        }
-        ++W_rowindex;
-      }
-    }
-  }
-  return result;
+  if (j <= k) return arma::zeros<arma::vec>(W_.n_cols);
+  return W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t();
 }
 
 inline arma::vec ACD::CalcTijkDeriv(arma::uword i, arma::uword j,
                                     arma::uword k) {
-  arma::vec result = Wijk(i, j, k);
-
-  return result;
+  return Wijk(i, j, k);
 }
 
 inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) {
