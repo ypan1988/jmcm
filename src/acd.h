@@ -2,7 +2,7 @@
 //         decomposition (ACD) of the covariance matrix
 //  This file is part of jmcm.
 //
-//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
+//  Copyright (C) 2015-2021 Yi Pan <ypan1988@gmail.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ inline void ACD::Grad1(arma::vec& grad1) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
-    grad1 += Xi.t() * Sigmai_inv * ri;
+    grad1 += Xi.t() * (Sigmai_inv * ri);
   }
 
   grad1 *= -2;
