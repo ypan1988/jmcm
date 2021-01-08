@@ -92,6 +92,10 @@ class JmcmBase : public roptim::Functor {
   arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
 
+  arma::vec cumsum_m_;
+  arma::vec cumsum_trim_;
+  arma::vec cumsum_trim2_;
+
   // free_param_ == 0  ---- beta + lambda + gamma
   // free_param_ == 1  ---- beta
   // free_param_ == 2  ---- lambda
@@ -116,6 +120,7 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       cov_only_(false),
       mean_(Y) {
   arma::uword N = Y_.n_rows;
+  arma::uword n_sub = m_.size();
   arma::uword n_bta = X_.n_cols;
   arma::uword n_lmd = Z_.n_cols;
   arma::uword n_gma = W_.n_cols;
@@ -130,59 +135,49 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   Zlmd_ = arma::zeros<arma::vec>(N);
   Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
   Resid_ = arma::zeros<arma::vec>(N);
+
+  cumsum_m_ = arma::zeros<arma::vec>(n_sub+1);
+  cumsum_m_.tail(n_sub) = arma::cumsum(m_);
+
+  cumsum_trim_ = arma::zeros<arma::vec>(n_sub+1);
+  cumsum_trim_.tail(n_sub) = arma::cumsum(m_%(m_-1)/2);
+
+  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub+1);
+  cumsum_trim2_.tail(n_sub) = arma::cumsum(m_%(m_+1)/2);
+
 }
 
 inline arma::uword JmcmBase::get_m(arma::uword i) const { return m_(i); }
 
 inline arma::vec JmcmBase::get_Y(arma::uword i) const {
-  arma::vec Yi;
-  if (i == 0)
-    Yi = Y_.subvec(0, m_(0) - 1);
-  else {
-    int index = arma::sum(m_.subvec(0, i - 1));
-    Yi = Y_.subvec(index, index + m_(i) - 1);
-  }
-  return Yi;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Y_.subvec(first_index, last_index);
 }
 
 inline arma::mat JmcmBase::get_X(arma::uword i) const {
-  arma::mat Xi;
-  if (i == 0)
-    Xi = X_.rows(0, m_(0) - 1);
-  else {
-    int index = arma::sum(m_.subvec(0, i - 1));
-    Xi = X_.rows(index, index + m_(i) - 1);
-  }
-  return Xi;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return X_.rows(first_index, last_index);
 }
 
 inline arma::mat JmcmBase::get_Z(arma::uword i) const {
-  arma::mat Zi;
-  if (i == 0)
-    Zi = Z_.rows(0, m_(0) - 1);
-  else {
-    int index = arma::sum(m_.subvec(0, i - 1));
-    Zi = Z_.rows(index, index + m_(i) - 1);
-  }
-  return Zi;
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Z_.rows(first_index, last_index);
 }
 
 inline arma::mat JmcmBase::get_W(arma::uword i) const {
-  arma::mat Wi;
-  if (m_(i) != 1) {
-    if (i == 0) {
-      int first_index = 0;
-      int last_index = m_(0) * (m_(0) - 1) / 2 - 1;
-      Wi = W_.rows(first_index, last_index);
-    } else {
-      int first_index = 0;
-      for (arma::uword idx = 0; idx != i; ++idx) {
-        first_index += m_(idx) * (m_(idx) - 1) / 2;
-      }
-      int last_index = first_index + m_(i) * (m_(i) - 1) / 2 - 1;
+  arma::mat Wi = arma::zeros<arma::mat>(m_(i), W_.n_cols);
 
-      Wi = W_.rows(first_index, last_index);
-    }
+  if (m_(i) != 1) {
+    arma::uword first_index = cumsum_trim_(i);
+    arma::uword last_index = cumsum_trim_(i+1) - 1;
+
+    Wi = W_.rows(first_index, last_index);
   }
 
   return Wi;
