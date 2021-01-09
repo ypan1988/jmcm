@@ -1,7 +1,7 @@
 //  jmcm_base.h: base class for three joint mean-covariance models (MCD/ACD/HPC)
 //  This file is part of jmcm.
 //
-//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
+//  Copyright (C) 2015-2021 Yi Pan <ypan1988@gmail.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -62,18 +62,18 @@ class JmcmBase : public roptim::Functor {
   void set_lmdgma(const arma::vec& x);
   void set_free_param(arma::uword n) { free_param_ = n; }
 
-  // virtual void UpdateBeta() {}
   void UpdateBeta();
+  arma::vec get_mu(arma::uword i) const;
+  arma::vec get_Resid(arma::uword i) const;
+
   virtual void UpdateLambda(const arma::vec&) {}
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
 
   virtual arma::mat get_D(arma::uword i) const = 0;
   virtual arma::mat get_T(arma::uword i) const = 0;
-  virtual arma::vec get_mu(arma::uword i) const = 0;
   virtual arma::mat get_Sigma(arma::uword i) const = 0;
   virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
-  virtual arma::vec get_Resid(arma::uword i) const = 0;
 
   // virtual double operator()(const arma::vec& x) = 0;
   virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
@@ -144,7 +144,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
 
   cumsum_trim2_ = arma::zeros<arma::vec>(n_sub+1);
   cumsum_trim2_.tail(n_sub) = arma::cumsum(m_%(m_+1)/2);
-
 }
 
 inline arma::uword JmcmBase::get_m(arma::uword i) const { return m_(i); }
@@ -239,6 +238,21 @@ inline void JmcmBase::UpdateBeta() {
   UpdateJmcm(beta);  // template method
   free_param_ = fp2;
 }
+
+inline arma::vec JmcmBase::get_mu(arma::uword i) const {
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Xbta_.subvec(first_index, last_index);
+}
+
+inline arma::vec JmcmBase::get_Resid(arma::uword i) const {
+  arma::uword first_index = cumsum_m_(i);
+  arma::uword last_index = cumsum_m_(i+1) - 1;
+
+  return Resid_.subvec(first_index, last_index);
+}
+
 
 }  // namespace jmcm
 

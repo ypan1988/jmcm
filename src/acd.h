@@ -44,10 +44,8 @@ class ACD : public JmcmBase {
 
   arma::mat get_D(arma::uword i) const override;
   arma::mat get_T(arma::uword i) const override;
-  arma::vec get_mu(arma::uword i) const override;
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
-  arma::vec get_Resid(arma::uword i) const override;
   arma::mat get_invT(arma::uword i) const;
 
   double operator()(const arma::vec& x) override;
@@ -105,13 +103,6 @@ inline arma::mat ACD::get_T(arma::uword i) const {
   return Ti;
 }
 
-inline arma::vec ACD::get_mu(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Xbta_.subvec(first_index, last_index);
-}
-
 inline arma::mat ACD::get_Sigma(arma::uword i) const {
   arma::mat DiTi = get_D(i) * get_T(i);
 
@@ -125,13 +116,6 @@ inline arma::mat ACD::get_Sigma_inv(arma::uword i) const {
   arma::mat Ti_inv_Di_inv = Ti_inv * Di_inv;
 
   return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
-}
-
-inline arma::vec ACD::get_Resid(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Resid_.subvec(first_index, last_index);
 }
 
 inline arma::mat ACD::get_invT(arma::uword i) const {

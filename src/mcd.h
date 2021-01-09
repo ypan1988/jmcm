@@ -44,10 +44,8 @@ class MCD : public JmcmBase {
 
   arma::mat get_D(arma::uword i) const override;
   arma::mat get_T(arma::uword i) const override;
-  arma::vec get_mu(arma::uword i) const override;
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
-  arma::vec get_Resid(arma::uword i) const override;
 
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
@@ -120,13 +118,6 @@ inline arma::mat MCD::get_T(arma::uword i) const {
   return Ti;
 }
 
-inline arma::vec MCD::get_mu(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Xbta_.subvec(first_index, last_index);
-}
-
 inline arma::mat MCD::get_Sigma(arma::uword i) const {
   arma::mat Ti = get_T(i);
   arma::mat Ti_inv = arma::pinv(Ti);
@@ -141,13 +132,6 @@ inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
   return Ti.t() * Di_inv * Ti;
-}
-
-inline arma::vec MCD::get_Resid(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Resid_.subvec(first_index, last_index);
 }
 
 inline double MCD::operator()(const arma::vec& x) {
