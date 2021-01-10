@@ -131,6 +131,10 @@ class JmcmBase : public roptim::Functor {
 
   bool cov_only_;
   arma::vec mean_;
+
+  bool is_same(const arma::vec v1, const arma::vec v2) const {
+    return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
+  }
 };
 
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
@@ -309,75 +313,76 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
-  arma::uword debug = 0;
-  bool update = true;
-
-  switch (free_param_) {
-  case 0:
-    if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
-    break;
-
-  case 1:
-    if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
-    break;
-
-  case 2:
-    if (std::equal(x.cbegin(), x.cend(), lambda_.cbegin())) update = false;
-    break;
-
-  case 3:
-    if (std::equal(x.cbegin(), x.cend(), gamma_.cbegin())) update = false;
-    break;
-
-  case 23:
-    if (std::equal(x.cbegin(), x.cend(), lmdgma_.cbegin())) update = false;
-    break;
-
-  default:
-    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
-
-  if (update) {
-    UpdateParam(x);
-    UpdateModel();
-  } else {
-    if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
-  }
-}
-
-inline void JmcmBase::UpdateParam(const arma::vec& x) {
   arma::uword n_bta = X_.n_cols;
   arma::uword n_lmd = Z_.n_cols;
   arma::uword n_gma = W_.n_cols;
 
   switch (free_param_) {
   case 0:
-    theta_ = x;
-    beta_ = x.rows(0, n_bta - 1);
-    lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
-    gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+    if (!is_same(x, theta_)) {
+      theta_ = x;
+      beta_ = x.rows(0, n_bta - 1);
+      lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
+      gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
+
+      Zlmd_ = Z_ * lambda_;
+      Wgma_ = W_ * gamma_;
+      Resid_ = Y_ - Xbta_;
+      UpdateModel();
+    }
     break;
 
   case 1:
-    theta_.rows(0, n_bta - 1) = x;
-    beta_ = x;
+    if (!is_same(x, beta_)) {
+      theta_.rows(0, n_bta - 1) = x;
+      beta_ = x;
+
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
+
+      Resid_ = Y_ - Xbta_;
+      UpdateModel();
+    }
     break;
 
   case 2:
-    theta_.rows(n_bta, n_bta + n_lmd - 1) = x;
-    lambda_ = x;
+    if (!is_same(x, lambda_)) {
+      theta_.rows(n_bta, n_bta + n_lmd - 1) = x;
+      lambda_ = x;
+
+      Zlmd_ = Z_ * lambda_;
+      UpdateModel();
+    }
     break;
 
   case 3:
-    theta_.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = x;
-    gamma_ = x;
+    if (!is_same(x, gamma_)) {
+      theta_.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = x;
+      gamma_ = x;
+
+      Wgma_ = W_ * gamma_;
+      UpdateModel();
+    }
     break;
 
   case 23:
-    theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
-    lambda_ = x.rows(0, n_lmd - 1);
-    gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
-    lmdgma_ = x;
+    if (!is_same(x, lmdgma_)) {
+      theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
+      lambda_ = x.rows(0, n_lmd - 1);
+      gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
+      lmdgma_ = x;
+
+      Zlmd_ = Z_ * lambda_;
+      Wgma_ = W_ * gamma_;
+      UpdateModel();
+    }
     break;
 
   default:

@@ -144,38 +144,17 @@ inline void ACD::Grad3(arma::vec& grad3) {
 inline void ACD::UpdateModel() {
   switch (free_param_) {
     case 0:
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
-
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
-      Resid_ = Y_ - Xbta_;
-
       UpdateTelem();
       UpdateTDResid();
-
       break;
 
     case 1:
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
-      Resid_ = Y_ - Xbta_;
-
       UpdateTDResid();
-
       break;
 
     case 23:
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
-
       UpdateTelem();
       UpdateTDResid();
-
       break;
 
     default:
