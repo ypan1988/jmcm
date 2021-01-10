@@ -52,7 +52,6 @@ class MCD : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
   void Grad2(arma::vec& grad2);
   void Grad3(arma::vec& grad3);
@@ -60,6 +59,10 @@ class MCD : public JmcmBase {
   void UpdateJmcm(const arma::vec& x) override;
   void UpdateParam(const arma::vec& x);
   void UpdateModel();
+
+  double CalcLogDetSigma() const override {
+    return arma::sum(arma::log(arma::exp(Zlmd_)));
+  }
 
  private:
   arma::mat G_;
@@ -121,21 +124,6 @@ inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
   return Ti.t() * Di_inv * Ti;
-}
-
-inline double MCD::operator()(const arma::vec& x) {
-  UpdateJmcm(x);
-
-  arma::uword i, n_sub = m_.n_elem;
-  double result = 0.0;
-  for (i = 0; i < n_sub; ++i) {
-    arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-    result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
-  }
-
-  result += arma::sum(arma::log(arma::exp(Zlmd_)));
-  return result;
 }
 
 inline void MCD::Gradient(const arma::vec& x, arma::vec& grad) {

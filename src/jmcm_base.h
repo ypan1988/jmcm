@@ -77,6 +77,7 @@ class JmcmBase : public roptim::Functor {
 
   void UpdateBeta();
   void Grad1(arma::vec& grad1);
+  double operator()(const arma::vec& x) override;
 
   arma::vec get_mu(arma::uword i) const {
     return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
@@ -94,9 +95,8 @@ class JmcmBase : public roptim::Functor {
   virtual arma::mat get_Sigma(arma::uword i) const = 0;
   virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
 
-  // virtual double operator()(const arma::vec& x) = 0;
-  virtual void Gradient(const arma::vec& x, arma::vec& grad) = 0;
   virtual void UpdateJmcm(const arma::vec& x) = 0;
+  virtual double CalcLogDetSigma() const = 0;
 
   void set_mean(const arma::vec& mean) {
     cov_only_ = true;
@@ -234,6 +234,21 @@ inline void JmcmBase::Grad1(arma::vec& grad1) {
   }
 
   grad1 *= -2;
+}
+
+inline double JmcmBase::operator()(const arma::vec& x) {
+  UpdateJmcm(x);
+
+  arma::uword i, n_sub = m_.n_elem;
+  double result = 0.0;
+  for (i = 0; i < n_sub; ++i) {
+    arma::vec ri = get_Resid(i);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
+  }
+
+  result += CalcLogDetSigma();
+  return result;
 }
 
 }  // namespace jmcm
