@@ -91,7 +91,6 @@ class JmcmBase : public roptim::Functor {
   void Gradient(const arma::vec& x, arma::vec& grad) override;
 
   void UpdateJmcm(const arma::vec& x);
-  void UpdateParam(const arma::vec& x);
   virtual void UpdateModel() = 0;
 
   arma::vec get_mu(arma::uword i) const {
@@ -113,9 +112,13 @@ class JmcmBase : public roptim::Functor {
   }
 
  protected:
+  // method_id_ == 0 ---- MCD
+  // method_id_ == 1 ---- ACD
+  // method_id_ == 2 ---- HPC
+  arma::uword method_id_;
+
   arma::vec m_, Y_;
   arma::mat X_, Z_, W_;
-  arma::uword method_id_;
 
   arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
