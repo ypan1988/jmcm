@@ -68,7 +68,6 @@ class ACD : public JmcmBase {
   void UpdateTelem();
   void UpdateTDResid();
 
-  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k);
   arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k);
   arma::mat CalcTransTiDeriv(arma::uword i);
 };  // class ACD
@@ -374,11 +373,6 @@ inline void ACD::UpdateTDResid() {
     TDResid_.subvec(first_index, last_index) = TiDiri;
     TDResid2_.subvec(first_index, last_index) = TiDiri2;
   }
-}
-
-inline arma::vec ACD::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  if (j <= k) return arma::zeros<arma::vec>(W_.n_cols);
-  return W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t();
 }
 
 inline arma::vec ACD::CalcTijkDeriv(arma::uword i, arma::uword j,

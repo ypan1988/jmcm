@@ -74,7 +74,6 @@ class HPC : public JmcmBase {
   void UpdateTelem();
   void UpdateTDResid();
 
-  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k);
   arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
                           const arma::mat& Phii, const arma::mat& Ti);
   arma::mat CalcTransTiDeriv(arma::uword i, const arma::mat& Phii,
@@ -421,11 +420,6 @@ inline void HPC::UpdateTDResid() {
     TDResid_.subvec(first_index, last_index) = TiDiri;
     TDResid2_.subvec(first_index, last_index) = TiDiri2;
   }
-}
-
-inline arma::vec HPC::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  if (j <= k) return arma::zeros<arma::vec>(W_.n_cols);
-  return W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t();
 }
 
 inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,

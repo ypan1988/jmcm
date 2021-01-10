@@ -48,6 +48,7 @@ class JmcmBase : public roptim::Functor {
   arma::mat get_X(arma::uword i) const;
   arma::mat get_Z(arma::uword i) const;
   arma::mat get_W(arma::uword i) const;
+  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k);
 
   arma::vec get_theta() const { return theta_; }
   arma::vec get_beta() const { return beta_; }
@@ -180,6 +181,11 @@ inline arma::mat JmcmBase::get_W(arma::uword i) const {
   }
 
   return Wi;
+}
+
+inline arma::vec JmcmBase::Wijk(arma::uword i, arma::uword j, arma::uword k) {
+  if (j <= k) return arma::zeros<arma::vec>(W_.n_cols);
+  return W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t();
 }
 
 inline void JmcmBase::set_theta(const arma::vec& x) {
