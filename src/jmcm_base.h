@@ -112,21 +112,13 @@ class JmcmBase : public roptim::Functor {
   }
 
  protected:
+  arma::vec m_, Y_;
+  arma::mat X_, Z_, W_;
+
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
   // method_id_ == 2 ---- HPC
   arma::uword method_id_;
-
-  arma::vec m_, Y_;
-  arma::mat X_, Z_, W_;
-
-  arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
-  arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
-
-  // Some useful data members to avoid duplicate index calculation.
-  arma::vec cumsum_m_;
-  arma::vec cumsum_trim_;
-  arma::vec cumsum_trim2_;
 
   // free_param_ == 0  ---- beta + lambda + gamma
   // free_param_ == 1  ---- beta
@@ -152,6 +144,15 @@ class JmcmBase : public roptim::Functor {
   bool cov_only_;
   arma::vec mean_;
 
+  arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
+  arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
+
+  // Some useful data members to avoid duplicate index calculation.
+  arma::vec cumsum_m_;
+  arma::vec cumsum_trim_;
+  arma::vec cumsum_trim2_;
+
+private:
   bool is_same(const arma::vec v1, const arma::vec v2) const {
     return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
   }
