@@ -64,6 +64,8 @@ class JmcmBase : public roptim::Functor {
   void set_free_param(arma::uword n) { free_param_ = n; }
 
   void UpdateBeta();
+  void Grad1(arma::vec& grad1);
+
   arma::vec get_mu(arma::uword i) const;
   arma::vec get_Resid(arma::uword i) const;
 
@@ -243,6 +245,20 @@ inline void JmcmBase::UpdateBeta() {
   free_param_ = 1;
   UpdateJmcm(beta);  // template method
   free_param_ = fp2;
+}
+
+inline void JmcmBase::Grad1(arma::vec& grad1) {
+  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  grad1 = arma::zeros<arma::vec>(n_bta);
+
+  for (i = 0; i < n_sub; ++i) {
+    arma::mat Xi = get_X(i);
+    arma::vec ri = get_Resid(i);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    grad1 += Xi.t() * (Sigmai_inv * ri);
+  }
+
+  grad1 *= -2;
 }
 
 inline arma::vec JmcmBase::get_mu(arma::uword i) const {

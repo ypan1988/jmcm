@@ -55,7 +55,6 @@ class HPC : public JmcmBase {
 
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
-  void Grad1(arma::vec& grad1);
   void Grad2(arma::vec& grad2);
 
   void UpdateJmcm(const arma::vec& x) override;
@@ -208,20 +207,6 @@ inline void HPC::Gradient(const arma::vec& x, arma::vec& grad) {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-}
-
-inline void HPC::Grad1(arma::vec& grad1) {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  grad1 = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi = get_X(i);
-    arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-    grad1 += Xi.t() * (Sigmai_inv * ri);
-  }
-
-  grad1 *= -2;
 }
 
 inline void HPC::Grad2(arma::vec& grad2) {
