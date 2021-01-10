@@ -120,6 +120,7 @@ class JmcmBase : public roptim::Functor {
   arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
 
+  // Some useful data members to avoid duplicate index calculation.
   arma::vec cumsum_m_;
   arma::vec cumsum_trim_;
   arma::vec cumsum_trim2_;
@@ -139,6 +140,12 @@ class JmcmBase : public roptim::Functor {
   //-----------------------------------------------------------------
   arma::uword free_param_;
 
+  // Do we have a pre-specified mean_? (it can be set by set_mean())
+  // If Yes, only covariance matrix will be modelled (cov_only_=true)
+  // and the value of mean_ will be fixed with the specified vector.
+  // If No (default), both mean and covariace matrix will be modelled.
+  // Here, we have cov_only_ = false and mean_ = Y_ (Obviously, the
+  // values of mean_ are useless as they are never used in this case).
   bool cov_only_;
   arma::vec mean_;
 
