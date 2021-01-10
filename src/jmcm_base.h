@@ -129,6 +129,14 @@ class JmcmBase : public roptim::Functor {
   // free_param_ == 2  ---- lambda
   // free_param_ == 3  ---- gamma
   // free_param_ == 23 -----lambda + gamma
+  //-----------------------------------------------------------------
+  // Note: this variable is used to change the behaviour of the
+  // Functor (i.e., MCD/ACD/HPC).  For example: If free_param_ == 1
+  // then the first parameter (i.e., beta) is free to change and the
+  // value of lambda and gamma will be fixed.  If free_param_ == 23
+  // then the second and third parameter (i.e., lambda and gamma) are
+  // free to change and the value of beta will be fixed.
+  //-----------------------------------------------------------------
   arma::uword free_param_;
 
   bool cov_only_;
