@@ -20,8 +20,6 @@
 #ifndef JMCM_SRC_ACD_H_
 #define JMCM_SRC_ACD_H_
 
-#include <algorithm>  // std::equal
-
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 

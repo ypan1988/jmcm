@@ -19,6 +19,8 @@
 #ifndef JMCM_SRC_JMCM_BASE_H_
 #define JMCM_SRC_JMCM_BASE_H_
 
+#include <algorithm>
+
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 

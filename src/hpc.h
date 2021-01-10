@@ -23,8 +23,6 @@
 
 #include <cmath>
 
-#include <algorithm>  // std::equal
-
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
