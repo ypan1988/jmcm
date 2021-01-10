@@ -76,8 +76,17 @@ class JmcmBase : public roptim::Functor {
   void set_free_param(arma::uword n) { free_param_ = n; }
 
   void UpdateBeta();
+  virtual void UpdateLambda(const arma::vec&) {}
+  virtual void UpdateGamma() {}
+  virtual void UpdateLambdaGamma(const arma::vec&) {}
+
   void Grad1(arma::vec& grad1);
+  void Grad23(arma::vec& grad23);
+  virtual void Grad2(arma::vec& grad2) {}
+  virtual void Grad3(arma::vec& grad3) {}
+
   double operator()(const arma::vec& x) override;
+  void Gradient(const arma::vec& x, arma::vec& grad) override;
 
   void UpdateJmcm(const arma::vec& x);
   void UpdateParam(const arma::vec& x);
@@ -89,10 +98,6 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_Resid(arma::uword i) const {
     return Resid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
   }
-
-  virtual void UpdateLambda(const arma::vec&) {}
-  virtual void UpdateGamma() {}
-  virtual void UpdateLambdaGamma(const arma::vec&) {}
 
   virtual arma::mat get_D(arma::uword i) const = 0;
   virtual arma::mat get_T(arma::uword i) const = 0;
@@ -238,6 +243,16 @@ inline void JmcmBase::Grad1(arma::vec& grad1) {
   grad1 *= -2;
 }
 
+inline void JmcmBase::Grad23(arma::vec& grad23) {
+  arma::vec grad2;
+  Grad2(grad2);
+
+  arma::vec grad3;
+  Grad3(grad3);
+
+  grad23 = arma::join_cols(grad2,grad3);
+}
+
 inline double JmcmBase::operator()(const arma::vec& x) {
   UpdateJmcm(x);
 
@@ -251,6 +266,46 @@ inline double JmcmBase::operator()(const arma::vec& x) {
 
   result += CalcLogDetSigma();
   return result;
+}
+
+inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
+  UpdateJmcm(x);
+
+  arma::uword n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
+  arma::vec grad1, grad2, grad3;
+
+  switch (free_param_) {
+  case 0:
+    Grad1(grad1);
+    Grad2(grad2);
+    Grad3(grad3);
+
+    grad = arma::zeros<arma::vec>(theta_.n_rows);
+    grad.subvec(0, n_bta - 1) = grad1;
+    grad.subvec(n_bta, n_bta + n_lmd - 1) = grad2;
+    grad.subvec(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = grad3;
+
+    break;
+
+  case 1:
+    Grad1(grad);
+    break;
+
+  case 2:
+    Grad2(grad);
+    break;
+
+  case 3:
+    Grad3(grad);
+    break;
+
+  case 23:
+    Grad23(grad);
+    break;
+
+  default:
+    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+  }
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {

@@ -68,8 +68,8 @@ class HPC : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  void Gradient(const arma::vec& x, arma::vec& grad) override;
-  void Grad2(arma::vec& grad2);
+  void Grad2(arma::vec& grad2) override;
+  void Grad3(arma::vec& grad3) override;
 
   void UpdateModel() override;
 
@@ -132,51 +132,26 @@ inline arma::mat HPC::get_Sigma_inv(arma::uword i) const {
   return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
-inline void HPC::Gradient(const arma::vec& x, arma::vec& grad) {
-  UpdateJmcm(x);
-
-  arma::uword n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
-
-  arma::vec grad1, grad2, grad3;
-
-  switch (free_param_) {
-    case 0:
-
-      Grad1(grad1);
-      Grad2(grad2);
-
-      grad = arma::zeros<arma::vec>(theta_.n_rows);
-      grad.subvec(0, n_bta - 1) = grad1;
-      grad.subvec(n_bta, n_bta + n_lmd + n_gma - 1) = grad2;
-
-      break;
-
-    case 1:
-      Grad1(grad);
-      break;
-
-    case 23:
-      Grad2(grad);
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
-}
-
 inline void HPC::Grad2(arma::vec& grad2) {
-  arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
-  grad2 = arma::zeros<arma::vec>(n_lmd + n_gma);
-  arma::vec grad2_lmd = arma::zeros<arma::vec>(n_lmd);
-  arma::vec grad2_gma = arma::zeros<arma::vec>(n_gma);
+  arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
+  grad2 = arma::zeros<arma::vec>(n_lmd);
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
 
-    grad2_lmd += 0.5 * Zi.t() * (hi - one);
+    grad2 += 0.5 * Zi.t() * (hi - one);
+  }
 
+  grad2 *= -2;
+}
+
+inline void HPC::Grad3(arma::vec& grad3) {
+  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
+  grad3 = arma::zeros<arma::vec>(n_gma);
+
+  for (i = 0; i < n_sub; ++i) {
     arma::mat Phii = get_Phi(i);
     arma::mat Ti = get_T(i);
     arma::mat Ti_inv = get_invT(i);
@@ -184,15 +159,13 @@ inline void HPC::Grad2(arma::vec& grad2) {
 
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i, Phii, Ti);
     for (arma::uword j = 0; j != m_(i); ++j) {
-      grad2_gma += -1 / Ti(j, j) * CalcTijkDeriv(i, j, j, Phii, Ti);
+      grad3 += -1 / Ti(j, j) * CalcTijkDeriv(i, j, j, Phii, Ti);
     }
-    grad2_gma += arma::kron(ei.t(), arma::eye(n_gma, n_gma)) * Ti_trans_deriv *
-                 Ti_inv.t() * ei;
+    grad3 += arma::kron(ei.t(), arma::eye(n_gma, n_gma)) * Ti_trans_deriv *
+      Ti_inv.t() * ei;
   }
-  grad2.subvec(0, n_lmd - 1) = grad2_lmd;
-  grad2.subvec(n_lmd, n_lmd + n_gma - 1) = grad2_gma;
 
-  grad2 *= -2;
+  grad3 *= -2;
 }
 
 inline void HPC::UpdateModel() {

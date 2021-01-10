@@ -52,9 +52,8 @@ class MCD : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  void Gradient(const arma::vec& x, arma::vec& grad) override;
-  void Grad2(arma::vec& grad2);
-  void Grad3(arma::vec& grad3);
+  void Grad2(arma::vec& grad2) override;
+  void Grad3(arma::vec& grad3) override;
 
   void UpdateModel() override;
 
@@ -122,44 +121,6 @@ inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
   arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
   return Ti.t() * Di_inv * Ti;
-}
-
-inline void MCD::Gradient(const arma::vec& x, arma::vec& grad) {
-  UpdateJmcm(x);
-
-  arma::uword n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
-
-  arma::vec grad1, grad2, grad3;
-
-  switch (free_param_) {
-    case 0:
-
-      Grad1(grad1);
-      Grad2(grad2);
-      Grad3(grad3);
-
-      grad = arma::zeros<arma::vec>(theta_.n_rows);
-      grad.subvec(0, n_bta - 1) = grad1;
-      grad.subvec(n_bta, n_bta + n_lmd - 1) = grad2;
-      grad.subvec(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = grad3;
-
-      break;
-
-    case 1:
-      Grad1(grad);
-      break;
-
-    case 2:
-      Grad2(grad);
-      break;
-
-    case 3:
-      Grad3(grad);
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
 }
 
 inline void MCD::Grad2(arma::vec& grad2) {
