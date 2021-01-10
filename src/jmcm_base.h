@@ -43,12 +43,24 @@ class JmcmBase : public roptim::Functor {
   arma::mat get_Z() const { return Z_; }
   arma::mat get_W() const { return W_; }
 
-  arma::uword get_m(arma::uword i) const;
-  arma::vec get_Y(arma::uword i) const;
-  arma::mat get_X(arma::uword i) const;
-  arma::mat get_Z(arma::uword i) const;
-  arma::mat get_W(arma::uword i) const;
-  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k);
+  arma::uword get_m(arma::uword i) const { return m_(i); }
+  arma::vec get_Y(arma::uword i) const {
+    return Y_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+  arma::mat get_X(arma::uword i) const {
+    return X_.rows(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+  arma::mat get_Z(arma::uword i) const {
+    return Z_.rows(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+  arma::mat get_W(arma::uword i) const {
+    return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), W_.n_cols) :
+           arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
+  }
+  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) {
+    return j <= k ? arma::zeros<arma::vec>(W_.n_cols) :
+           arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
+  }
 
   arma::vec get_theta() const { return theta_; }
   arma::vec get_beta() const { return beta_; }
@@ -66,8 +78,12 @@ class JmcmBase : public roptim::Functor {
   void UpdateBeta();
   void Grad1(arma::vec& grad1);
 
-  arma::vec get_mu(arma::uword i) const;
-  arma::vec get_Resid(arma::uword i) const;
+  arma::vec get_mu(arma::uword i) const {
+    return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+  arma::vec get_Resid(arma::uword i) const {
+    return Resid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
 
   virtual void UpdateLambda(const arma::vec&) {}
   virtual void UpdateGamma() {}
@@ -149,47 +165,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   cumsum_trim2_.tail(n_sub) = arma::cumsum(m_%(m_+1)/2);
 }
 
-inline arma::uword JmcmBase::get_m(arma::uword i) const { return m_(i); }
-
-inline arma::vec JmcmBase::get_Y(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Y_.subvec(first_index, last_index);
-}
-
-inline arma::mat JmcmBase::get_X(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return X_.rows(first_index, last_index);
-}
-
-inline arma::mat JmcmBase::get_Z(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Z_.rows(first_index, last_index);
-}
-
-inline arma::mat JmcmBase::get_W(arma::uword i) const {
-  arma::mat Wi = arma::zeros<arma::mat>(m_(i), W_.n_cols);
-
-  if (m_(i) != 1) {
-    arma::uword first_index = cumsum_trim_(i);
-    arma::uword last_index = cumsum_trim_(i+1) - 1;
-
-    Wi = W_.rows(first_index, last_index);
-  }
-
-  return Wi;
-}
-
-inline arma::vec JmcmBase::Wijk(arma::uword i, arma::uword j, arma::uword k) {
-  if (j <= k) return arma::zeros<arma::vec>(W_.n_cols);
-  return W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t();
-}
-
 inline void JmcmBase::set_theta(const arma::vec& x) {
   arma::uword fp2 = free_param_;
   free_param_ = 0;
@@ -260,21 +235,6 @@ inline void JmcmBase::Grad1(arma::vec& grad1) {
 
   grad1 *= -2;
 }
-
-inline arma::vec JmcmBase::get_mu(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Xbta_.subvec(first_index, last_index);
-}
-
-inline arma::vec JmcmBase::get_Resid(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return Resid_.subvec(first_index, last_index);
-}
-
 
 }  // namespace jmcm
 

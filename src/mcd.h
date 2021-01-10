@@ -39,11 +39,16 @@ class MCD : public JmcmBase {
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void UpdateLambda(const arma::vec& x) override;
+  void UpdateLambda(const arma::vec& x) override { set_lambda(x); }
   void UpdateGamma() override;
 
-  arma::mat get_D(arma::uword i) const override;
-  arma::mat get_T(arma::uword i) const override;
+  arma::mat get_D(arma::uword i) const override {
+    return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)));
+  }
+  arma::mat get_T(arma::uword i) const override {
+    return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
+           pan::ltrimat(m_(i), -Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
+  }
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
@@ -60,8 +65,13 @@ class MCD : public JmcmBase {
   arma::mat G_;
   arma::vec TResid_;
 
-  arma::mat get_G(arma::uword i) const;
-  arma::vec get_TResid(arma::uword i) const;
+  arma::mat get_G(arma::uword i) const {
+    return G_.rows(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+  arma::vec get_TResid(arma::uword i) const {
+    return TResid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+  }
+
   void UpdateG();
   void UpdateTResid();
 
@@ -77,8 +87,6 @@ inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
   TResid_ = arma::zeros<arma::vec>(N);
 }
 
-inline void MCD::UpdateLambda(const arma::vec& x) { set_lambda(x); }
-
 inline void MCD::UpdateGamma() {
   arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
   arma::mat GDG = arma::zeros<arma::mat>(n_gma, n_gma);
@@ -91,30 +99,12 @@ inline void MCD::UpdateGamma() {
     arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
 
     GDG += Gi.t() * Di_inv * Gi;
-    GDr += Gi.t() * Di_inv * ri;
+    GDr += Gi.t() * (Di_inv * ri);
   }
 
   arma::vec gamma = GDG.i() * GDr;
 
   set_gamma(gamma);
-}
-
-inline arma::mat MCD::get_D(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return arma::diagmat(arma::exp(Zlmd_.subvec(first_index, last_index)));
-}
-
-inline arma::mat MCD::get_T(arma::uword i) const {
-  arma::mat Ti = arma::eye(m_(i), m_(i));
-  if (m_(i) != 1) {
-    arma::uword first_index = cumsum_trim_(i);
-    arma::uword last_index = cumsum_trim_(i+1) - 1;
-
-    Ti = pan::ltrimat(m_(i), -Wgma_.subvec(first_index, last_index));
-  }
-  return Ti;
 }
 
 inline arma::mat MCD::get_Sigma(arma::uword i) const {
@@ -334,20 +324,6 @@ inline void MCD::UpdateModel() {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-}
-
-inline arma::mat MCD::get_G(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return G_.rows(first_index, last_index);
-}
-
-inline arma::vec MCD::get_TResid(arma::uword i) const {
-  arma::uword first_index = cumsum_m_(i);
-  arma::uword last_index = cumsum_m_(i+1) - 1;
-
-  return TResid_.subvec(first_index, last_index);
 }
 
 inline void MCD::UpdateG() {
