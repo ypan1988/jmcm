@@ -71,9 +71,7 @@ class HPC : public JmcmBase {
   void Gradient(const arma::vec& x, arma::vec& grad) override;
   void Grad2(arma::vec& grad2);
 
-  void UpdateJmcm(const arma::vec& x) override;
-  void UpdateParam(const arma::vec& x);
-  void UpdateModel();
+  void UpdateModel() override;
 
   double CalcLogDetSigma() const override {
     double result = 0.0;
@@ -195,66 +193,6 @@ inline void HPC::Grad2(arma::vec& grad2) {
   grad2.subvec(n_lmd, n_lmd + n_gma - 1) = grad2_gma;
 
   grad2 *= -2;
-}
-
-inline void HPC::UpdateJmcm(const arma::vec& x) {
-  arma::uword debug = 0;
-  bool update = true;
-
-  switch (free_param_) {
-    case 0:
-      if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
-      break;
-
-    case 1:
-      if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
-      break;
-
-    case 23:
-      if (std::equal(x.cbegin(), x.cend(), lmdgma_.cbegin())) update = false;
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
-
-  if (update) {
-    UpdateParam(x);
-    UpdateModel();
-  } else {
-    if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
-  }
-}
-
-inline void HPC::UpdateParam(const arma::vec& x) {
-  arma::uword n_bta = X_.n_cols;
-  arma::uword n_lmd = Z_.n_cols;
-  arma::uword n_gma = W_.n_cols;
-
-  switch (free_param_) {
-    case 0:
-      theta_ = x;
-      beta_ = x.rows(0, n_bta - 1);
-      lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
-      gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
-      lmdgma_ = x.rows(n_bta, n_bta + n_lmd + n_gma - 1);
-      break;
-
-    case 1:
-      theta_.rows(0, n_bta - 1) = x;
-      beta_ = x;
-      break;
-
-    case 23:
-      theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
-      lambda_ = x.rows(0, n_lmd - 1);
-      gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
-      lmdgma_ = x;
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
 }
 
 inline void HPC::UpdateModel() {

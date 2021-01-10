@@ -56,9 +56,7 @@ class MCD : public JmcmBase {
   void Grad2(arma::vec& grad2);
   void Grad3(arma::vec& grad3);
 
-  void UpdateJmcm(const arma::vec& x) override;
-  void UpdateParam(const arma::vec& x);
-  void UpdateModel();
+  void UpdateModel() override;
 
   double CalcLogDetSigma() const override {
     return arma::sum(arma::log(arma::exp(Zlmd_)));
@@ -199,72 +197,6 @@ inline void MCD::Grad3(arma::vec& grad3) {
   }
 
   grad3 *= -2;
-}
-
-inline void MCD::UpdateJmcm(const arma::vec& x) {
-  arma::uword debug = 0;
-  bool update = true;
-
-  switch (free_param_) {
-    case 0:
-      if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
-      break;
-
-    case 1:
-      if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
-      break;
-
-    case 2:
-      if (std::equal(x.cbegin(), x.cend(), lambda_.cbegin())) update = false;
-      break;
-
-    case 3:
-      if (std::equal(x.cbegin(), x.cend(), gamma_.cbegin())) update = false;
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
-
-  if (update) {
-    UpdateParam(x);
-    UpdateModel();
-  } else {
-    if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
-  }
-}
-
-inline void MCD::UpdateParam(const arma::vec& x) {
-  arma::uword n_bta = X_.n_cols;
-  arma::uword n_lmd = Z_.n_cols;
-  arma::uword n_gma = W_.n_cols;
-
-  switch (free_param_) {
-    case 0:
-      theta_ = x;
-      beta_ = x.rows(0, n_bta - 1);
-      lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
-      gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
-      break;
-
-    case 1:
-      theta_.rows(0, n_bta - 1) = x;
-      beta_ = x;
-      break;
-
-    case 2:
-      theta_.rows(n_bta, n_bta + n_lmd - 1) = x;
-      lambda_ = x;
-      break;
-
-    case 3:
-      theta_.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = x;
-      gamma_ = x;
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
 }
 
 inline void MCD::UpdateModel() {

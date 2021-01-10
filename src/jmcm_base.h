@@ -79,6 +79,10 @@ class JmcmBase : public roptim::Functor {
   void Grad1(arma::vec& grad1);
   double operator()(const arma::vec& x) override;
 
+  void UpdateJmcm(const arma::vec& x);
+  void UpdateParam(const arma::vec& x);
+  virtual void UpdateModel() = 0;
+
   arma::vec get_mu(arma::uword i) const {
     return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
   }
@@ -94,8 +98,6 @@ class JmcmBase : public roptim::Functor {
   virtual arma::mat get_T(arma::uword i) const = 0;
   virtual arma::mat get_Sigma(arma::uword i) const = 0;
   virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
-
-  virtual void UpdateJmcm(const arma::vec& x) = 0;
   virtual double CalcLogDetSigma() const = 0;
 
   void set_mean(const arma::vec& mean) {
@@ -249,6 +251,83 @@ inline double JmcmBase::operator()(const arma::vec& x) {
 
   result += CalcLogDetSigma();
   return result;
+}
+
+inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
+  arma::uword debug = 0;
+  bool update = true;
+
+  switch (free_param_) {
+  case 0:
+    if (std::equal(x.cbegin(), x.cend(), theta_.cbegin())) update = false;
+    break;
+
+  case 1:
+    if (std::equal(x.cbegin(), x.cend(), beta_.cbegin())) update = false;
+    break;
+
+  case 2:
+    if (std::equal(x.cbegin(), x.cend(), lambda_.cbegin())) update = false;
+    break;
+
+  case 3:
+    if (std::equal(x.cbegin(), x.cend(), gamma_.cbegin())) update = false;
+    break;
+
+  case 23:
+    if (std::equal(x.cbegin(), x.cend(), lmdgma_.cbegin())) update = false;
+    break;
+
+  default:
+    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+  }
+
+  if (update) {
+    UpdateParam(x);
+    UpdateModel();
+  } else {
+    if (debug) Rcpp::Rcout << "Hey, I did save some time!:)" << std::endl;
+  }
+}
+
+inline void JmcmBase::UpdateParam(const arma::vec& x) {
+  arma::uword n_bta = X_.n_cols;
+  arma::uword n_lmd = Z_.n_cols;
+  arma::uword n_gma = W_.n_cols;
+
+  switch (free_param_) {
+  case 0:
+    theta_ = x;
+    beta_ = x.rows(0, n_bta - 1);
+    lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
+    gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+    break;
+
+  case 1:
+    theta_.rows(0, n_bta - 1) = x;
+    beta_ = x;
+    break;
+
+  case 2:
+    theta_.rows(n_bta, n_bta + n_lmd - 1) = x;
+    lambda_ = x;
+    break;
+
+  case 3:
+    theta_.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = x;
+    gamma_ = x;
+    break;
+
+  case 23:
+    theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
+    lambda_ = x.rows(0, n_lmd - 1);
+    gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
+    lmdgma_ = x;
+    break;
+
+  default:
+    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+  }
 }
 
 }  // namespace jmcm
