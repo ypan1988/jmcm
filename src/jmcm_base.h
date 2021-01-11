@@ -114,7 +114,7 @@ class JmcmBase : public roptim::Functor {
  protected:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
-  const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_;
+  const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_, n_lmdgma_;
 
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
@@ -152,6 +152,7 @@ class JmcmBase : public roptim::Functor {
   arma::vec cumsum_m_;
   arma::vec cumsum_trim_;
   arma::vec cumsum_trim2_;
+  arma::uvec cumsum_param_;
 
 private:
   bool is_same(const arma::vec v1, const arma::vec v2) const {
@@ -165,6 +166,7 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
     : m_(m), Y_(Y), X_(X), Z_(Z), W_(W),
       N_(Y_.n_rows), n_sub_(m_.n_elem),
       n_bta_(X_.n_cols), n_lmd_(Z_.n_cols), n_gma_(W_.n_cols),
+      n_lmdgma_(n_lmd_ + n_gma_),
       method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y) {
   theta_ = arma::zeros<arma::vec>(n_bta_ + n_lmd_ + n_gma_);
   beta_ = arma::zeros<arma::vec>(n_bta_);
@@ -185,6 +187,8 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
 
   cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_+1);
   cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_%(m_+1)/2);
+
+  cumsum_param_ = arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}));
 }
 
 inline void JmcmBase::set_theta(const arma::vec& x) {
@@ -281,7 +285,6 @@ inline double JmcmBase::operator()(const arma::vec& x) {
 inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
   UpdateJmcm(x);
 
-  arma::uword n_bta = X_.n_cols, n_lmd = Z_.n_cols, n_gma = W_.n_cols;
   arma::vec grad1, grad2, grad3;
 
   switch (free_param_) {
@@ -291,9 +294,9 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
     Grad3(grad3);
 
     grad = arma::zeros<arma::vec>(theta_.n_rows);
-    grad.subvec(0, n_bta - 1) = grad1;
-    grad.subvec(n_bta, n_bta + n_lmd - 1) = grad2;
-    grad.subvec(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = grad3;
+    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = grad1;
+    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = grad2;
+    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = grad3;
 
     break;
 
@@ -319,17 +322,14 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
-  arma::uword n_bta = X_.n_cols;
-  arma::uword n_lmd = Z_.n_cols;
-  arma::uword n_gma = W_.n_cols;
 
   switch (free_param_) {
   case 0:
     if (!is_same(x, theta_)) {
       theta_ = x;
-      beta_ = x.rows(0, n_bta - 1);
-      lambda_ = x.rows(n_bta, n_bta + n_lmd - 1);
-      gamma_ = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+      beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
+      lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
+      gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
 
       if (cov_only_)
         Xbta_ = mean_;
@@ -345,7 +345,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 
   case 1:
     if (!is_same(x, beta_)) {
-      theta_.rows(0, n_bta - 1) = x;
+      theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
       beta_ = x;
 
       if (cov_only_)
@@ -360,7 +360,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 
   case 2:
     if (!is_same(x, lambda_)) {
-      theta_.rows(n_bta, n_bta + n_lmd - 1) = x;
+      theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
       lambda_ = x;
 
       Zlmd_ = Z_ * lambda_;
@@ -370,7 +370,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 
   case 3:
     if (!is_same(x, gamma_)) {
-      theta_.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1) = x;
+      theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
       gamma_ = x;
 
       Wgma_ = W_ * gamma_;
@@ -380,9 +380,9 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 
   case 23:
     if (!is_same(x, lmdgma_)) {
-      theta_.rows(n_bta, n_bta + n_lmd + n_gma - 1) = x;
-      lambda_ = x.rows(0, n_lmd - 1);
-      gamma_ = x.rows(n_lmd, n_lmd + n_gma - 1);
+      theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
+      lambda_ = x.rows(0, n_lmd_ - 1);
+      gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
       lmdgma_ = x;
 
       Zlmd_ = Z_ * lambda_;
