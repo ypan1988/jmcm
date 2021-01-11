@@ -37,8 +37,6 @@ class JmcmBase : public roptim::Functor {
   JmcmBase(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
            const arma::mat& Z, const arma::mat& W, const arma::uword method_id);
 
-  arma::uword get_method_id() const { return method_id_; }
-
   arma::vec get_m() const { return m_; }
   arma::vec get_Y() const { return Y_; }
   arma::mat get_X() const { return X_; }
@@ -57,11 +55,19 @@ class JmcmBase : public roptim::Functor {
   }
   arma::mat get_W(arma::uword i) const {
     return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), W_.n_cols) :
-           arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
+    arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
   }
   arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) const {
     return j <= k ? arma::zeros<arma::vec>(W_.n_cols) :
-           arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
+    arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
+  }
+
+  arma::uword get_method_id() const { return method_id_; }
+  void set_free_param(arma::uword n) { free_param_ = n; }
+
+  void set_mean(const arma::vec& mean) {
+    cov_only_ = true;
+    mean_ = mean;
   }
 
   arma::vec get_theta() const { return theta_; }
@@ -75,23 +81,22 @@ class JmcmBase : public roptim::Functor {
   void set_lambda(const arma::vec& x);
   void set_gamma(const arma::vec& x);
   void set_lmdgma(const arma::vec& x);
-  void set_free_param(arma::uword n) { free_param_ = n; }
 
   void UpdateBeta();
   virtual void UpdateLambda(const arma::vec&) {}
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
 
-  arma::vec Grad1() const;
-  arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
-  virtual arma::vec Grad2() const { return arma::vec(); }
-  virtual arma::vec Grad3() const { return arma::vec(); }
+  void UpdateJmcm(const arma::vec& x);
+  virtual void UpdateModel() = 0;
 
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
 
-  void UpdateJmcm(const arma::vec& x);
-  virtual void UpdateModel() = 0;
+  arma::vec Grad1() const;
+  arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
+  virtual arma::vec Grad2() const { return arma::vec(); }
+  virtual arma::vec Grad3() const { return arma::vec(); }
 
   arma::vec get_mu(arma::uword i) const {
     return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
@@ -100,36 +105,14 @@ class JmcmBase : public roptim::Functor {
     return Resid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
   }
 
+  virtual double CalcLogDetSigma() const = 0;
+  virtual arma::mat get_Sigma(arma::uword i) const = 0;
+  virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
+
   // Matrix D refers to the diagonal matrix in MCD/ACD/HPC
   // Matrix T refers to the lower-triangular matrix in MCD/ACD/HPC
   virtual arma::mat get_D(arma::uword i) const = 0;
   virtual arma::mat get_T(arma::uword i) const = 0;
-  virtual arma::mat get_Sigma(arma::uword i) const = 0;
-  virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
-  virtual double CalcLogDetSigma() const = 0;
-
-  void set_mean(const arma::vec& mean) {
-    cov_only_ = true;
-    mean_ = mean;
-  }
-
-  // Return a column vector containing the elements that form the
-  // lower triangle part (include diagonal elements) of matrix M.
-  arma::vec get_lower_part(const arma::mat &M) const {
-    return arma::mat(M.t())(arma::trimatu_ind(arma::size(M)));
-  }
-
-  // Construct an n x n lower triangular matrix M with vector x.
-  // Should the diagonal be included?
-  // diag == true ---- YES
-  // diag == false ---- NO
-  // Note: if diag == false, the diagonal elements of M is 1.
-  arma::mat get_ltrimatrix(int n, const arma::vec& x, bool diag) const {
-    int k = diag ? 0 : 1;
-    arma::mat M = arma::eye<arma::mat>(n, n);
-    M(arma::trimatu_ind(arma::size(M), k)) = x;
-    return M.t();
-  }
 
  protected:
   const arma::vec m_, Y_;
@@ -178,7 +161,26 @@ class JmcmBase : public roptim::Functor {
   arma::vec cumsum_trim2_;
   arma::uvec cumsum_param_;
 
-private:
+ protected:
+  // Return a column vector containing the elements that form the
+  // lower triangle part (include diagonal elements) of matrix M.
+  arma::vec get_lower_part(const arma::mat &M) const {
+    return arma::mat(M.t())(arma::trimatu_ind(arma::size(M)));
+  }
+
+  // Construct an n x n lower triangular matrix M with vector x.
+  // Should the diagonal be included?
+  // diag == true ---- YES
+  // diag == false ---- NO
+  // Note: if diag == false, the diagonal elements of M are 1.
+  arma::mat get_ltrimatrix(int n, const arma::vec& x, bool diag) const {
+    int k = diag ? 0 : 1;
+    arma::mat M = arma::eye<arma::mat>(n, n);
+    M(arma::trimatu_ind(arma::size(M), k)) = x;
+    return M.t();
+  }
+
+ private:
   bool is_same(const arma::vec v1, const arma::vec v2) const {
     return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
   }
@@ -267,67 +269,6 @@ inline void JmcmBase::UpdateBeta() {
   set_beta(XSX.i() * XSy);
 }
 
-inline arma::vec JmcmBase::Grad1() const {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::vec grad1 = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Xi = get_X(i);
-    arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-    grad1 += Xi.t() * (Sigmai_inv * ri);
-  }
-
-  return (-2 * grad1);
-}
-
-inline double JmcmBase::operator()(const arma::vec& x) {
-  UpdateJmcm(x);
-
-  arma::uword i, n_sub = m_.n_elem;
-  double result = 0.0;
-  for (i = 0; i < n_sub; ++i) {
-    arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
-    result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
-  }
-
-  result += CalcLogDetSigma();
-  return result;
-}
-
-inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
-  UpdateJmcm(x);
-
-  switch (free_param_) {
-  case 0:
-    grad = arma::zeros<arma::vec>(theta_.n_rows);
-    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
-    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
-    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
-    break;
-
-  case 1:
-    grad = Grad1();
-    break;
-
-  case 2:
-    grad = Grad2();
-    break;
-
-  case 3:
-    grad = Grad3();
-    break;
-
-  case 23:
-    grad = Grad23();
-    break;
-
-  default:
-    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
-}
-
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 
   switch (free_param_) {
@@ -401,6 +342,67 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
   default:
     Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
+}
+
+inline double JmcmBase::operator()(const arma::vec& x) {
+  UpdateJmcm(x);
+
+  arma::uword i, n_sub = m_.n_elem;
+  double result = 0.0;
+  for (i = 0; i < n_sub; ++i) {
+    arma::vec ri = get_Resid(i);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
+  }
+
+  result += CalcLogDetSigma();
+  return result;
+}
+
+inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
+  UpdateJmcm(x);
+
+  switch (free_param_) {
+  case 0:
+    grad = arma::zeros<arma::vec>(theta_.n_rows);
+    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
+    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
+    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
+    break;
+
+  case 1:
+    grad = Grad1();
+    break;
+
+  case 2:
+    grad = Grad2();
+    break;
+
+  case 3:
+    grad = Grad3();
+    break;
+
+  case 23:
+    grad = Grad23();
+    break;
+
+  default:
+    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+  }
+}
+
+inline arma::vec JmcmBase::Grad1() const {
+  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
+  arma::vec grad1 = arma::zeros<arma::vec>(n_bta);
+
+  for (i = 0; i < n_sub; ++i) {
+    arma::mat Xi = get_X(i);
+    arma::vec ri = get_Resid(i);
+    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    grad1 += Xi.t() * (Sigmai_inv * ri);
+  }
+
+  return (-2 * grad1);
 }
 
 }  // namespace jmcm
