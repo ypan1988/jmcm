@@ -265,11 +265,9 @@ inline void JmcmBase::set_lmdgma(const arma::vec& x) {
 }
 
 inline void JmcmBase::UpdateBeta() {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSy = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
+  arma::mat XSX = arma::zeros<arma::mat>(n_bta_, n_bta_);
+  arma::vec XSy = arma::zeros<arma::vec>(n_bta_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec yi = get_Y(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
@@ -358,9 +356,8 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
 inline double JmcmBase::operator()(const arma::vec& x) {
   UpdateJmcm(x);
 
-  arma::uword i, n_sub = m_.n_elem;
   double result = 0.0;
-  for (i = 0; i < n_sub; ++i) {
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
     result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
@@ -403,10 +400,8 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
 }
 
 inline arma::vec JmcmBase::Grad1() const {
-  arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  arma::vec grad1 = arma::zeros<arma::vec>(n_bta);
-
-  for (i = 0; i < n_sub; ++i) {
+  arma::vec grad1 = arma::zeros<arma::vec>(n_bta_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
