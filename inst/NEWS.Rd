@@ -2,6 +2,17 @@
 \title{jmcm News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.2.4}{
+  \subsection{USER-VISIBLE CHANGES}{
+    \itemize{
+      \item improve readability of the code.
+      \item add some useful comments.
+      \item speedup MCD/ACD/HPC method (GH #2, @Neutron3529).
+    }
+  }
+}
+
+
 \section{CHANGES IN VERSION 0.2.3}{
   \subsection{BUG FIXES}{
     \itemize{
@@ -12,7 +23,7 @@
   }
   \subsection{USER-VISIBLE CHANGES}{
     \itemize{
-      \item speedup hpc method (GH #2, @Neutron3529).
+      \item speedup HPC method (GH #2, @Neutron3529).
     }
   }
 }
