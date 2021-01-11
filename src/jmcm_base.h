@@ -100,6 +100,8 @@ class JmcmBase : public roptim::Functor {
     return Resid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
   }
 
+  // Matrix D refers to the diagonal matrix in MCD/ACD/HPC
+  // Matrix T refers to the lower-triangular matrix in MCD/ACD/HPC
   virtual arma::mat get_D(arma::uword i) const = 0;
   virtual arma::mat get_T(arma::uword i) const = 0;
   virtual arma::mat get_Sigma(arma::uword i) const = 0;
