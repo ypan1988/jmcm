@@ -112,8 +112,8 @@ class JmcmBase : public roptim::Functor {
   }
 
  protected:
-  arma::vec m_, Y_;
-  arma::mat X_, Z_, W_;
+  const arma::vec m_, Y_;
+  const arma::mat X_, Z_, W_;
 
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
