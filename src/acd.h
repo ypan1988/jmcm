@@ -23,7 +23,6 @@
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
-#include "arma_util.h"
 #include "jmcm_base.h"
 
 namespace jmcm {
@@ -47,11 +46,11 @@ class ACD : public JmcmBase {
   }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-           pan::ltrimat(m_(i), Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
+           get_ltrimatrix(m_(i), Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
   }
   arma::mat get_invT(arma::uword i) const {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-           pan::ltrimat(m_(i), invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
+           get_ltrimatrix(m_(i), invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
   }
 
   arma::mat get_Sigma(arma::uword i) const override {
@@ -153,7 +152,7 @@ inline void ACD::UpdateTelem() {
 
     arma::uword first_index = cumsum_trim2_(i);
     arma::uword last_index = cumsum_trim2_(i+1)  - 1;
-    invTelem_.subvec(first_index, last_index) = pan::lvectorise(Ti_inv, true);
+    invTelem_.subvec(first_index, last_index) = get_lower_part(Ti_inv);
   }
 }
 

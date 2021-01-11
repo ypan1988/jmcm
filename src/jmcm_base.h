@@ -113,6 +113,24 @@ class JmcmBase : public roptim::Functor {
     mean_ = mean;
   }
 
+  // Return a column vector containing the elements that form the
+  // lower triangle part (include diagonal elements) of matrix M.
+  arma::vec get_lower_part(const arma::mat &M) const {
+    return arma::mat(M.t())(arma::trimatu_ind(arma::size(M)));
+  }
+
+  // Construct an n x n lower triangular matrix M with vector x.
+  // Should the diagonal be included?
+  // diag == true ---- YES
+  // diag == false ---- NO
+  // Note: if diag == false, the diagonal elements of M is 1.
+  arma::mat get_ltrimatrix(int n, const arma::vec& x, bool diag) const {
+    int k = diag ? 0 : 1;
+    arma::mat M = arma::eye<arma::mat>(n, n);
+    M(arma::trimatu_ind(arma::size(M), k)) = x;
+    return M.t();
+  }
+
  protected:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
