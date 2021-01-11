@@ -114,6 +114,7 @@ class JmcmBase : public roptim::Functor {
  protected:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
+  const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_;
 
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
@@ -161,40 +162,29 @@ private:
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
-    : m_(m),
-      Y_(Y),
-      X_(X),
-      Z_(Z),
-      W_(W),
-      method_id_(method_id),
-      free_param_(0),
-      cov_only_(false),
-      mean_(Y) {
-  arma::uword N = Y_.n_rows;
-  arma::uword n_sub = m_.size();
-  arma::uword n_bta = X_.n_cols;
-  arma::uword n_lmd = Z_.n_cols;
-  arma::uword n_gma = W_.n_cols;
+    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W),
+      N_(Y_.n_rows), n_sub_(m_.n_elem),
+      n_bta_(X_.n_cols), n_lmd_(Z_.n_cols), n_gma_(W_.n_cols),
+      method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y) {
+  theta_ = arma::zeros<arma::vec>(n_bta_ + n_lmd_ + n_gma_);
+  beta_ = arma::zeros<arma::vec>(n_bta_);
+  lambda_ = arma::zeros<arma::vec>(n_lmd_);
+  gamma_ = arma::zeros<arma::vec>(n_gma_);
+  lmdgma_ = arma::zeros<arma::vec>(n_lmd_ + n_gma_);
 
-  theta_ = arma::zeros<arma::vec>(n_bta + n_lmd + n_gma);
-  beta_ = arma::zeros<arma::vec>(n_bta);
-  lambda_ = arma::zeros<arma::vec>(n_lmd);
-  gamma_ = arma::zeros<arma::vec>(n_gma);
-  lmdgma_ = arma::zeros<arma::vec>(n_lmd + n_gma);
-
-  Xbta_ = arma::zeros<arma::vec>(N);
-  Zlmd_ = arma::zeros<arma::vec>(N);
+  Xbta_ = arma::zeros<arma::vec>(N_);
+  Zlmd_ = arma::zeros<arma::vec>(N_);
   Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
-  Resid_ = arma::zeros<arma::vec>(N);
+  Resid_ = arma::zeros<arma::vec>(N_);
 
-  cumsum_m_ = arma::zeros<arma::vec>(n_sub+1);
-  cumsum_m_.tail(n_sub) = arma::cumsum(m_);
+  cumsum_m_ = arma::zeros<arma::vec>(n_sub_+1);
+  cumsum_m_.tail(n_sub_) = arma::cumsum(m_);
 
-  cumsum_trim_ = arma::zeros<arma::vec>(n_sub+1);
-  cumsum_trim_.tail(n_sub) = arma::cumsum(m_%(m_-1)/2);
+  cumsum_trim_ = arma::zeros<arma::vec>(n_sub_+1);
+  cumsum_trim_.tail(n_sub_) = arma::cumsum(m_%(m_-1)/2);
 
-  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub+1);
-  cumsum_trim2_.tail(n_sub) = arma::cumsum(m_%(m_+1)/2);
+  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_+1);
+  cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_%(m_+1)/2);
 }
 
 inline void JmcmBase::set_theta(const arma::vec& x) {
