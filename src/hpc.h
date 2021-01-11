@@ -66,8 +66,8 @@ class HPC : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  void Grad2(arma::vec& grad2) override;
-  void Grad3(arma::vec& grad3) override;
+  arma::vec Grad2() const override;
+  arma::vec Grad3() const override;
 
   void UpdateModel() override;
 
@@ -97,9 +97,9 @@ class HPC : public JmcmBase {
   void UpdateTDResid();
 
   arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
-                          const arma::mat& Phii, const arma::mat& Ti);
+                          const arma::mat& Phii, const arma::mat& Ti) const;
   arma::mat CalcTransTiDeriv(arma::uword i, const arma::mat& Phii,
-                             const arma::mat& Ti);
+                             const arma::mat& Ti) const;
 
 };  // class HPC
 
@@ -130,9 +130,9 @@ inline arma::mat HPC::get_Sigma_inv(arma::uword i) const {
   return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
-inline void HPC::Grad2(arma::vec& grad2) {
+inline arma::vec HPC::Grad2() const {
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
-  grad2 = arma::zeros<arma::vec>(n_lmd);
+  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd);
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
@@ -142,12 +142,12 @@ inline void HPC::Grad2(arma::vec& grad2) {
     grad2 += 0.5 * Zi.t() * (hi - one);
   }
 
-  grad2 *= -2;
+  return (-2 * grad2);
 }
 
-inline void HPC::Grad3(arma::vec& grad3) {
+inline arma::vec HPC::Grad3() const {
   arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  grad3 = arma::zeros<arma::vec>(n_gma);
+  arma::vec grad3 = arma::zeros<arma::vec>(n_gma);
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Phii = get_Phi(i);
@@ -163,7 +163,7 @@ inline void HPC::Grad3(arma::vec& grad3) {
       Ti_inv.t() * ei;
   }
 
-  grad3 *= -2;
+  return (-2 * grad3);
 }
 
 inline void HPC::UpdateModel() {
@@ -240,7 +240,7 @@ inline void HPC::UpdateTDResid() {
 
 inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
                                     const arma::mat& Phii,
-                                    const arma::mat& Ti) {
+                                    const arma::mat& Ti) const {
   arma::uword n_gma = W_.n_cols;
 
   arma::vec result = arma::zeros<arma::vec>(n_gma);
@@ -261,7 +261,7 @@ inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
 }
 
 inline arma::mat HPC::CalcTransTiDeriv(arma::uword i, const arma::mat& Phii,
-                                       const arma::mat& Ti) {
+                                       const arma::mat& Ti) const {
   arma::uword n_gma = W_.n_cols;
 
   arma::mat result = arma::zeros<arma::mat>(n_gma * m_(i), m_(i));

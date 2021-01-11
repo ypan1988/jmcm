@@ -59,7 +59,7 @@ class JmcmBase : public roptim::Functor {
     return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), W_.n_cols) :
            arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
   }
-  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) {
+  arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) const {
     return j <= k ? arma::zeros<arma::vec>(W_.n_cols) :
            arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
   }
@@ -82,10 +82,10 @@ class JmcmBase : public roptim::Functor {
   virtual void UpdateGamma() {}
   virtual void UpdateLambdaGamma(const arma::vec&) {}
 
-  void Grad1(arma::vec& grad1);
-  void Grad23(arma::vec& grad23);
-  virtual void Grad2(arma::vec& grad2) {}
-  virtual void Grad3(arma::vec& grad3) {}
+  arma::vec Grad1() const;
+  arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
+  virtual arma::vec Grad2() const { return arma::vec(); }
+  virtual arma::vec Grad3() const { return arma::vec(); }
 
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
@@ -247,9 +247,9 @@ inline void JmcmBase::UpdateBeta() {
   set_beta(XSX.i() * XSy);
 }
 
-inline void JmcmBase::Grad1(arma::vec& grad1) {
+inline arma::vec JmcmBase::Grad1() const {
   arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
-  grad1 = arma::zeros<arma::vec>(n_bta);
+  arma::vec grad1 = arma::zeros<arma::vec>(n_bta);
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
@@ -258,17 +258,7 @@ inline void JmcmBase::Grad1(arma::vec& grad1) {
     grad1 += Xi.t() * (Sigmai_inv * ri);
   }
 
-  grad1 *= -2;
-}
-
-inline void JmcmBase::Grad23(arma::vec& grad23) {
-  arma::vec grad2;
-  Grad2(grad2);
-
-  arma::vec grad3;
-  Grad3(grad3);
-
-  grad23 = arma::join_cols(grad2,grad3);
+  return (-2 * grad1);
 }
 
 inline double JmcmBase::operator()(const arma::vec& x) {
@@ -293,31 +283,27 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
 
   switch (free_param_) {
   case 0:
-    Grad1(grad1);
-    Grad2(grad2);
-    Grad3(grad3);
-
     grad = arma::zeros<arma::vec>(theta_.n_rows);
-    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = grad1;
-    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = grad2;
-    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = grad3;
+    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
+    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
+    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
 
     break;
 
   case 1:
-    Grad1(grad);
+    grad = Grad1();
     break;
 
   case 2:
-    Grad2(grad);
+    grad = Grad2();
     break;
 
   case 3:
-    Grad3(grad);
+    grad = Grad3();
     break;
 
   case 23:
-    Grad23(grad);
+    grad = Grad23();
     break;
 
   default:

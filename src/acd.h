@@ -54,8 +54,8 @@ class ACD : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  void Grad2(arma::vec& grad2) override;
-  void Grad3(arma::vec& grad3) override;
+  arma::vec Grad2() const override;
+  arma::vec Grad3() const override;
 
   void UpdateModel() override;
 
@@ -78,8 +78,8 @@ class ACD : public JmcmBase {
   void UpdateTelem();
   void UpdateTDResid();
 
-  arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k) { return Wijk(i, j, k); }
-  arma::mat CalcTransTiDeriv(arma::uword i);
+  arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k) const { return Wijk(i, j, k); }
+  arma::mat CalcTransTiDeriv(arma::uword i) const;
 };  // class ACD
 
 inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
@@ -107,9 +107,9 @@ inline arma::mat ACD::get_Sigma_inv(arma::uword i) const {
   return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
-inline void ACD::Grad2(arma::vec& grad2) {
+inline arma::vec ACD::Grad2() const {
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
-  grad2 = arma::zeros<arma::vec>(n_lmd);
+  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd);
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
@@ -119,12 +119,12 @@ inline void ACD::Grad2(arma::vec& grad2) {
     grad2 += 0.5 * Zi.t() * (hi - one);
   }
 
-  grad2 *= -2;
+  return (-2 * grad2);
 }
 
-inline void ACD::Grad3(arma::vec& grad3) {
+inline arma::vec ACD::Grad3() const {
   arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  grad3 = arma::zeros<arma::vec>(n_gma);
+  arma::vec grad3 = arma::zeros<arma::vec>(n_gma);
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Ti = get_T(i);
@@ -136,7 +136,7 @@ inline void ACD::Grad3(arma::vec& grad3) {
       Ti_inv.t() * ei;
   }
 
-  grad3 *= -2;
+  return (-2 * grad3);
 }
 
 inline void ACD::UpdateModel() {
@@ -198,7 +198,7 @@ inline void ACD::UpdateTDResid() {
   }
 }
 
-inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) {
+inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) const {
   arma::uword n_gma = W_.n_cols;
 
   arma::mat result = arma::zeros<arma::mat>(n_gma * m_(i), m_(i));

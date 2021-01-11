@@ -50,8 +50,8 @@ class MCD : public JmcmBase {
   arma::mat get_Sigma(arma::uword i) const override;
   arma::mat get_Sigma_inv(arma::uword i) const override;
 
-  void Grad2(arma::vec& grad2) override;
-  void Grad3(arma::vec& grad3) override;
+  arma::vec Grad2() const override;
+  arma::vec Grad3() const override;
 
   void UpdateModel() override;
 
@@ -121,9 +121,9 @@ inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
   return Ti.t() * Di_inv * Ti;
 }
 
-inline void MCD::Grad2(arma::vec& grad2) {
+inline arma::vec MCD::Grad2() const {
   arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
-  grad2 = arma::zeros<arma::vec>(n_lmd);
+  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd);
 
   for (i = 0; i < n_sub; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
@@ -137,12 +137,12 @@ inline void MCD::Grad2(arma::vec& grad2) {
     grad2 += 0.5 * Zi.t() * (Di_inv * ei - one);
   }
 
-  grad2 *= -2;
+  return (-2 * grad2);
 }
 
-inline void MCD::Grad3(arma::vec& grad3) {
+inline arma::vec MCD::Grad3() const {
   arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  grad3 = arma::zeros<arma::vec>(n_gma);
+  arma::vec grad3 = arma::zeros<arma::vec>(n_gma);
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Gi = get_G(i);
@@ -155,7 +155,7 @@ inline void MCD::Grad3(arma::vec& grad3) {
     grad3 += Gi.t() * (Di_inv * Tiri);
   }
 
-  grad3 *= -2;
+  return (-2 * grad3);
 }
 
 inline void MCD::UpdateModel() {
