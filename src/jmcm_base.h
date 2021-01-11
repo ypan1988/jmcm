@@ -235,23 +235,18 @@ inline void JmcmBase::set_lmdgma(const arma::vec& x) {
 inline void JmcmBase::UpdateBeta() {
   arma::uword i, n_sub = m_.n_elem, n_bta = X_.n_cols;
   arma::mat XSX = arma::zeros<arma::mat>(n_bta, n_bta);
-  arma::vec XSY = arma::zeros<arma::vec>(n_bta);
+  arma::vec XSy = arma::zeros<arma::vec>(n_bta);
 
   for (i = 0; i < n_sub; ++i) {
     arma::mat Xi = get_X(i);
-    arma::vec Yi = get_Y(i);
+    arma::vec yi = get_Y(i);
     arma::mat Sigmai_inv = get_Sigma_inv(i);
 
     XSX += Xi.t() * Sigmai_inv * Xi;
-    XSY += Xi.t() * Sigmai_inv * Yi;
+    XSy += Xi.t() * (Sigmai_inv * yi);
   }
 
-  arma::vec beta = XSX.i() * XSY;
-
-  arma::uword fp2 = free_param_;
-  free_param_ = 1;
-  UpdateJmcm(beta);  // template method
-  free_param_ = fp2;
+  set_beta(XSX.i() * XSy);
 }
 
 inline void JmcmBase::Grad1(arma::vec& grad1) {
