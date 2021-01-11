@@ -72,15 +72,11 @@ class HPC : public JmcmBase {
   void UpdateModel() override;
 
   double CalcLogDetSigma() const override {
-    double result = 0.0;
-    for (arma::uword i = 0; i < m_.n_elem; ++i) {
-      result += arma::sum(arma::log(get_T(i).diag()));
-    }
-    result = 2 * result + arma::sum(Zlmd_);
-    return result;
+    return 2 * log_det_T_ + arma::sum(Zlmd_);
   }
 
  private:
+  double log_det_T_ = 0.0;
   arma::vec Telem_;  // elements for the lower triangular matrix T
   arma::vec invTelem_;
   arma::vec TDResid_;
@@ -190,6 +186,7 @@ inline void HPC::UpdateModel() {
 inline void HPC::UpdateTelem() {
   arma::uword i, n_sub = m_.n_elem;
 
+  log_det_T_ = 0.0;
   for (i = 0; i < n_sub; ++i) {
     arma::mat Phii = get_Phi(i);
     arma::mat Ti = arma::eye(m_(i), m_(i));
@@ -204,6 +201,7 @@ inline void HPC::UpdateTelem() {
       }
       Ti(j, j) = cumsin;
     }
+    log_det_T_ += arma::sum(arma::log(Ti.diag()));
 
     arma::mat Ti_inv;
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
