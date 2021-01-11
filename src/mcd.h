@@ -55,9 +55,7 @@ class MCD : public JmcmBase {
 
   void UpdateModel() override;
 
-  double CalcLogDetSigma() const override {
-    return arma::sum(arma::log(arma::exp(Zlmd_)));
-  }
+  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
 
  private:
   arma::mat G_;

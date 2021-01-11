@@ -74,9 +74,9 @@ class HPC : public JmcmBase {
   double CalcLogDetSigma() const override {
     double result = 0.0;
     for (arma::uword i = 0; i < m_.n_elem; ++i) {
-      result += 2 * arma::sum(arma::log(get_T(i).diag()));
+      result += arma::sum(arma::log(get_T(i).diag()));
     }
-    result += 2 * arma::sum(arma::log(arma::exp(Zlmd_ / 2)));
+    result = 2 * result + arma::sum(Zlmd_);
     return result;
   }
 

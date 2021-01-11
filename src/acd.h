@@ -59,9 +59,7 @@ class ACD : public JmcmBase {
 
   void UpdateModel() override;
 
-  double CalcLogDetSigma() const override {
-    return 2 * arma::sum(arma::log(arma::exp(Zlmd_ / 2)));
-  }
+  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
 
  private:
   arma::vec invTelem_;
