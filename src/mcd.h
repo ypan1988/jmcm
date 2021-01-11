@@ -38,6 +38,20 @@ class MCD : public JmcmBase {
 
   void UpdateLambda(const arma::vec& x) override { set_lambda(x); }
   void UpdateGamma() override;
+  void UpdateModel() override;
+
+  arma::vec Grad2() const override;
+  arma::vec Grad3() const override;
+
+  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
+  arma::mat get_Sigma(arma::uword i) const override {
+    arma::mat Ti_inv = get_invT(i), Di = get_D(i);
+    return Ti_inv * Di * Ti_inv.t();
+  }
+  arma::mat get_Sigma_inv(arma::uword i) const override {
+    arma::mat Ti = get_T(i), Di_inv = get_invD(i);
+    return Ti.t() * Di_inv * Ti;
+  }
 
   arma::mat get_D(arma::uword i) const override {
     return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)));
@@ -50,21 +64,6 @@ class MCD : public JmcmBase {
            get_ltrimatrix(m_(i), -Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
   }
   arma::mat get_invT(arma::uword i) const { return arma::pinv(get_T(i)); }
-  arma::mat get_Sigma(arma::uword i) const override {
-    arma::mat Ti_inv = get_invT(i), Di = get_D(i);
-    return Ti_inv * Di * Ti_inv.t();
-  }
-  arma::mat get_Sigma_inv(arma::uword i) const override {
-    arma::mat Ti = get_T(i), Di_inv = get_invD(i);
-    return Ti.t() * Di_inv * Ti;
-  }
-
-  arma::vec Grad2() const override;
-  arma::vec Grad3() const override;
-
-  void UpdateModel() override;
-
-  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
 
  private:
   arma::mat G_;
@@ -105,6 +104,29 @@ inline void MCD::UpdateGamma() {
   set_gamma(GDG.i() * GDr);
 }
 
+inline void MCD::UpdateModel() {
+  switch (free_param_) {
+  case 0:
+    UpdateG();
+    UpdateTResid();
+    break;
+
+  case 1:
+    UpdateG();
+    UpdateTResid();
+    break;
+
+  case 2: break;
+
+  case 3:
+    UpdateTResid();
+    break;
+
+  default:
+    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+  }
+}
+
 inline arma::vec MCD::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);
   for (arma::uword i = 0; i < n_sub_; ++i) {
@@ -130,29 +152,6 @@ inline arma::vec MCD::Grad3() const {
   }
 
   return (-2 * grad3);
-}
-
-inline void MCD::UpdateModel() {
-  switch (free_param_) {
-    case 0:
-      UpdateG();
-      UpdateTResid();
-      break;
-
-    case 1:
-      UpdateG();
-      UpdateTResid();
-      break;
-
-    case 2: break;
-
-    case 3:
-      UpdateTResid();
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
-  }
 }
 
 inline void MCD::UpdateG() {
