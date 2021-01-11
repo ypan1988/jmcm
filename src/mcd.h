@@ -86,23 +86,18 @@ class MCD : public JmcmBase {
 inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 0) {
-  arma::uword N = Y_.n_rows;
-  arma::uword n_gma = W_.n_cols;
-
-  G_ = arma::zeros<arma::mat>(N, n_gma);
-  TResid_ = arma::zeros<arma::vec>(N);
+  G_ = arma::zeros<arma::mat>(N_, n_gma_);
+  TResid_ = arma::zeros<arma::vec>(N_);
 }
 
 inline void MCD::UpdateGamma() {
-  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  arma::mat GDG = arma::zeros<arma::mat>(n_gma, n_gma);
-  arma::vec GDr = arma::zeros<arma::vec>(n_gma);
+  arma::mat GDG = arma::zeros<arma::mat>(n_gma_, n_gma_);
+  arma::vec GDr = arma::zeros<arma::vec>(n_gma_);
 
-  for (i = 0; i < n_sub; ++i) {
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = get_G(i);
     arma::vec ri = get_Resid(i);
-    arma::mat Di = get_D(i);
-    arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
+    arma::mat Di_inv = get_invD(i);
 
     GDG += Gi.t() * Di_inv * Gi;
     GDr += Gi.t() * (Di_inv * ri);
@@ -112,16 +107,11 @@ inline void MCD::UpdateGamma() {
 }
 
 inline arma::vec MCD::Grad2() const {
-  arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
-  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd);
-
-  for (i = 0; i < n_sub; ++i) {
+  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
-
-    arma::mat Di = get_D(i);
-    arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
+    arma::mat Di_inv = get_invD(i);
     arma::vec ei = arma::pow(get_TResid(i), 2);
 
     grad2 += 0.5 * Zi.t() * (Di_inv * ei - one);
@@ -131,15 +121,10 @@ inline arma::vec MCD::Grad2() const {
 }
 
 inline arma::vec MCD::Grad3() const {
-  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  arma::vec grad3 = arma::zeros<arma::vec>(n_gma);
-
-  for (i = 0; i < n_sub; ++i) {
+  arma::vec grad3 = arma::zeros<arma::vec>(n_gma_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = get_G(i);
-
-    arma::mat Di = get_D(i);
-    arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
+    arma::mat Di_inv = get_invD(i);
     arma::vec Tiri = get_TResid(i);
 
     grad3 += Gi.t() * (Di_inv * Tiri);
@@ -172,14 +157,12 @@ inline void MCD::UpdateModel() {
 }
 
 inline void MCD::UpdateG() {
-  arma::uword i, j, n_sub = m_.n_elem;
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Gi = arma::zeros<arma::mat>(m_(i), W_.n_cols);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
+    arma::mat Gi = arma::zeros<arma::mat>(m_(i), n_gma_);
 
     arma::mat Wi = get_W(i);
     arma::vec ri = get_Resid(i);
-    for (j = 1; j != m_(i); ++j) {
+    for (arma::uword j = 1; j != m_(i); ++j) {
       arma::uword index = 0;
       if (j != 1) index = (j-1) * j /2;
       Gi.row(j) = ri.subvec(0, j - 1).t() * Wi.rows(index, index + j - 1);
@@ -193,9 +176,7 @@ inline void MCD::UpdateG() {
 }
 
 inline void MCD::UpdateTResid() {
-  arma::uword i, n_sub = m_.n_elem;
-
-  for (i = 0; i < n_sub; ++i) {
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Tiri = get_T(i) * get_Resid(i);
 
     arma::uword first_index = cumsum_m_(i);

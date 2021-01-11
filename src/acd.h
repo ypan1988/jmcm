@@ -92,18 +92,14 @@ class ACD : public JmcmBase {
 inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 1) {
-  arma::uword N = Y_.n_rows;
-
-  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N);
-  TDResid_ = arma::zeros<arma::vec>(N);
-  TDResid2_ = arma::zeros<arma::vec>(N);
+  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N_);
+  TDResid_ = arma::zeros<arma::vec>(N_);
+  TDResid2_ = arma::zeros<arma::vec>(N_);
 }
 
 inline arma::vec ACD::Grad2() const {
-  arma::uword i, n_sub = m_.n_elem, n_lmd = Z_.n_cols;
-  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd);
-
-  for (i = 0; i < n_sub; ++i) {
+  arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
@@ -115,16 +111,13 @@ inline arma::vec ACD::Grad2() const {
 }
 
 inline arma::vec ACD::Grad3() const {
-  arma::uword i, n_sub = m_.n_elem, n_gma = W_.n_cols;
-  arma::vec grad3 = arma::zeros<arma::vec>(n_gma);
-
-  for (i = 0; i < n_sub; ++i) {
-    arma::mat Ti = get_T(i);
-    arma::mat Ti_inv = get_invT(i);
+  arma::vec grad3 = arma::zeros<arma::vec>(n_gma_);
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ei = get_TDResid(i);
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i);
+    arma::mat Ti_inv = get_invT(i);
 
-    grad3 += arma::kron(ei.t(), arma::eye(n_gma, n_gma)) * Ti_trans_deriv *
+    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) * Ti_trans_deriv *
       Ti_inv.t() * ei;
   }
 
@@ -153,9 +146,7 @@ inline void ACD::UpdateModel() {
 }
 
 inline void ACD::UpdateTelem() {
-  arma::uword i, n_sub = m_.n_elem;
-
-  for (i = 0; i < n_sub; ++i) {
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Ti = get_T(i);
     arma::mat Ti_inv;
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
@@ -167,16 +158,11 @@ inline void ACD::UpdateTelem() {
 }
 
 inline void ACD::UpdateTDResid() {
-  arma::uword i, n_sub = m_.n_elem;
-
-  for (i = 0; i < n_sub; ++i) {
+  for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
 
-    arma::mat Ti = get_T(i);
     arma::mat Ti_inv = get_invT(i);
-
-    arma::mat Di = get_D(i);
-    arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
+    arma::mat Di_inv = get_invD(i);
 
     arma::vec TiDiri = Ti_inv * Di_inv * ri;
     arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * Ti_inv * Di_inv * ri *
@@ -191,12 +177,10 @@ inline void ACD::UpdateTDResid() {
 }
 
 inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) const {
-  arma::uword n_gma = W_.n_cols;
-
-  arma::mat result = arma::zeros<arma::mat>(n_gma * m_(i), m_(i));
+  arma::mat result = arma::zeros<arma::mat>(n_gma_ * m_(i), m_(i));
   for (arma::uword k = 1; k != m_(i); ++k) {
     for (arma::uword j = 0; j <= k; ++j) {
-      result.submat(j * n_gma, k, (j * n_gma + n_gma - 1), k) =
+      result.submat(j * n_gma_, k, (j * n_gma_ + n_gma_ - 1), k) =
           CalcTijkDeriv(i, k, j);
     }
   }
