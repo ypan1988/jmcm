@@ -220,7 +220,8 @@ arma::vec JmcmFit<JMCM>::Optimize() {
                   << " and Angle Parameters..." << std::endl;
               break;
             }
-            default: {}
+            default: {
+            }
           }
         }
         jmcm_.set_free_param(23);

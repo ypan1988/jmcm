@@ -5,11 +5,11 @@
 #ifndef JMCM_LINESEARCH_H_
 #define JMCM_LINESEARCH_H_
 
+#include <RcppArmadillo.h>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
-
-#include <RcppArmadillo.h>
 
 namespace pan {
 

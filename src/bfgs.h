@@ -5,13 +5,14 @@
 #ifndef JMCM_BFGS_H_
 #define JMCM_BFGS_H_
 
+#include <RcppArmadillo.h>
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <limits>
 
 #include "linesearch.h"
-#include <RcppArmadillo.h>
 
 namespace pan {
 

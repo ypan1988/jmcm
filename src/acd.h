@@ -53,18 +53,27 @@ class ACD : public JmcmBase {
   }
 
   arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)/2));
+    return arma::diagmat(
+        arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
   }
   arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)/2));
+    return arma::diagmat(
+        arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
   }
   arma::mat get_T(arma::uword i) const override {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-           get_ltrimatrix(m_(i), Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
+    return m_(i) == 1 ? arma::eye(m_(i), m_(i))
+                      : get_ltrimatrix(m_(i),
+                                       Wgma_.subvec(cumsum_trim_(i),
+                                                    cumsum_trim_(i + 1) - 1),
+                                       false);
   }
   arma::mat get_invT(arma::uword i) const {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-           get_ltrimatrix(m_(i), invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
+    return m_(i) == 1
+               ? arma::eye(m_(i), m_(i))
+               : get_ltrimatrix(m_(i),
+                                invTelem_.subvec(cumsum_trim2_(i),
+                                                 cumsum_trim2_(i + 1) - 1),
+                                true);
   }
 
  private:
@@ -73,16 +82,18 @@ class ACD : public JmcmBase {
   arma::vec TDResid2_;
 
   arma::vec get_TDResid(arma::uword i) const {
-    return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::vec get_TDResid2(arma::uword i) const {
-    return TDResid2_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return TDResid2_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
 
   void UpdateTelem();
   void UpdateTDResid();
 
-  arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k) const { return Wijk(i, j, k); }
+  arma::vec CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k) const {
+    return Wijk(i, j, k);
+  }
   arma::mat CalcTransTiDeriv(arma::uword i) const;
 };  // class ACD
 
@@ -122,7 +133,7 @@ inline arma::vec ACD::Grad2() const {
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
 
-    grad2 += Zi.t() * (hi - one); // cancel the 0.5 in front and 2 in return
+    grad2 += Zi.t() * (hi - one);  // cancel the 0.5 in front and 2 in return
   }
 
   return (-grad2);
@@ -135,8 +146,8 @@ inline arma::vec ACD::Grad3() const {
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i);
     arma::mat Ti_inv = get_invT(i);
 
-    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) * Ti_trans_deriv *
-      Ti_inv.t() * ei;
+    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
+             (Ti_trans_deriv * (Ti_inv.t() * ei));
   }
 
   return (-2 * grad3);
@@ -149,7 +160,7 @@ inline void ACD::UpdateTelem() {
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
 
     arma::uword first_index = cumsum_trim2_(i);
-    arma::uword last_index = cumsum_trim2_(i+1)  - 1;
+    arma::uword last_index = cumsum_trim2_(i + 1) - 1;
     invTelem_.subvec(first_index, last_index) = get_lower_part(Ti_inv);
   }
 }
@@ -165,7 +176,7 @@ inline void ACD::UpdateTDResid() {
     arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * TiDiri * Diri.t());
 
     arma::uword first_index = cumsum_m_(i);
-    arma::uword last_index = cumsum_m_(i+1) - 1;
+    arma::uword last_index = cumsum_m_(i + 1) - 1;
 
     TDResid_.subvec(first_index, last_index) = TiDiri;
     TDResid2_.subvec(first_index, last_index) = TiDiri2;

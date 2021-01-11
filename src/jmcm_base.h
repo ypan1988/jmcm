@@ -45,21 +45,23 @@ class JmcmBase : public roptim::Functor {
 
   arma::uword get_m(arma::uword i) const { return m_(i); }
   arma::vec get_Y(arma::uword i) const {
-    return Y_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return Y_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::mat get_X(arma::uword i) const {
-    return X_.rows(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return X_.rows(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::mat get_Z(arma::uword i) const {
-    return Z_.rows(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return Z_.rows(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::mat get_W(arma::uword i) const {
-    return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), W_.n_cols) :
-    arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
+    return m_(i) == 1
+               ? arma::zeros<arma::mat>(m_(i), W_.n_cols)
+               : arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i + 1) - 1));
   }
   arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) const {
-    return j <= k ? arma::zeros<arma::vec>(W_.n_cols) :
-    arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
+    return j <= k
+               ? arma::zeros<arma::vec>(W_.n_cols)
+               : arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
   }
 
   arma::uword get_method_id() const { return method_id_; }
@@ -99,10 +101,10 @@ class JmcmBase : public roptim::Functor {
   virtual arma::vec Grad3() const { return arma::vec(); }
 
   arma::vec get_mu(arma::uword i) const {
-    return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::vec get_Resid(arma::uword i) const {
-    return Resid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return Resid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
 
   virtual double CalcLogDetSigma() const = 0;
@@ -164,7 +166,7 @@ class JmcmBase : public roptim::Functor {
  protected:
   // Return a column vector containing the elements that form the
   // lower triangle part (include diagonal elements) of matrix M.
-  arma::vec get_lower_part(const arma::mat &M) const {
+  arma::vec get_lower_part(const arma::mat& M) const {
     return arma::mat(M.t())(arma::trimatu_ind(arma::size(M)));
   }
 
@@ -189,11 +191,21 @@ class JmcmBase : public roptim::Functor {
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
-    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W),
-      N_(Y_.n_rows), n_sub_(m_.n_elem),
-      n_bta_(X_.n_cols), n_lmd_(Z_.n_cols), n_gma_(W_.n_cols),
+    : m_(m),
+      Y_(Y),
+      X_(X),
+      Z_(Z),
+      W_(W),
+      N_(Y_.n_rows),
+      n_sub_(m_.n_elem),
+      n_bta_(X_.n_cols),
+      n_lmd_(Z_.n_cols),
+      n_gma_(W_.n_cols),
       n_lmdgma_(n_lmd_ + n_gma_),
-      method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y) {
+      method_id_(method_id),
+      free_param_(0),
+      cov_only_(false),
+      mean_(Y) {
   theta_ = arma::zeros<arma::vec>(n_bta_ + n_lmd_ + n_gma_);
   beta_ = arma::zeros<arma::vec>(n_bta_);
   lambda_ = arma::zeros<arma::vec>(n_lmd_);
@@ -205,14 +217,14 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
   Resid_ = arma::zeros<arma::vec>(N_);
 
-  cumsum_m_ = arma::zeros<arma::vec>(n_sub_+1);
+  cumsum_m_ = arma::zeros<arma::vec>(n_sub_ + 1);
   cumsum_m_.tail(n_sub_) = arma::cumsum(m_);
 
-  cumsum_trim_ = arma::zeros<arma::vec>(n_sub_+1);
-  cumsum_trim_.tail(n_sub_) = arma::cumsum(m_%(m_-1)/2);
+  cumsum_trim_ = arma::zeros<arma::vec>(n_sub_ + 1);
+  cumsum_trim_.tail(n_sub_) = arma::cumsum(m_ % (m_ - 1) / 2);
 
-  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_+1);
-  cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_%(m_+1)/2);
+  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_ + 1);
+  cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_ % (m_ + 1) / 2);
 
   cumsum_param_ = arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}));
 }
@@ -270,77 +282,76 @@ inline void JmcmBase::UpdateBeta() {
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
-
   switch (free_param_) {
-  case 0:
-    if (!is_same(x, theta_)) {
-      theta_ = x;
-      beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
-      lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
-      gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
+    case 0:
+      if (!is_same(x, theta_)) {
+        theta_ = x;
+        beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
+        lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
+        gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
 
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
+        if (cov_only_)
+          Xbta_ = mean_;
+        else
+          Xbta_ = X_ * beta_;
 
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
-      Resid_ = Y_ - Xbta_;
-      UpdateModel();
-    }
-    break;
+        Zlmd_ = Z_ * lambda_;
+        Wgma_ = W_ * gamma_;
+        Resid_ = Y_ - Xbta_;
+        UpdateModel();
+      }
+      break;
 
-  case 1:
-    if (!is_same(x, beta_)) {
-      theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
-      beta_ = x;
+    case 1:
+      if (!is_same(x, beta_)) {
+        theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
+        beta_ = x;
 
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
+        if (cov_only_)
+          Xbta_ = mean_;
+        else
+          Xbta_ = X_ * beta_;
 
-      Resid_ = Y_ - Xbta_;
-      UpdateModel();
-    }
-    break;
+        Resid_ = Y_ - Xbta_;
+        UpdateModel();
+      }
+      break;
 
-  case 2:
-    if (!is_same(x, lambda_)) {
-      theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
-      lambda_ = x;
+    case 2:
+      if (!is_same(x, lambda_)) {
+        theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
+        lambda_ = x;
 
-      Zlmd_ = Z_ * lambda_;
-      UpdateModel();
-    }
-    break;
+        Zlmd_ = Z_ * lambda_;
+        UpdateModel();
+      }
+      break;
 
-  case 3:
-    if (!is_same(x, gamma_)) {
-      theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
-      gamma_ = x;
+    case 3:
+      if (!is_same(x, gamma_)) {
+        theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
+        gamma_ = x;
 
-      Wgma_ = W_ * gamma_;
-      UpdateModel();
-    }
-    break;
+        Wgma_ = W_ * gamma_;
+        UpdateModel();
+      }
+      break;
 
-  case 23:
-    if (!is_same(x, lmdgma_)) {
-      theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
-      lambda_ = x.rows(0, n_lmd_ - 1);
-      gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
-      lmdgma_ = x;
+    case 23:
+      if (!is_same(x, lmdgma_)) {
+        theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
+        lambda_ = x.rows(0, n_lmd_ - 1);
+        gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
+        lmdgma_ = x;
 
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
-      UpdateModel();
-    }
-    break;
+        Zlmd_ = Z_ * lambda_;
+        Wgma_ = W_ * gamma_;
+        UpdateModel();
+      }
+      break;
 
-  default:
-    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+    default:
+      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
 }
 
@@ -363,31 +374,31 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
   UpdateJmcm(x);
 
   switch (free_param_) {
-  case 0:
-    grad = arma::zeros<arma::vec>(theta_.n_rows);
-    grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
-    grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
-    grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
-    break;
+    case 0:
+      grad = arma::zeros<arma::vec>(theta_.n_rows);
+      grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
+      grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
+      grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
+      break;
 
-  case 1:
-    grad = Grad1();
-    break;
+    case 1:
+      grad = Grad1();
+      break;
 
-  case 2:
-    grad = Grad2();
-    break;
+    case 2:
+      grad = Grad2();
+      break;
 
-  case 3:
-    grad = Grad3();
-    break;
+    case 3:
+      grad = Grad3();
+      break;
 
-  case 23:
-    grad = Grad23();
-    break;
+    case 23:
+      grad = Grad23();
+      break;
 
-  default:
-    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+    default:
+      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
 }
 

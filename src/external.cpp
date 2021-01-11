@@ -324,11 +324,11 @@ RcppExport SEXP grad(SEXP xp, SEXP x_) {
 
 RcppExport SEXP hess(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-  
+
   arma::vec x = Rcpp::as<arma::vec>(x_);
 
   arma::mat hess;
   ptr->Hessian(x, hess);
-  
+
   return Rcpp::wrap(hess);
 }

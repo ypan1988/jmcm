@@ -58,23 +58,35 @@ class HPC : public JmcmBase {
   }
 
   arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1) / 2));
+    return arma::diagmat(
+        arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
   }
   arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1) / 2));
+    return arma::diagmat(
+        arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
   }
   arma::mat get_T(arma::uword i) const override {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-    get_ltrimatrix(m_(i), Telem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
+    return m_(i) == 1 ? arma::eye(m_(i), m_(i))
+                      : get_ltrimatrix(m_(i),
+                                       Telem_.subvec(cumsum_trim2_(i),
+                                                     cumsum_trim2_(i + 1) - 1),
+                                       true);
   }
   arma::mat get_invT(arma::uword i) const {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
-    get_ltrimatrix(m_(i), invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
+    return m_(i) == 1
+               ? arma::eye(m_(i), m_(i))
+               : get_ltrimatrix(m_(i),
+                                invTelem_.subvec(cumsum_trim2_(i),
+                                                 cumsum_trim2_(i + 1) - 1),
+                                true);
   }
 
   arma::mat get_Phi(arma::uword i) const {
-    return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), m_(i)) :
-           get_ltrimatrix(m_(i), Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
+    return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), m_(i))
+                      : get_ltrimatrix(m_(i),
+                                       Wgma_.subvec(cumsum_trim_(i),
+                                                    cumsum_trim_(i + 1) - 1),
+                                       false);
   }
   arma::mat get_R(arma::uword i) const {
     arma::mat Ti = get_T(i);
@@ -89,10 +101,10 @@ class HPC : public JmcmBase {
   arma::vec TDResid2_;
 
   arma::vec get_TDResid(arma::uword i) const {
-    return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::vec get_TDResid2(arma::uword i) const {
-    return TDResid2_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1);
+    return TDResid2_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
 
   void UpdateTelem();
@@ -117,22 +129,22 @@ inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
 
 inline void HPC::UpdateModel() {
   switch (free_param_) {
-  case 0:
-    UpdateTelem();
-    UpdateTDResid();
-    break;
+    case 0:
+      UpdateTelem();
+      UpdateTDResid();
+      break;
 
-  case 1:
-    UpdateTDResid();
-    break;
+    case 1:
+      UpdateTDResid();
+      break;
 
-  case 23:
-    UpdateTelem();
-    UpdateTDResid();
-    break;
+    case 23:
+      UpdateTelem();
+      UpdateTDResid();
+      break;
 
-  default:
-    Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+    default:
+      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
 }
 
@@ -143,7 +155,7 @@ inline arma::vec HPC::Grad2() const {
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
 
-    grad2 += Zi.t() * (hi - one); // cancel the 0.5 in front and 2 in return
+    grad2 += Zi.t() * (hi - one);  // cancel the 0.5 in front and 2 in return
   }
 
   return (-grad2);
@@ -161,8 +173,8 @@ inline arma::vec HPC::Grad3() const {
     for (arma::uword j = 0; j != m_(i); ++j) {
       grad3 += -1 / Ti(j, j) * CalcTijkDeriv(i, j, j, Phii, Ti);
     }
-    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) * (Ti_trans_deriv *
-             (Ti_inv.t() * ei));
+    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
+             (Ti_trans_deriv * (Ti_inv.t() * ei));
   }
 
   return (-2 * grad3);
@@ -177,7 +189,7 @@ inline void HPC::UpdateTelem() {
     Ti(0, 0) = 1;
     for (arma::uword j = 1; j != m_(i); ++j) {
       Ti(j, 0) = std::cos(Phii(j, 0));
-      double cumsin=std::sin(Phii(j, 0));
+      double cumsin = std::sin(Phii(j, 0));
       for (arma::uword l = 1; l != j; ++l) {
         Ti(j, l) = std::cos(Phii(j, l)) * cumsin;
         cumsin *= std::sin(Phii(j, l));
@@ -190,7 +202,7 @@ inline void HPC::UpdateTelem() {
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
 
     arma::uword first_index = cumsum_trim2_(i);
-    arma::uword last_index = cumsum_trim2_(i+1)  - 1;
+    arma::uword last_index = cumsum_trim2_(i + 1) - 1;
 
     Telem_.subvec(first_index, last_index) = get_lower_part(Ti);
     invTelem_.subvec(first_index, last_index) = get_lower_part(Ti_inv);
@@ -208,7 +220,7 @@ inline void HPC::UpdateTDResid() {
     arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * TiDiri * Diri.t());
 
     arma::uword first_index = cumsum_m_(i);
-    arma::uword last_index = cumsum_m_(i+1) - 1;
+    arma::uword last_index = cumsum_m_(i + 1) - 1;
 
     TDResid_.subvec(first_index, last_index) = TiDiri;
     TDResid2_.subvec(first_index, last_index) = TiDiri2;
