@@ -42,6 +42,9 @@ class ACD : public JmcmBase {
   arma::mat get_D(arma::uword i) const override {
     return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)/2));
   }
+  arma::mat get_invD(arma::uword i) const {
+    return arma::diagmat(arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)/2));
+  }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
            pan::ltrimat(m_(i), Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1), false);
@@ -51,8 +54,14 @@ class ACD : public JmcmBase {
            pan::ltrimat(m_(i), invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i+1) - 1), true);
   }
 
-  arma::mat get_Sigma(arma::uword i) const override;
-  arma::mat get_Sigma_inv(arma::uword i) const override;
+  arma::mat get_Sigma(arma::uword i) const override {
+    arma::mat DiTi = get_D(i) * get_T(i);
+    return DiTi * DiTi.t();
+  }
+  arma::mat get_Sigma_inv(arma::uword i) const override {
+    arma::mat Ti_inv_Di_inv = get_invT(i) * get_invD(i);
+    return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
+  }
 
   arma::vec Grad2() const override;
   arma::vec Grad3() const override;
@@ -88,21 +97,6 @@ inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
   invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N);
   TDResid_ = arma::zeros<arma::vec>(N);
   TDResid2_ = arma::zeros<arma::vec>(N);
-}
-
-inline arma::mat ACD::get_Sigma(arma::uword i) const {
-  arma::mat DiTi = get_D(i) * get_T(i);
-
-  return DiTi * DiTi.t();
-}
-
-inline arma::mat ACD::get_Sigma_inv(arma::uword i) const {
-  arma::mat Di = get_D(i);
-  arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-  arma::mat Ti_inv = get_invT(i);
-  arma::mat Ti_inv_Di_inv = Ti_inv * Di_inv;
-
-  return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
 }
 
 inline arma::vec ACD::Grad2() const {

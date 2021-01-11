@@ -43,12 +43,22 @@ class MCD : public JmcmBase {
   arma::mat get_D(arma::uword i) const override {
     return arma::diagmat(arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)));
   }
+  arma::mat get_invD(arma::uword i) const {
+    return arma::diagmat(arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i+1) - 1)));
+  }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i)) :
            pan::ltrimat(m_(i), -Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i+1) - 1));
   }
-  arma::mat get_Sigma(arma::uword i) const override;
-  arma::mat get_Sigma_inv(arma::uword i) const override;
+  arma::mat get_invT(arma::uword i) const { return arma::pinv(get_T(i)); }
+  arma::mat get_Sigma(arma::uword i) const override {
+    arma::mat Ti_inv = get_invT(i), Di = get_D(i);
+    return Ti_inv * Di * Ti_inv.t();
+  }
+  arma::mat get_Sigma_inv(arma::uword i) const override {
+    arma::mat Ti = get_T(i), Di_inv = get_invD(i);
+    return Ti.t() * Di_inv * Ti;
+  }
 
   arma::vec Grad2() const override;
   arma::vec Grad3() const override;
@@ -98,25 +108,7 @@ inline void MCD::UpdateGamma() {
     GDr += Gi.t() * (Di_inv * ri);
   }
 
-  arma::vec gamma = GDG.i() * GDr;
-
-  set_gamma(gamma);
-}
-
-inline arma::mat MCD::get_Sigma(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  arma::mat Ti_inv = arma::pinv(Ti);
-  arma::mat Di = get_D(i);
-
-  return Ti_inv * Di * Ti_inv.t();
-}
-
-inline arma::mat MCD::get_Sigma_inv(arma::uword i) const {
-  arma::mat Ti = get_T(i);
-  arma::mat Di = get_D(i);
-  arma::mat Di_inv = arma::diagmat(arma::pow(Di.diag(), -1));
-
-  return Ti.t() * Di_inv * Ti;
+  set_gamma(GDG.i() * GDr);
 }
 
 inline arma::vec MCD::Grad2() const {
