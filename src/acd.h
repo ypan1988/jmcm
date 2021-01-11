@@ -104,10 +104,10 @@ inline arma::vec ACD::Grad2() const {
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
 
-    grad2 += 0.5 * Zi.t() * (hi - one);
+    grad2 += Zi.t() * (hi - one); // cancel the 0.5 in front and 2 in return
   }
 
-  return (-2 * grad2);
+  return (-grad2);
 }
 
 inline arma::vec ACD::Grad3() const {

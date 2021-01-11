@@ -114,10 +114,10 @@ inline arma::vec MCD::Grad2() const {
     arma::mat Di_inv = get_invD(i);
     arma::vec ei = arma::pow(get_TResid(i), 2);
 
-    grad2 += 0.5 * Zi.t() * (Di_inv * ei - one);
+    grad2 += Zi.t() * (Di_inv * ei - one); // cancel the 0.5 in front and 2 in return
   }
 
-  return (-2 * grad2);
+  return (-grad2);
 }
 
 inline arma::vec MCD::Grad3() const {
