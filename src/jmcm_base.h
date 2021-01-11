@@ -149,6 +149,10 @@ class JmcmBase : public roptim::Functor {
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
 
   // Some useful data members to avoid duplicate index calculation.
+  // cumsum_m_ == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
+  // cumsum_trim_ == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
+  // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
+  // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
   arma::vec cumsum_m_;
   arma::vec cumsum_trim_;
   arma::vec cumsum_trim2_;
