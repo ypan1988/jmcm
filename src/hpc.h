@@ -206,9 +206,9 @@ inline void HPC::UpdateTDResid() {
     arma::mat Ti_inv = get_invT(i);
     arma::mat Di_inv = get_invD(i);
 
-    arma::vec TiDiri = Ti_inv * Di_inv * ri;
-    arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * Ti_inv * Di_inv * ri *
-                                      ri.t() * Di_inv);  // hi
+    arma::vec Diri = Di_inv * ri;
+    arma::vec TiDiri = Ti_inv * Diri;
+    arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * TiDiri * Diri.t());
 
     arma::uword first_index = cumsum_m_(i);
     arma::uword last_index = cumsum_m_(i+1) - 1;
