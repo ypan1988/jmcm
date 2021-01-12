@@ -55,12 +55,12 @@ class JmcmBase : public roptim::Functor {
   }
   arma::mat get_W(arma::uword i) const {
     return m_(i) == 1
-               ? arma::zeros<arma::mat>(m_(i), W_.n_cols)
+               ? arma::zeros<arma::mat>(m_(i), n_gma_)
                : arma::mat(W_.rows(cumsum_trim_(i), cumsum_trim_(i + 1) - 1));
   }
   arma::vec Wijk(arma::uword i, arma::uword j, arma::uword k) const {
     return j <= k
-               ? arma::zeros<arma::vec>(W_.n_cols)
+               ? arma::zeros<arma::vec>(n_gma_)
                : arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
   }
 
