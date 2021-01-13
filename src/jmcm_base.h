@@ -85,9 +85,9 @@ class JmcmBase : public roptim::Functor {
   void set_lmdgma(const arma::vec& x);
 
   void UpdateBeta();
-  virtual void UpdateLambda(const arma::vec&) {}
+  void UpdateLambda(const arma::vec& x) { set_lambda(x); }
+  void UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
   virtual void UpdateGamma() {}
-  virtual void UpdateLambdaGamma(const arma::vec&) {}
 
   void UpdateJmcm(const arma::vec& x);
   virtual void UpdateModel() = 0;

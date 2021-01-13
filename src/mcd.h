@@ -36,7 +36,6 @@ class MCD : public JmcmBase {
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void UpdateLambda(const arma::vec& x) override { set_lambda(x); }
   void UpdateGamma() override;
   void UpdateModel() override;
 

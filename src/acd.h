@@ -36,7 +36,6 @@ class ACD : public JmcmBase {
   ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
-  void UpdateLambdaGamma(const arma::vec& x) override { set_lmdgma(x); }
   void UpdateModel() override;
 
   arma::vec Grad2() const override;
