@@ -118,13 +118,11 @@ class HPC : public JmcmBase {
 
 inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
-    : JmcmBase(m, Y, X, Z, W, 2) {
-  Telem_ = arma::zeros<arma::vec>(W_.n_rows + N_);
-  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N_);
-
-  TDResid_ = arma::zeros<arma::vec>(N_);
-  TDResid2_ = arma::zeros<arma::vec>(N_);
-}
+    : JmcmBase(m, Y, X, Z, W, 2),
+      Telem_(W_.n_rows + N_, arma::fill::zeros),
+      invTelem_(W_.n_rows + N_, arma::fill::zeros),
+      TDResid_(N_, arma::fill::zeros),
+      TDResid2_(N_, arma::fill::zeros) {}
 
 inline void HPC::UpdateModel() {
   switch (free_param_) {

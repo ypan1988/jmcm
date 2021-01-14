@@ -98,11 +98,10 @@ class ACD : public JmcmBase {
 
 inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
-    : JmcmBase(m, Y, X, Z, W, 1) {
-  invTelem_ = arma::zeros<arma::vec>(W_.n_rows + N_);
-  TDResid_ = arma::zeros<arma::vec>(N_);
-  TDResid2_ = arma::zeros<arma::vec>(N_);
-}
+    : JmcmBase(m, Y, X, Z, W, 1),
+      invTelem_(W_.n_rows + N_, arma::fill::zeros),
+      TDResid_(N_, arma::fill::zeros),
+      TDResid2_(N_, arma::fill::zeros) {}
 
 inline void ACD::UpdateModel() {
   switch (free_param_) {

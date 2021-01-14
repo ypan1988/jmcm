@@ -228,18 +228,17 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       method_id_(method_id),
       free_param_(0),
       cov_only_(false),
-      mean_(Y) {
-  theta_ = arma::zeros<arma::vec>(n_bta_ + n_lmd_ + n_gma_);
-  beta_ = arma::zeros<arma::vec>(n_bta_);
-  lambda_ = arma::zeros<arma::vec>(n_lmd_);
-  gamma_ = arma::zeros<arma::vec>(n_gma_);
-  lmdgma_ = arma::zeros<arma::vec>(n_lmd_ + n_gma_);
-
-  Xbta_ = arma::zeros<arma::vec>(N_);
-  Zlmd_ = arma::zeros<arma::vec>(N_);
-  Wgma_ = arma::zeros<arma::vec>(W_.n_rows);
-  Resid_ = arma::zeros<arma::vec>(N_);
-
+      mean_(Y),
+      theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
+      beta_(n_bta_, arma::fill::zeros),
+      lambda_(n_lmd_, arma::fill::zeros),
+      gamma_(n_gma_, arma::fill::zeros),
+      lmdgma_(n_lmd_ + n_gma_, arma::fill::zeros),
+      Xbta_(N_, arma::fill::zeros),
+      Zlmd_(N_, arma::fill::zeros),
+      Wgma_(W_.n_rows, arma::fill::zeros),
+      Resid_(N_, arma::fill::zeros),
+      cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {
   cumsum_m_ = arma::zeros<arma::vec>(n_sub_ + 1);
   cumsum_m_.tail(n_sub_) = arma::cumsum(m_);
 
@@ -248,8 +247,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
 
   cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_ + 1);
   cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_ % (m_ + 1) / 2);
-
-  cumsum_param_ = arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}));
 }
 
 inline void JmcmBase::UpdateBeta() {

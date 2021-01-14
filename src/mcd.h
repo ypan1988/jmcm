@@ -87,10 +87,9 @@ class MCD : public JmcmBase {
 
 inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
-    : JmcmBase(m, Y, X, Z, W, 0) {
-  G_ = arma::zeros<arma::mat>(N_, n_gma_);
-  TResid_ = arma::zeros<arma::vec>(N_);
-}
+    : JmcmBase(m, Y, X, Z, W, 0),
+      G_(N_, n_gma_, arma::fill::zeros),
+      TResid_(N_, arma::fill::zeros) {}
 
 inline void MCD::UpdateGamma() {
   arma::mat GDG = arma::zeros<arma::mat>(n_gma_, n_gma_);
