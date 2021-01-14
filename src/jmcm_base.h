@@ -97,8 +97,8 @@ class JmcmBase : public roptim::Functor {
 
   arma::vec Grad1() const;
   arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
-  virtual arma::vec Grad2() const { return arma::vec(); }
-  virtual arma::vec Grad3() const { return arma::vec(); }
+  virtual arma::vec Grad2() const = 0;
+  virtual arma::vec Grad3() const = 0;
 
   arma::vec get_mu(arma::uword i) const {
     return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
