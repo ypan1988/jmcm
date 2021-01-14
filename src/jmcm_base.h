@@ -78,11 +78,11 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_gamma() const { return gamma_; }
   arma::uword get_free_param() const { return free_param_; }
 
-  void set_theta(const arma::vec& x);
-  void set_beta(const arma::vec& x);
-  void set_lambda(const arma::vec& x);
-  void set_gamma(const arma::vec& x);
-  void set_lmdgma(const arma::vec& x);
+  void set_theta(const arma::vec& x) { set_param(x, 0); }
+  void set_beta(const arma::vec& x) { set_param(x, 1); }
+  void set_lambda(const arma::vec& x) { set_param(x, 2); }
+  void set_gamma(const arma::vec& x) { set_param(x, 3); }
+  void set_lmdgma(const arma::vec& x) { set_param(x, 23); }
 
   void UpdateBeta();
   void UpdateLambda(const arma::vec& x) { set_lambda(x); }
@@ -183,6 +183,12 @@ class JmcmBase : public roptim::Functor {
   }
 
  private:
+  void set_param(const arma::vec& x, int fp) {
+    arma::uword fp2 = free_param_;
+    free_param_ = fp;
+    UpdateJmcm(x);
+    free_param_ = fp2;
+  }
   bool is_same(const arma::vec v1, const arma::vec v2) const {
     return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
   }
@@ -227,41 +233,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_ % (m_ + 1) / 2);
 
   cumsum_param_ = arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}));
-}
-
-inline void JmcmBase::set_theta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 0;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void JmcmBase::set_beta(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 1;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void JmcmBase::set_lambda(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 2;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void JmcmBase::set_gamma(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 3;
-  UpdateJmcm(x);
-  free_param_ = fp2;
-}
-
-inline void JmcmBase::set_lmdgma(const arma::vec& x) {
-  arma::uword fp2 = free_param_;
-  free_param_ = 23;
-  UpdateJmcm(x);
-  free_param_ = fp2;
 }
 
 inline void JmcmBase::UpdateBeta() {
