@@ -73,11 +73,6 @@ class JmcmBase : public roptim::Functor {
     mean_ = mean;
   }
 
-  arma::vec get_theta() const { return theta_; }
-  arma::vec get_beta() const { return beta_; }
-  arma::vec get_lambda() const { return lambda_; }
-  arma::vec get_gamma() const { return gamma_; }
-
   // A unified function to get parameters. fp is used as a temp value
   // for free_param_ to specify the parameter you want to get.
   arma::vec get_param(int fp) const {

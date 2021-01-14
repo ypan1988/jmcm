@@ -238,7 +238,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         jmcm_.UpdateLambdaGamma(lmdgma);
       }
 
-      arma::vec xnew = jmcm_.get_theta();
+      arma::vec xnew = jmcm_.get_param(0);
 
       p = xnew - x;
     }
