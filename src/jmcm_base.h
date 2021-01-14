@@ -78,15 +78,23 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_gamma() const { return gamma_; }
   arma::uword get_free_param() const { return free_param_; }
 
-  void set_theta(const arma::vec& x) { set_param(x, 0); }
-  void set_beta(const arma::vec& x) { set_param(x, 1); }
-  void set_lambda(const arma::vec& x) { set_param(x, 2); }
-  void set_gamma(const arma::vec& x) { set_param(x, 3); }
-  void set_lmdgma(const arma::vec& x) { set_param(x, 23); }
+  // A unified function to set parameters. fp is used as a temp value
+  // for free_param_ to specify the parameter you want to change:
+  // fp == 0  ---- set beta + lambda + gamma
+  // fp == 1  ---- set beta
+  // fp == 2  ---- set lambda
+  // fp == 3  ---- set gamma
+  // fp == 23 ---- set lambda + gamma
+  void set_param(const arma::vec& x, int fp) {
+    arma::uword fp2 = free_param_;
+    free_param_ = fp;
+    UpdateJmcm(x);
+    free_param_ = fp2;
+  }
 
   void UpdateBeta();
-  void UpdateLambda(const arma::vec& x) { set_lambda(x); }
-  void UpdateLambdaGamma(const arma::vec& x) { set_lmdgma(x); }
+  void UpdateLambda(const arma::vec& x) { set_param(x, 2); }
+  void UpdateLambdaGamma(const arma::vec& x) { set_param(x, 23); }
   virtual void UpdateGamma() {}
 
   void UpdateJmcm(const arma::vec& x);
@@ -183,12 +191,6 @@ class JmcmBase : public roptim::Functor {
   }
 
  private:
-  void set_param(const arma::vec& x, int fp) {
-    arma::uword fp2 = free_param_;
-    free_param_ = fp;
-    UpdateJmcm(x);
-    free_param_ = fp2;
-  }
   bool is_same(const arma::vec v1, const arma::vec v2) const {
     return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
   }
@@ -247,7 +249,7 @@ inline void JmcmBase::UpdateBeta() {
     XSy += Xi.t() * (Sigmai_inv * yi);
   }
 
-  set_beta(XSX.i() * XSy);
+  set_param(XSX.i() * XSy, 1);
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {

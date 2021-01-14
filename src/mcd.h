@@ -105,7 +105,7 @@ inline void MCD::UpdateGamma() {
     GDr += Gi.t() * (Di_inv * ri);
   }
 
-  set_gamma(GDG.i() * GDr);
+  set_param(GDG.i() * GDr, 3);
 }
 
 inline void MCD::UpdateModel() {
