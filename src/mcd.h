@@ -111,10 +111,6 @@ inline void MCD::UpdateGamma() {
 inline void MCD::UpdateModel() {
   switch (free_param_) {
     case 0:
-      UpdateG();
-      UpdateTResid();
-      break;
-
     case 1:
       UpdateG();
       UpdateTResid();

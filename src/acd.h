@@ -106,23 +106,18 @@ inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
 
 inline void ACD::UpdateModel() {
   switch (free_param_) {
-    case 0:
-      UpdateTelem();
-      UpdateTDResid();
-      break;
-
     case 1:
-      UpdateTDResid();
       break;
 
+    case 0:
     case 23:
       UpdateTelem();
-      UpdateTDResid();
       break;
 
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
+  UpdateTDResid();
 }
 
 inline arma::vec ACD::Grad2() const {
