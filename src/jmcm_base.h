@@ -97,9 +97,14 @@ class JmcmBase : public roptim::Functor {
   void UpdateLambdaGamma(const arma::vec& x) { set_param(x, 23); }
   virtual void UpdateGamma() {}
 
+  // Preparation work needed for the Functors to:
+  // + Calculate the objective function,
+  // + Calculate the gradient.
   void UpdateJmcm(const arma::vec& x);
+  // Extra preparation work (MCD/ACD/HPC specific).
   virtual void UpdateModel() = 0;
 
+  // Core functions of Functor
   double operator()(const arma::vec& x) override;
   void Gradient(const arma::vec& x, arma::vec& grad) override;
 
