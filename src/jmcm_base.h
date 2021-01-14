@@ -65,6 +65,7 @@ class JmcmBase : public roptim::Functor {
   }
 
   arma::uword get_method_id() const { return method_id_; }
+  arma::uword get_free_param() const { return free_param_; }
   void set_free_param(arma::uword n) { free_param_ = n; }
 
   void set_mean(const arma::vec& mean) {
@@ -76,15 +77,27 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_beta() const { return beta_; }
   arma::vec get_lambda() const { return lambda_; }
   arma::vec get_gamma() const { return gamma_; }
-  arma::uword get_free_param() const { return free_param_; }
+
+  arma::vec get_param(int fp) const {
+    switch (fp) {
+      case 0:
+        return theta_;
+      case 1:
+        return beta_;
+      case 2:
+        return lambda_;
+      case 3:
+        return gamma_;
+      case 23:
+        return lmdgma_;
+      default:
+        Rcpp::Rcout << "Wrong fp value" << std::endl;
+    }
+    return arma::vec();
+  }
 
   // A unified function to set parameters. fp is used as a temp value
-  // for free_param_ to specify the parameter you want to change:
-  // fp == 0  ---- set beta + lambda + gamma
-  // fp == 1  ---- set beta
-  // fp == 2  ---- set lambda
-  // fp == 3  ---- set gamma
-  // fp == 23 ---- set lambda + gamma
+  // for free_param_ to specify the parameter you want to change.
   void set_param(const arma::vec& x, int fp) {
     arma::uword fp2 = free_param_;
     free_param_ = fp;
@@ -101,7 +114,6 @@ class JmcmBase : public roptim::Functor {
   // + Calculate the objective function,
   // + Calculate the gradient.
   void UpdateJmcm(const arma::vec& x);
-  // Extra preparation work (MCD/ACD/HPC specific).
   virtual void UpdateModel() = 0;
 
   // Core functions of Functor
@@ -196,8 +208,9 @@ class JmcmBase : public roptim::Functor {
   }
 
  private:
-  bool is_same(const arma::vec v1, const arma::vec v2) const {
-    return std::equal(v1.cbegin(), v1.cend(), v2.cbegin());
+  bool is_same(const arma::vec& x, int fp) const {
+    arma::vec par = get_param(fp);
+    return std::equal(x.cbegin(), x.cend(), par.cbegin());
   }
 };
 
@@ -258,77 +271,65 @@ inline void JmcmBase::UpdateBeta() {
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
+  if (is_same(x, free_param_)) return;
+
   switch (free_param_) {
     case 0:
-      if (!is_same(x, theta_)) {
-        theta_ = x;
-        beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
-        lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
-        gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
+      theta_ = x;
+      beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
+      lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
+      gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
 
-        if (cov_only_)
-          Xbta_ = mean_;
-        else
-          Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
 
-        Zlmd_ = Z_ * lambda_;
-        Wgma_ = W_ * gamma_;
-        Resid_ = Y_ - Xbta_;
-        UpdateModel();
-      }
+      Zlmd_ = Z_ * lambda_;
+      Wgma_ = W_ * gamma_;
+      Resid_ = Y_ - Xbta_;
       break;
 
     case 1:
-      if (!is_same(x, beta_)) {
-        theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
-        beta_ = x;
+      theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
+      beta_ = x;
 
-        if (cov_only_)
-          Xbta_ = mean_;
-        else
-          Xbta_ = X_ * beta_;
+      if (cov_only_)
+        Xbta_ = mean_;
+      else
+        Xbta_ = X_ * beta_;
 
-        Resid_ = Y_ - Xbta_;
-        UpdateModel();
-      }
+      Resid_ = Y_ - Xbta_;
       break;
 
     case 2:
-      if (!is_same(x, lambda_)) {
-        theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
-        lambda_ = x;
+      theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
+      lambda_ = x;
 
-        Zlmd_ = Z_ * lambda_;
-        UpdateModel();
-      }
+      Zlmd_ = Z_ * lambda_;
       break;
 
     case 3:
-      if (!is_same(x, gamma_)) {
-        theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
-        gamma_ = x;
+      theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
+      gamma_ = x;
 
-        Wgma_ = W_ * gamma_;
-        UpdateModel();
-      }
+      Wgma_ = W_ * gamma_;
       break;
 
     case 23:
-      if (!is_same(x, lmdgma_)) {
-        theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
-        lambda_ = x.rows(0, n_lmd_ - 1);
-        gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
-        lmdgma_ = x;
+      theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
+      lambda_ = x.rows(0, n_lmd_ - 1);
+      gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
+      lmdgma_ = x;
 
-        Zlmd_ = Z_ * lambda_;
-        Wgma_ = W_ * gamma_;
-        UpdateModel();
-      }
+      Zlmd_ = Z_ * lambda_;
+      Wgma_ = W_ * gamma_;
       break;
 
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
+  UpdateModel();
 }
 
 inline double JmcmBase::operator()(const arma::vec& x) {
