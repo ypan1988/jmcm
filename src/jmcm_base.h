@@ -78,6 +78,8 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_lambda() const { return lambda_; }
   arma::vec get_gamma() const { return gamma_; }
 
+  // A unified function to get parameters. fp is used as a temp value
+  // for free_param_ to specify the parameter you want to get.
   arma::vec get_param(int fp) const {
     switch (fp) {
       case 0:
@@ -114,6 +116,7 @@ class JmcmBase : public roptim::Functor {
   // + Calculate the objective function,
   // + Calculate the gradient.
   void UpdateJmcm(const arma::vec& x);
+  // Extra preparation work (MCD/ACD/HPC specific).
   virtual void UpdateModel() = 0;
 
   // Core functions of Functor
@@ -209,8 +212,7 @@ class JmcmBase : public roptim::Functor {
 
  private:
   bool is_same(const arma::vec& x, int fp) const {
-    arma::vec par = get_param(fp);
-    return std::equal(x.cbegin(), x.cend(), par.cbegin());
+    return std::equal(x.cbegin(), x.cend(), get_param(fp).cbegin());
   }
 };
 
