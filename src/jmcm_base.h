@@ -102,12 +102,18 @@ class JmcmBase : public roptim::Functor {
     free_param_ = fp2;
   }
 
+  arma::vec get_mu(arma::uword i) const {
+    return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
+  }
   arma::vec get_Zlmd() const { return Zlmd_; }
   arma::vec get_Zlmd(arma::uword i) const {
     return Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
   arma::vec get_Wgma(arma::uword i) const {
     return Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i + 1) - 1);
+  }
+  arma::vec get_Resid(arma::uword i) const {
+    return Resid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
 
   void UpdateBeta();
@@ -130,13 +136,6 @@ class JmcmBase : public roptim::Functor {
   arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
   virtual arma::vec Grad2() const = 0;
   virtual arma::vec Grad3() const = 0;
-
-  arma::vec get_mu(arma::uword i) const {
-    return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
-  }
-  arma::vec get_Resid(arma::uword i) const {
-    return Resid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
-  }
 
   virtual double CalcLogDetSigma() const = 0;
   virtual arma::mat get_Sigma(arma::uword i) const = 0;
