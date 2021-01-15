@@ -42,7 +42,7 @@ class MCD : public JmcmBase {
   arma::vec Grad2() const override;
   arma::vec Grad3() const override;
 
-  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
+  double CalcLogDetSigma() const override { return arma::sum(get_Zlmd()); }
   arma::mat get_Sigma(arma::uword i) const override {
     arma::mat Ti_inv = get_invT(i), Di = get_D(i);
     return Ti_inv * Di * Ti_inv.t();
@@ -53,19 +53,14 @@ class MCD : public JmcmBase {
   }
 
   arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(
-        arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1)));
+    return arma::diagmat(arma::exp(get_Zlmd(i)));
   }
   arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(
-        arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1)));
+    return arma::diagmat(arma::exp(-get_Zlmd(i)));
   }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i))
-                      : get_ltrimatrix(m_(i),
-                                       -Wgma_.subvec(cumsum_trim_(i),
-                                                     cumsum_trim_(i + 1) - 1),
-                                       false);
+                      : get_ltrimatrix(m_(i), -get_Wgma(i), false);
   }
   arma::mat get_invT(arma::uword i) const { return arma::pinv(get_T(i)); }
 
@@ -108,7 +103,7 @@ inline void MCD::UpdateGamma() {
 }
 
 inline void MCD::UpdateModel() {
-  switch (free_param_) {
+  switch (get_free_param()) {
     case 0:
     case 1:
       UpdateG();

@@ -45,7 +45,7 @@ class HPC : public JmcmBase {
   arma::vec Grad3() const override;
 
   double CalcLogDetSigma() const override {
-    return 2 * log_det_T_ + arma::sum(Zlmd_);
+    return 2 * log_det_T_ + arma::sum(get_Zlmd());
   }
   arma::mat get_Sigma(arma::uword i) const override {
     arma::mat DiTi = get_D(i) * get_T(i);
@@ -57,12 +57,10 @@ class HPC : public JmcmBase {
   }
 
   arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(
-        arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
+    return arma::diagmat(arma::exp(get_Zlmd(i) / 2));
   }
   arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(
-        arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
+    return arma::diagmat(arma::exp(-get_Zlmd(i) / 2));
   }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i))
@@ -82,10 +80,7 @@ class HPC : public JmcmBase {
 
   arma::mat get_Phi(arma::uword i) const {
     return m_(i) == 1 ? arma::zeros<arma::mat>(m_(i), m_(i))
-                      : get_ltrimatrix(m_(i),
-                                       Wgma_.subvec(cumsum_trim_(i),
-                                                    cumsum_trim_(i + 1) - 1),
-                                       false);
+                      : get_ltrimatrix(m_(i), get_Wgma(i), false);
   }
   arma::mat get_R(arma::uword i) const {
     arma::mat Ti = get_T(i);
@@ -125,7 +120,7 @@ inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       TDResid2_(N_, arma::fill::zeros) {}
 
 inline void HPC::UpdateModel() {
-  switch (free_param_) {
+  switch (get_free_param()) {
     case 1:
       break;
 

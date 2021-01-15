@@ -41,7 +41,7 @@ class ACD : public JmcmBase {
   arma::vec Grad2() const override;
   arma::vec Grad3() const override;
 
-  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
+  double CalcLogDetSigma() const override { return arma::sum(get_Zlmd()); }
   arma::mat get_Sigma(arma::uword i) const override {
     arma::mat DiTi = get_D(i) * get_T(i);
     return DiTi * DiTi.t();
@@ -52,19 +52,14 @@ class ACD : public JmcmBase {
   }
 
   arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(
-        arma::exp(Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
+    return arma::diagmat(arma::exp(get_Zlmd(i) / 2));
   }
   arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(
-        arma::exp(-Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) / 2));
+    return arma::diagmat(arma::exp(-get_Zlmd(i) / 2));
   }
   arma::mat get_T(arma::uword i) const override {
     return m_(i) == 1 ? arma::eye(m_(i), m_(i))
-                      : get_ltrimatrix(m_(i),
-                                       Wgma_.subvec(cumsum_trim_(i),
-                                                    cumsum_trim_(i + 1) - 1),
-                                       false);
+                      : get_ltrimatrix(m_(i), get_Wgma(i), false);
   }
   arma::mat get_invT(arma::uword i) const {
     return m_(i) == 1
@@ -104,7 +99,7 @@ inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       TDResid2_(N_, arma::fill::zeros) {}
 
 inline void ACD::UpdateModel() {
-  switch (free_param_) {
+  switch (get_free_param()) {
     case 1:
       break;
 

@@ -102,6 +102,14 @@ class JmcmBase : public roptim::Functor {
     free_param_ = fp2;
   }
 
+  arma::vec get_Zlmd() const { return Zlmd_; }
+  arma::vec get_Zlmd(arma::uword i) const {
+    return Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
+  }
+  arma::vec get_Wgma(arma::uword i) const {
+    return Wgma_.subvec(cumsum_trim_(i), cumsum_trim_(i + 1) - 1);
+  }
+
   void UpdateBeta();
   void UpdateLambda(const arma::vec& x) { set_param(x, 2); }
   void UpdateLambdaGamma(const arma::vec& x) { set_param(x, 23); }
@@ -144,6 +152,7 @@ class JmcmBase : public roptim::Functor {
   const arma::mat X_, Z_, W_;
   const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_, n_lmdgma_;
 
+ private:
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
   // method_id_ == 2 ---- HPC
@@ -176,6 +185,7 @@ class JmcmBase : public roptim::Functor {
   arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
   arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
 
+ protected:
   // Some useful data members to avoid duplicate index calculation.
   // cumsum_m_ == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
   // cumsum_trim_ == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
@@ -186,7 +196,6 @@ class JmcmBase : public roptim::Functor {
   arma::vec cumsum_trim2_;
   arma::uvec cumsum_param_;
 
- protected:
   // Return a column vector containing the elements that form the
   // lower triangle part (include diagonal elements) of matrix M.
   arma::vec get_lower_part(const arma::mat& M) const {
