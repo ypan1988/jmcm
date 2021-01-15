@@ -331,7 +331,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
     default:
       Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
-  UpdateModel();
+  UpdateModel();  // specific MCD/ACD/HPC preparation work
 }
 
 inline double JmcmBase::operator()(const arma::vec& x) {
