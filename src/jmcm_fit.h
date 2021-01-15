@@ -1,8 +1,8 @@
-//  jmcm_base.h: model fitting for three joint mean-covariance models
-//               (MCD/ACD/HPC)
+//  jmcm_fit.h: model fitting for three joint mean-covariance models
+//
 //  This file is part of jmcm.
 //
-//  Copyright (C) 2015-2018 Yi Pan <ypan1988@gmail.com>
+//  Copyright (C) 2015-2021 Yi Pan <ypan1988@gmail.com>
 //
 //  This program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ class JmcmFit {
   arma::vec start_, mean_;
   bool trace_, profile_, errormsg_, covonly_;
   std::string optim_method_;
+  const std::string line_ =
+      "--------------------------------------------------";
 
   double f_min_;
   arma::uword n_iters_;
@@ -68,12 +70,12 @@ class JmcmFit {
 
 template <typename JMCM>
 arma::vec JmcmFit<JMCM>::Optimize() {
-  int n_bta = jmcm_.get_X().n_cols;
-  int n_lmd = jmcm_.get_Z().n_cols;
-  int n_gma = jmcm_.get_W().n_cols;
+  int n_bta = jmcm_.n_bta_;
+  int n_lmd = jmcm_.n_lmd_;
+  int n_gma = jmcm_.n_gma_;
 
   if (covonly_) {
-    if ((jmcm_.get_Y().n_rows != mean_.n_rows) && errormsg_)
+    if ((jmcm_.N_ != mean_.n_rows) && errormsg_)
       Rcpp::Rcerr << "The size of the responses Y does not match the size of "
                      "the given mean"
                   << std::endl;
@@ -181,7 +183,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         arma::vec lmd = x.rows(n_bta, n_bta + n_lmd - 1);
 
         if (trace_) {
-          Rcpp::Rcout << "--------------------------------------------------"
+          Rcpp::Rcout << line_
                       << "\n Updating Innovation Variance Parameters..."
                       << std::endl;
         }
@@ -194,8 +196,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         jmcm_.set_free_param(0);
 
         if (trace_) {
-          Rcpp::Rcout << "--------------------------------------------------"
-                      << std::endl;
+          Rcpp::Rcout << line_ << std::endl;
         }
 
         jmcm_.UpdateLambda(lmd);
@@ -207,17 +208,14 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         if (trace_) {
           switch (method_id_) {
             case 1: {
-              Rcpp::Rcout
-                  << "--------------------------------------------------"
-                  << "\n Updating Innovation Variance Parameters"
-                  << " and Moving Average Parameters..." << std::endl;
+              Rcpp::Rcout << line_
+                          << "\n Updating Innovation Variance Parameters"
+                          << " and Moving Average Parameters..." << std::endl;
               break;
             }
             case 2: {
-              Rcpp::Rcout
-                  << "--------------------------------------------------"
-                  << "\n Updating Variance Parameters"
-                  << " and Angle Parameters..." << std::endl;
+              Rcpp::Rcout << line_ << "\n Updating Variance Parameters"
+                          << " and Angle Parameters..." << std::endl;
               break;
             }
             default: {
@@ -231,8 +229,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
           optim.minimize(jmcm_, lmdgma);
         jmcm_.set_free_param(0);
         if (trace_) {
-          Rcpp::Rcout << "--------------------------------------------------"
-                      << std::endl;
+          Rcpp::Rcout << line_ << std::endl;
         }
 
         jmcm_.UpdateLambdaGamma(lmdgma);

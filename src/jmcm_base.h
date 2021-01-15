@@ -146,7 +146,7 @@ class JmcmBase : public roptim::Functor {
   virtual arma::mat get_D(arma::uword i) const = 0;
   virtual arma::mat get_T(arma::uword i) const = 0;
 
- protected:
+ public:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
   const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_, n_lmdgma_;
