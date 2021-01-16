@@ -1,7 +1,3 @@
-// Copyright (C) 2015-2016 The University of Manchester
-//
-// Written by Yi Pan - ypan1988@gmail.com
-
 #ifndef JMCM_BFGS_H_
 #define JMCM_BFGS_H_
 
@@ -12,30 +8,214 @@
 #include <iomanip>
 #include <limits>
 
-#include "linesearch.h"
-
 namespace pan {
 
 template <typename T>
-class BFGS : public LineSearch<T> {
+class BFGS {
  public:
-  BFGS();
-  ~BFGS();
+  BFGS()
+      : info_(6, arma::fill::zeros),
+        kIterMax_(200),
+        kAlpha_(1.0e-4),
+        kEpsilon_(std::numeric_limits<double>::epsilon()),
+        kTolX_(4 * kEpsilon_),
+        kScaStepMax_(100) {}
+  ~BFGS() = default;
+
+  arma::vec info_;
+  const int kIterMax_;     // Maximum number of iterations
+  const double kAlpha_;    // Ensure sufficient decrease in function value
+  const double kEpsilon_;  // Machine precision
+  const double kTolX_;     // Convergence criterion on x values
+  const double
+      kScaStepMax_;  // Scaled maximum step length allowed in line searches
+  const double grad_tol_ = 1e-6;
+
+  void linesearch(T &fun, arma::vec &x, arma::vec &p, double F,
+                  const arma::vec &dF);
+  void set_message(bool message) { message_ = message; }
 
   void set_trace(bool trace) { trace_ = trace; }
-  // void set_message(bool message) { LineSearch<T>::set_message(message); }
-  void Optimize(T& func, arma::vec& x, const double grad_tol = 1e-6);
-  int n_iters() const;
-  double f_min() const;
+  void minimize(T &fun, arma::vec &x, const double grad_tol = 1e-6);
+
+  // Test for convergence on small gradient
+  bool test_grad(const arma::vec &x, double F, const arma::vec &dF) const {
+    arma::vec xtmp = x;
+    xtmp.for_each([](arma::vec::elem_type &val) { val = std::max(val, 1.0); });
+    return arma::max(arma::abs(dF) % xtmp / std::max(F, 1.0)) < grad_tol_;
+  }
+
+  // Test for convergence on small x - xp
+  bool test_diff_x(const arma::vec &x, const arma::vec &h) const {
+    arma::vec xtmp = x;
+    xtmp.for_each([](arma::vec::elem_type &val) { val = std::max(val, 1.0); });
+    return arma::max(arma::abs(h) / xtmp) < kTolX_;
+  }
+
+  int n_iters() const { return n_iters_; }
+  double f_min() const { return f_min_; }
 
  private:
   bool trace_;
-  // bool message_;
   int n_iters_;
   double f_min_;
+
+  bool message_;
+  bool IsInfOrNaN(double x) {
+    return (x == std::numeric_limits<double>::infinity() ||
+            x == -std::numeric_limits<double>::infinity() || x != x);
+  }
 };  // class BFGS
 
-#include "bfgs_impl.h"
+template <typename T>
+void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &p, double F,
+                         const arma::vec &dF) {
+  const int n_pars = x.n_rows;  // number of parameters
+
+  const arma::vec xold = x;
+  const double fold = F;
+  arma::vec grad = dF;
+
+  double slope = dot(grad, p);
+  if (slope >= 0.0 && message_)
+    Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
+
+  // Calculate the minimum step length
+  double test = 0.0;
+  for (int i = 0; i != n_pars; ++i) {
+    double temp = std::abs(p(i)) / std::max(std::abs(xold(i)), 1.0);
+    if (temp > test) test = temp;
+  }
+  double stepmin = kEpsilon_ / test;
+
+  double alpha, alpha2, alpha_tmp, f2;
+  alpha = 1.0;  // Always try full Newton step first
+  alpha2 = alpha_tmp = F = f2 = 0.0;
+  for (int iter = 0; iter != kIterMax_; ++iter) {
+    // Start of iteration loop
+    x = xold + alpha * p;
+    F = fun(x);
+
+    if (alpha < stepmin) {
+      // x is too close to xold, ignored
+      x = xold;
+      return;
+    } else if (F <= fold + kAlpha_ * alpha * slope) {
+      // Sufficient function decrease
+      return;
+    } else if (IsInfOrNaN(F)) {
+      // f is INF or NAN
+      while (!IsInfOrNaN(alpha) && IsInfOrNaN(F)) {
+        alpha *= 0.5;
+        x = xold + alpha * p;
+        F = fun(x);
+      }
+
+      alpha_tmp = 0.5 * alpha;
+    } else {
+      // Backtrack
+      if (alpha == 1.0) {
+        alpha_tmp = -slope / (2.0 * (F - fold - slope));
+      } else {
+        double rhs1 = F - fold - alpha * slope;
+        double rhs2 = f2 - fold - alpha2 * slope;
+        double a = rhs1 / (alpha * alpha) / (alpha - alpha2) -
+                   rhs2 / (alpha2 * alpha2) / (alpha - alpha2);
+        double b = -alpha2 * rhs1 / (alpha * alpha) / (alpha - alpha2) +
+                   alpha * rhs2 / (alpha2 * alpha2) / (alpha - alpha2);
+        if (IsInfOrNaN(a) || IsInfOrNaN(b)) {
+          alpha_tmp = 0.5 * alpha;
+        } else if (a == 0.0) {
+          alpha_tmp = -slope / (2.0 * b);
+        } else {
+          double disc = b * b - 3.0 * a * slope;
+          if (disc < 0.0) {
+            alpha_tmp = 0.5 * alpha;
+          } else if (b <= 0.0) {
+            alpha_tmp = (-b + sqrt(disc)) / (3.0 * a);
+          } else {
+            alpha_tmp = -slope / (b + sqrt(disc));
+          }
+        }
+        if (alpha_tmp > 0.5 * alpha || IsInfOrNaN(alpha_tmp)) {
+          alpha_tmp = 0.5 * alpha;
+        }
+      }
+    }
+    alpha2 = alpha;
+    f2 = F;
+    alpha = std::max(alpha_tmp, 0.1 * alpha);
+  }
+}
+
+template <typename T>
+void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
+  const int n_pars = x.n_rows;  // number of parameters
+
+  // Calculate starting function value and gradient
+  double F = fun(x);
+  arma::vec dF;
+  fun.Gradient(x, dF);
+
+  // Initialize the inverse Hessian to a unit matrix
+  arma::mat D = arma::eye<arma::mat>(n_pars, n_pars);
+
+  // Initialize Newton Step
+  arma::vec h = -D * dF;
+
+  // Calculate the maximum step length
+  const double delta =
+      kScaStepMax_ * std::max(arma::norm(x, 2), double(n_pars));
+
+  // Main loop over the iterations
+  n_iters_ = 0;
+  do {
+    arma::vec h = -D * dF;
+
+    arma::vec x2 = x;  // Save the old point
+
+    double h_norm = arma::norm(h, 2);
+    if (h_norm > delta) h *= delta / h_norm;
+
+    linesearch(fun, x, h, F, dF);
+
+    F = fun(x);  // Update function value
+    h = x - x2;  // Update line direction
+    x2 = x;      // Update the current point
+    f_min_ = F;
+
+    if (trace_) {
+      Rcpp::Rcout << std::setw(5) << n_iters_ << ": " << std::setw(10) << F
+                  << ": ";
+      x.t().print();
+    }
+
+    arma::vec grad2 = dF;  // Save the old gradient
+    fun.Gradient(x, dF);   // Get the new gradient
+
+    arma::vec y = dF - grad2;
+    double rho = 1 / arma::dot(h, y);
+    arma::vec u = D * y;
+    arma::vec v = 0.5 * (1 + rho * arma::dot(u, y)) * h - u;
+
+    // Skip update if fac not sufficiently positive
+    if (rho * sqrt(kEpsilon_ * arma::dot(y, y) * arma::dot(h, h)) < 1) {
+      D += rho * (h * v.t() + v * h.t());
+    }
+
+    if (test_grad(x, F, dF)) {
+      info_(5) = 1;
+      return;
+    }
+    if (test_diff_x(x, h)) {
+      info_(5) = 2;
+      return;
+    }
+  } while (++n_iters_ != kIterMax_);
+  if (this->message_) {
+    Rcpp::Rcerr << "too many iterations in bfgs" << std::endl;
+  }
+}
 
 }  // namespace pan
 

@@ -83,9 +83,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
   }
 
   pan::BFGS<JMCM> bfgs;
-  pan::LineSearch<JMCM> linesearch;
-  linesearch.set_message(errormsg_);
-
+  bfgs.set_message(errormsg_);
   roptim::Roptim<JMCM> optim;
 
   if (optim_method_ == "default") {
@@ -102,20 +100,6 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
     optim.control.trace = trace_;
 
-    // Maximum number of iterations
-    const int kIterMax = 200;
-
-    // Machine precision
-    const double kEpsilon = std::numeric_limits<double>::epsilon();
-
-    // Convergence criterion on x values
-    const double kTolX = 4 * kEpsilon;
-
-    // Scaled maximum step length allowed in line searches
-    const double kScaStepMax = 100;
-
-    const double grad_tol = 1e-6;
-
     const int n_pars = x.n_rows;  // number of parameters
 
     double f = jmcm_(x);
@@ -130,15 +114,17 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
     // Calculate the maximum step length
     double sum = sqrt(arma::dot(x, x));
-    const double kStepMax = kScaStepMax * std::max(sum, double(n_pars));
+    const double delta = bfgs.kScaStepMax_ * std::max(sum, double(n_pars));
 
     // Main loop over the iterations
-    for (int iter = 0; iter != kIterMax; ++iter) {
+    for (int iter = 0; iter != bfgs.kIterMax_; ++iter) {
       n_iters_ = iter;
 
       arma::vec x2 = x;  // Save the old point
 
-      linesearch.GetStep(jmcm_, x, p, kStepMax);
+      double h_norm = arma::norm(p, 2);
+      if (h_norm > delta) p *= delta / h_norm;
+      bfgs.linesearch(jmcm_, x, p, f, grad);
 
       f = jmcm_(x);  // Update function value
       p = x - x2;    // Update line direction
@@ -152,30 +138,13 @@ arma::vec JmcmFit<JMCM>::Optimize() {
       }
 
       // Test for convergence on Delta x
-      double test = 0.0;
-      for (int i = 0; i != n_pars; ++i) {
-        double temp = std::abs(p(i)) / std::max(std::abs(x(i)), 1.0);
-        if (temp > test) test = temp;
-      }
-
-      if (test < kTolX) {
-        break;
-      }
+      if (bfgs.test_diff_x(x, p)) break;
 
       arma::vec grad2 = grad;   // Save the old gradient
       jmcm_.Gradient(x, grad);  // Get the new gradient
 
       // Test for convergence on zero gradient
-      test = 0.0;
-      double den = std::max(f, 1.0);
-      for (int i = 0; i != n_pars; ++i) {
-        double temp = std::abs(grad(i)) * std::max(std::abs(x(i)), 1.0) / den;
-        if (temp > test) test = temp;
-      }
-
-      if (test < grad_tol) {
-        break;
-      }
+      if (bfgs.test_grad(x, f, grad)) break;
 
       if (!covonly_) jmcm_.UpdateBeta();
 
@@ -190,7 +159,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
         jmcm_.set_free_param(2);
         if (optim_method_ == "default")
-          bfgs.Optimize(jmcm_, lmd);
+          bfgs.minimize(jmcm_, lmd);
         else
           optim.minimize(jmcm_, lmd);
         jmcm_.set_free_param(0);
@@ -224,7 +193,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         }
         jmcm_.set_free_param(23);
         if (optim_method_ == "default")
-          bfgs.Optimize(jmcm_, lmdgma);
+          bfgs.minimize(jmcm_, lmdgma);
         else
           optim.minimize(jmcm_, lmdgma);
         jmcm_.set_free_param(0);
@@ -243,7 +212,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
     if (optim_method_ == "default") {
       bfgs.set_trace(trace_);
       bfgs.set_message(errormsg_);
-      bfgs.Optimize(jmcm_, x);
+      bfgs.minimize(jmcm_, x);
       f_min_ = bfgs.f_min();
       n_iters_ = bfgs.n_iters();
     } else {
