@@ -38,14 +38,12 @@ class BFGS {
   void set_trace(bool trace) { trace_ = trace; }
   void minimize(T &fun, arma::vec &x, const double grad_tol = 1e-6);
 
-  // Test for convergence on small gradient
   bool test_grad(const arma::vec &x, double F, const arma::vec &g) const {
     arma::vec xtmp = x;
     xtmp.for_each([](arma::vec::elem_type &val) { val = std::max(val, 1.0); });
     return arma::max(arma::abs(g) % xtmp / std::max(F, 1.0)) < grad_tol_;
   }
 
-  // Test for convergence on small x - xp
   bool test_diff_x(const arma::vec &x, const arma::vec &h) const {
     arma::vec xtmp = x;
     xtmp.for_each([](arma::vec::elem_type &val) { val = std::max(val, 1.0); });
@@ -179,6 +177,8 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
     h = x - x2;  // Update line direction
     x2 = x;      // Update the current point
     f_min_ = F;
+    arma::vec grad2 = g;  // Save the old gradient
+    fun.Gradient(x, g);   // Get the new gradient
 
     if (trace_) {
       Rcpp::Rcout << std::setw(5) << n_iters_ << ": " << std::setw(10) << F
@@ -186,23 +186,22 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
       x.t().print();
     }
 
-    arma::vec grad2 = g;  // Save the old gradient
-    fun.Gradient(x, g);   // Get the new gradient
-
+    // BFGS Updating
     arma::vec y = g - grad2;
     double rho = 1 / arma::dot(h, y);
     arma::vec u = D * y;
     arma::vec v = 0.5 * (1 + rho * arma::dot(u, y)) * h - u;
 
-    // Skip update if fac not sufficiently positive
     if (rho * sqrt(kEpsilon_ * arma::dot(y, y) * arma::dot(h, h)) < 1) {
       D += rho * (h * v.t() + v * h.t());
     }
 
+    // Test for convergence on small gradient
     if (test_grad(x, F, g)) {
       info_(5) = 1;
       return;
     }
+    // Test for convergence on small x - xp
     if (test_diff_x(x, h)) {
       info_(5) = 2;
       return;
