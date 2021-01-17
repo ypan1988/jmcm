@@ -1,5 +1,5 @@
-#ifndef JMCM_BFGS_H_
-#define JMCM_BFGS_H_
+#ifndef BFGS_H_
+#define BFGS_H_
 
 #include <RcppArmadillo.h>
 
@@ -33,10 +33,12 @@ class BFGS {
 
   void linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
                   const arma::vec &g);
-  void set_message(bool message) { message_ = message; }
-
-  void set_trace(bool trace) { trace_ = trace; }
   void minimize(T &fun, arma::vec &x, const double grad_tol = 1e-6);
+
+  void set_message(bool message) { message_ = message; }
+  void set_trace(bool trace) { trace_ = trace; }
+  int n_iters() const { return n_iters_; }
+  double f_min() const { return f_min_; }
 
   bool test_grad(const arma::vec &x, double F, const arma::vec &g) const {
     arma::vec xtmp = x;
@@ -50,15 +52,11 @@ class BFGS {
     return arma::max(arma::abs(h) / xtmp) < kTolX_;
   }
 
-  int n_iters() const { return n_iters_; }
-  double f_min() const { return f_min_; }
-
  private:
-  bool trace_;
+  bool message_, trace_;
   int n_iters_;
   double f_min_;
 
-  bool message_;
   bool IsInfOrNaN(double x) {
     return (x == std::numeric_limits<double>::infinity() ||
             x == -std::numeric_limits<double>::infinity() || x != x);
@@ -69,12 +67,11 @@ template <typename T>
 void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
                          const arma::vec &g) {
   const int n_pars = x.n_rows;  // number of parameters
-
   const arma::vec xold = x;
   const double Fold = F;
 
-  double dphi = dot(h, g);
-  if (dphi >= 0.0 && message_)
+  double dphi0 = dot(h, g);
+  if (dphi0 >= 0.0 && message_)
     Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
 
   // Calculate the minimum step length
@@ -107,44 +104,53 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
         F = fun(x);
       }
       alpha_tmp = 0.5 * alpha;
-    } else if (F <= Fold + p3 * alpha * dphi) {
+    } else if (F <= Fold + p3 * alpha * dphi0) {
       // Sufficient function decrease
       return;
     } else {
-      // Backtrack
+      // Begin Backtrack
       if (alpha == 1.0) {
-        alpha_tmp = -dphi / (2.0 * (F - Fold - dphi));
+        // fisrt backtrack:
+        // model phi(alpha) as a quadratic
+        // phi(alpha) =
+        //    (phi(1) - phi(0) - dphi0) * alpha^2 + dphi0 * alpha + phi(0)
+        alpha_tmp = -dphi0 / (2.0 * (F - Fold - dphi0));
       } else {
+        // second and subsequent backtracks
+        // model phi(alpha) as a cubic
+        // phi(alpha) =
+        //    a * alpha^3 + b * alpha^2 + dphi0 * alpha + phi(0)
         double val1 = 1 / alpha / alpha;
         double val2 = 1 / alpha2 / alpha2;
         arma::vec ab =
             1 / (alpha - alpha2) *
             arma::mat({{val1, -val2}, {-alpha2 * val1, alpha * val2}}) *
-            arma::vec({F - dphi * alpha - Fold, F2 - dphi * alpha2 - Fold});
+            arma::vec({F - dphi0 * alpha - Fold, F2 - dphi0 * alpha2 - Fold});
         double a = ab(0), b = ab(1);
 
         if (IsInfOrNaN(a) || IsInfOrNaN(b)) {
           alpha_tmp = 0.5 * alpha;
         } else if (a == 0.0) {
-          alpha_tmp = -dphi / (2.0 * b);
+          alpha_tmp = -dphi0 / (2.0 * b);
         } else {
-          double disc = b * b - 3.0 * a * dphi;
+          double disc = b * b - 3.0 * a * dphi0;
           if (disc < 0.0) {
             alpha_tmp = 0.5 * alpha;
           } else if (b <= 0.0) {
             alpha_tmp = (-b + sqrt(disc)) / (3.0 * a);
           } else {
-            alpha_tmp = -dphi / (b + sqrt(disc));
+            alpha_tmp = -dphi0 / (b + sqrt(disc));
           }
         }
         if (alpha_tmp > 0.5 * alpha || IsInfOrNaN(alpha_tmp)) {
-          alpha_tmp = 0.5 * alpha;
+          alpha_tmp = 0.5 * alpha;  // alpha_tmp <= 0.5alpha
         }
+        // End Backtrack
       }
     }
     alpha2 = alpha;
     F2 = F;
-    alpha = std::max(alpha_tmp, 0.1 * alpha);
+    alpha = std::max(alpha_tmp, 0.1 * alpha);  // alpha_tmp >= 0.1alpha
   }
 }
 
