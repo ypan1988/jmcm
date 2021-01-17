@@ -31,8 +31,8 @@ class BFGS {
       kScaStepMax_;  // Scaled maximum step length allowed in line searches
   const double grad_tol_ = 1e-6;
 
-  void linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
-                  const arma::vec &g);
+  double linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
+                    const arma::vec &g);
   void minimize(T &fun, arma::vec &x, const double grad_tol = 1e-6);
 
   void set_message(bool message) { message_ = message; }
@@ -64,8 +64,9 @@ class BFGS {
 };  // class BFGS
 
 template <typename T>
-void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
-                         const arma::vec &g) {
+double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
+                           const arma::vec &g) {
+  arma::vec x = xx;
   const int n_pars = x.n_rows;  // number of parameters
   const arma::vec xold = x;
   const double Fold = F;
@@ -89,7 +90,7 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
     if (alpha < stepmin) {
       // x is too close to xold, ignored
       x = xold;
-      return;
+      return 0.0;
     }
 
     // Start of iteration loop
@@ -106,7 +107,7 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
       alpha_tmp = 0.5 * alpha;
     } else if (F <= Fold + p3 * alpha * dphi0) {
       // Sufficient function decrease
-      return;
+      return alpha;
     } else {
       // Begin Backtrack
       if (alpha == 1.0) {
@@ -151,7 +152,9 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
     alpha2 = alpha;
     F2 = F;
     alpha = std::max(alpha_tmp, 0.1 * alpha);  // alpha_tmp >= 0.1alpha
-  }
+  }                                            // for loop
+
+  return alpha;
 }
 
 template <typename T>
@@ -180,20 +183,22 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
     double h_norm = arma::norm(h, 2);
     if (h_norm > delta) h *= delta / h_norm;
 
+    double alpha = linesearch(fun, x, h, F, g);
     arma::vec x2 = x;  // Save the old point
-    linesearch(fun, x, h, F, g);
-    F = fun(x);  // Update function value
-    h = x - x2;  // Update line direction
-    x2 = x;      // Update the current point
-    f_min_ = F;
-    arma::vec grad2 = g;  // Save the old gradient
-    fun.Gradient(x, g);   // Get the new gradient
+    x += alpha * h;
 
     if (trace_) {
       Rcpp::Rcout << std::setw(5) << n_iters_ << ": " << std::setw(10) << F
                   << ": ";
       x.t().print();
     }
+
+    h = x - x2;  // Update line direction
+    x2 = x;      // Update the current point
+    F = fun(x);  // Update function value
+    f_min_ = F;
+    arma::vec grad2 = g;  // Save the old gradient
+    fun.Gradient(x, g);   // Get the new gradient
 
     // BFGS Updating
     arma::vec y = g - grad2;

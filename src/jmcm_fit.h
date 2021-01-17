@@ -110,7 +110,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
     arma::mat hess_inv = arma::eye<arma::mat>(n_pars, n_pars);
 
     // Initialize Newton Step
-    arma::vec p = -hess_inv * grad;
+    arma::vec h = -hess_inv * grad;
 
     // Calculate the maximum step length
     double sum = sqrt(arma::dot(x, x));
@@ -120,14 +120,15 @@ arma::vec JmcmFit<JMCM>::Optimize() {
     for (int iter = 0; iter != bfgs.kIterMax_; ++iter) {
       n_iters_ = iter;
 
-      arma::vec x2 = x;  // Save the old point
+      double h_norm = arma::norm(h, 2);
+      if (h_norm > delta) h *= delta / h_norm;
+      double alpha = bfgs.linesearch(jmcm_, x, h, f, grad);
 
-      double h_norm = arma::norm(p, 2);
-      if (h_norm > delta) p *= delta / h_norm;
-      bfgs.linesearch(jmcm_, x, p, f, grad);
+      arma::vec x2 = x;  // Save the old point
+      x += alpha * h;
 
       f = jmcm_(x);  // Update function value
-      p = x - x2;    // Update line direction
+      h = x - x2;    // Update line direction
       x2 = x;
       f_min_ = f;
 
@@ -138,7 +139,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
       }
 
       // Test for convergence on Delta x
-      if (bfgs.test_diff_x(x, p)) break;
+      if (bfgs.test_diff_x(x, h)) break;
 
       arma::vec grad2 = grad;   // Save the old gradient
       jmcm_.Gradient(x, grad);  // Get the new gradient
@@ -206,7 +207,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
       arma::vec xnew = jmcm_.get_param(0);
 
-      p = xnew - x;
+      h = xnew - x;
     }
   } else {
     if (optim_method_ == "default") {
