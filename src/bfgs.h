@@ -115,12 +115,14 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
       if (alpha == 1.0) {
         alpha_tmp = -dphi / (2.0 * (F - Fold - dphi));
       } else {
-        double rhs1 = F - Fold - alpha * dphi;
-        double rhs2 = F2 - Fold - alpha2 * dphi;
-        double a = rhs1 / (alpha * alpha) / (alpha - alpha2) -
-                   rhs2 / (alpha2 * alpha2) / (alpha - alpha2);
-        double b = -alpha2 * rhs1 / (alpha * alpha) / (alpha - alpha2) +
-                   alpha * rhs2 / (alpha2 * alpha2) / (alpha - alpha2);
+        double val1 = 1 / alpha / alpha;
+        double val2 = 1 / alpha2 / alpha2;
+        arma::vec ab =
+            1 / (alpha - alpha2) *
+            arma::mat({{val1, -val2}, {-alpha2 * val1, alpha * val2}}) *
+            arma::vec({F - dphi * alpha - Fold, F2 - dphi * alpha2 - Fold});
+        double a = ab(0), b = ab(1);
+
         if (IsInfOrNaN(a) || IsInfOrNaN(b)) {
           alpha_tmp = 0.5 * alpha;
         } else if (a == 0.0) {
