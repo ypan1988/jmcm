@@ -73,8 +73,8 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
   const arma::vec xold = x;
   const double Fold = F;
 
-  double slope = dot(h, g);
-  if (slope >= 0.0 && message_)
+  double dphi = dot(h, g);
+  if (dphi >= 0.0 && message_)
     Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
 
   // Calculate the minimum step length
@@ -85,37 +85,38 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
   }
   double stepmin = kEpsilon_ / test;
 
-  double alpha, alpha2, alpha_tmp, f2;
+  double alpha, alpha2, alpha_tmp, F2;
   alpha = 1.0;  // Always try full Newton step first
-  alpha2 = alpha_tmp = F = f2 = 0.0;
+  alpha2 = alpha_tmp = F = F2 = 0.0;
   for (int iter = 0; iter != kIterMax_; ++iter) {
-    // Start of iteration loop
-    x = xold + alpha * h;
-    F = fun(x);
-
     if (alpha < stepmin) {
       // x is too close to xold, ignored
       x = xold;
       return;
-    } else if (F <= Fold + p3 * alpha * slope) {
-      // Sufficient function decrease
-      return;
-    } else if (IsInfOrNaN(F)) {
+    }
+
+    // Start of iteration loop
+    x = xold + alpha * h;
+    F = fun(x);
+
+    if (IsInfOrNaN(F)) {
       // f is INF or NAN
       while (!IsInfOrNaN(alpha) && IsInfOrNaN(F)) {
         alpha *= 0.5;
         x = xold + alpha * h;
         F = fun(x);
       }
-
       alpha_tmp = 0.5 * alpha;
+    } else if (F <= Fold + p3 * alpha * dphi) {
+      // Sufficient function decrease
+      return;
     } else {
       // Backtrack
       if (alpha == 1.0) {
-        alpha_tmp = -slope / (2.0 * (F - Fold - slope));
+        alpha_tmp = -dphi / (2.0 * (F - Fold - dphi));
       } else {
-        double rhs1 = F - Fold - alpha * slope;
-        double rhs2 = f2 - Fold - alpha2 * slope;
+        double rhs1 = F - Fold - alpha * dphi;
+        double rhs2 = F2 - Fold - alpha2 * dphi;
         double a = rhs1 / (alpha * alpha) / (alpha - alpha2) -
                    rhs2 / (alpha2 * alpha2) / (alpha - alpha2);
         double b = -alpha2 * rhs1 / (alpha * alpha) / (alpha - alpha2) +
@@ -123,15 +124,15 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
         if (IsInfOrNaN(a) || IsInfOrNaN(b)) {
           alpha_tmp = 0.5 * alpha;
         } else if (a == 0.0) {
-          alpha_tmp = -slope / (2.0 * b);
+          alpha_tmp = -dphi / (2.0 * b);
         } else {
-          double disc = b * b - 3.0 * a * slope;
+          double disc = b * b - 3.0 * a * dphi;
           if (disc < 0.0) {
             alpha_tmp = 0.5 * alpha;
           } else if (b <= 0.0) {
             alpha_tmp = (-b + sqrt(disc)) / (3.0 * a);
           } else {
-            alpha_tmp = -slope / (b + sqrt(disc));
+            alpha_tmp = -dphi / (b + sqrt(disc));
           }
         }
         if (alpha_tmp > 0.5 * alpha || IsInfOrNaN(alpha_tmp)) {
@@ -140,7 +141,7 @@ void BFGS<T>::linesearch(T &fun, arma::vec &x, arma::vec &h, double F,
       }
     }
     alpha2 = alpha;
-    f2 = F;
+    F2 = F;
     alpha = std::max(alpha_tmp, 0.1 * alpha);
   }
 }
