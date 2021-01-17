@@ -67,8 +67,8 @@ template <typename T>
 double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
                            const arma::vec &g) {
   arma::vec x = xx;
-  const int n_pars = x.n_rows;  // number of parameters
-  const arma::vec xold = x;
+
+  const arma::vec xold = xx;
   const double Fold = F;
 
   double dphi0 = dot(h, g);
@@ -76,18 +76,16 @@ double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
     Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
 
   // Calculate the minimum step length
-  double test = 0.0;
-  for (int i = 0; i != n_pars; ++i) {
-    double temp = std::abs(h(i)) / std::max(std::abs(xold(i)), 1.0);
-    if (temp > test) test = temp;
-  }
-  double stepmin = kEpsilon_ / test;
+  arma::vec xtmp = x;
+  xtmp.for_each([](arma::vec::elem_type &val) { val = std::max(val, 1.0); });
+  double test = arma::max(arma::abs(h) / xtmp);
+  double step_min = kEpsilon_ / test;
 
   double alpha, alpha2, alpha_tmp, F2;
   alpha = 1.0;  // Always try full Newton step first
   alpha2 = alpha_tmp = F = F2 = 0.0;
   for (int iter = 0; iter != kIterMax_; ++iter) {
-    if (alpha < stepmin) {
+    if (alpha < step_min) {
       // x is too close to xold, ignored
       x = xold;
       return 0.0;
