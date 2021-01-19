@@ -14,15 +14,13 @@ template <typename T>
 class BFGS {
  public:
   BFGS()
-      : info_(6, arma::fill::zeros),
-        kIterMax_(200),
+      : kIterMax_(200),
         p3(1.0e-4),
         kEpsilon_(std::numeric_limits<double>::epsilon()),
         kTolX_(4 * kEpsilon_),
         kScaStepMax_(100) {}
   ~BFGS() = default;
 
-  arma::vec info_;
   const int kIterMax_;     // Maximum number of iterations
   const double p3;         // Ensure sufficient decrease in function value
   const double kEpsilon_;  // Machine precision
@@ -85,11 +83,8 @@ double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
   alpha = 1.0;  // Always try full Newton step first
   alpha2 = alpha_tmp = F = F2 = 0.0;
   for (int iter = 0; iter != kIterMax_; ++iter) {
-    if (alpha < step_min) {
-      // x is too close to xold, ignored
-      x = xold;
-      return 0.0;
-    }
+    // x is too close to xold, ignored
+    if (alpha < step_min) return 0.0;
 
     // Start of iteration loop
     x = xold + alpha * h;
@@ -171,8 +166,7 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
   arma::vec h = -D * g;
 
   // Calculate the maximum step length
-  const double delta =
-      kScaStepMax_ * std::max(arma::norm(x, 2), double(n_pars));
+  double delta = kScaStepMax_ * std::max(arma::norm(x, 2), double(n_pars));
 
   // Main loop over the iterations
   n_iters_ = 0;
@@ -208,18 +202,10 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
       D += rho * (h * v.t() + v * h.t());
     }
 
-    // Test for convergence on small gradient
-    if (test_grad(x, F, g)) {
-      info_(5) = 1;
-      return;
-    }
-    // Test for convergence on small x - xp
-    if (test_diff_x(x, h)) {
-      info_(5) = 2;
-      return;
-    }
+    // Test for convergence on small gradient and small x - xp
+    if (test_grad(x, F, g) || test_diff_x(x, h)) return;
   } while (++n_iters_ != kIterMax_);
-  if (this->message_) {
+  if (message_) {
     Rcpp::Rcerr << "too many iterations in bfgs" << std::endl;
   }
 }
