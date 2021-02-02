@@ -131,9 +131,9 @@ double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
           if (disc < 0.0) {
             alpha_tmp = 0.5 * alpha;
           } else if (b <= 0.0) {
-            alpha_tmp = (-b + sqrt(disc)) / (3.0 * a);
+            alpha_tmp = (-b + std::sqrt(disc)) / (3.0 * a);
           } else {
-            alpha_tmp = -dphi0 / (b + sqrt(disc));
+            alpha_tmp = -dphi0 / (b + std::sqrt(disc));
           }
         }
         if (alpha_tmp > 0.5 * alpha || IsInfOrNaN(alpha_tmp)) {
@@ -198,7 +198,7 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
     arma::vec u = D * y;
     arma::vec v = 0.5 * (1 + rho * arma::dot(u, y)) * h - u;
 
-    if (rho * sqrt(kEpsilon_ * arma::dot(y, y) * arma::dot(h, h)) < 1) {
+    if (rho * std::sqrt(kEpsilon_ * arma::dot(y, y) * arma::dot(h, h)) < 1) {
       D += rho * (h * v.t() + v * h.t());
     }
 
