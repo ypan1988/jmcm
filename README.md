@@ -50,3 +50,9 @@ Or the released version from CRAN:
 ```R
 install.packages("jmcm")
 ```
+
+## Usage
+
+Check the JSS paper with the corresponding R replication code [v82i09.R](https://github.com/ypan1988/jmcm-demo/blob/main/v82i09.R).
+
+For benchmarking of jmcm package, use the R script [jmcm-benchmark.R](https://github.com/ypan1988/jmcm-demo/blob/main/jmcm-benchmark.R).
