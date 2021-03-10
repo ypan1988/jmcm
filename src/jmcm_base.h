@@ -279,11 +279,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
       lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
       gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
 
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
-
+      Xbta_ = cov_only_ ? mean_ : X_ * beta_;
       Zlmd_ = Z_ * lambda_;
       Wgma_ = W_ * gamma_;
       Resid_ = Y_ - Xbta_;
@@ -293,11 +289,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
       theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
       beta_ = x;
 
-      if (cov_only_)
-        Xbta_ = mean_;
-      else
-        Xbta_ = X_ * beta_;
-
+      Xbta_ = cov_only_ ? mean_ : X_ * beta_;
       Resid_ = Y_ - Xbta_;
       break;
 
