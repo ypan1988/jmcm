@@ -342,10 +342,7 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
 
   switch (free_param_) {
     case 0:
-      grad = arma::zeros<arma::vec>(theta_.n_rows);
-      grad.subvec(cumsum_param_(0), cumsum_param_(1) - 1) = Grad1();
-      grad.subvec(cumsum_param_(1), cumsum_param_(2) - 1) = Grad2();
-      grad.subvec(cumsum_param_(2), cumsum_param_(3) - 1) = Grad3();
+      grad = arma::join_cols(Grad1(), Grad2(), Grad3());
       break;
 
     case 1:
