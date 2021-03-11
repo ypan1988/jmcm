@@ -47,27 +47,20 @@ class ACD : public JmcmBase {
     return DiTi * DiTi.t();
   }
   arma::mat get_Sigma_inv(arma::uword i) const override {
-    arma::mat Ti_inv_Di_inv = get_invT(i) * get_invD(i);
+    arma::mat Ti_inv_Di_inv = get_T(i, true) * get_D(i, true);
     return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
   }
 
-  arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(arma::exp(get_Zlmd(i) / 2));
+  arma::mat get_D(arma::uword i, bool inv = false) const override {
+    arma::vec elem = inv ? -get_Zlmd(i) : get_Zlmd(i);
+    return arma::diagmat(arma::exp(elem / 2));
   }
-  arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(arma::exp(-get_Zlmd(i) / 2));
-  }
-  arma::mat get_T(arma::uword i) const override {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i))
-                      : get_ltrimatrix(m_(i), get_Wgma(i), false);
-  }
-  arma::mat get_invT(arma::uword i) const {
-    return m_(i) == 1
-               ? arma::eye(m_(i), m_(i))
-               : get_ltrimatrix(m_(i),
-                                invTelem_.subvec(cumsum_trim2_(i),
-                                                 cumsum_trim2_(i + 1) - 1),
-                                true);
+  arma::mat get_T(arma::uword i, bool inv = false) const override {
+    if (m_(i) == 1) return arma::eye(m_(i), m_(i));
+    arma::vec elem =
+        inv ? invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i + 1) - 1)
+            : get_Wgma(i);
+    return get_ltrimatrix(m_(i), elem, inv);
   }
 
  private:
@@ -132,7 +125,7 @@ inline arma::vec ACD::Grad3() const {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ei = get_TDResid(i);
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i);
-    arma::mat Ti_inv = get_invT(i);
+    arma::mat Ti_inv = get_T(i, true);
 
     grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
              (Ti_trans_deriv * (Ti_inv.t() * ei));
@@ -156,8 +149,8 @@ inline void ACD::UpdateTelem() {
 inline void ACD::UpdateTDResid() {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
-    arma::mat Ti_inv = get_invT(i);
-    arma::mat Di_inv = get_invD(i);
+    arma::mat Ti_inv = get_T(i, true);
+    arma::mat Di_inv = get_D(i, true);
 
     arma::vec Diri = Di_inv * ri;
     arma::vec TiDiri = Ti_inv * Diri;

@@ -133,7 +133,6 @@ class JmcmBase : public roptim::Functor {
   void Gradient(const arma::vec& x, arma::vec& grad) override;
 
   arma::vec Grad1() const;
-  arma::vec Grad23() const { return arma::join_cols(Grad2(), Grad3()); }
   virtual arma::vec Grad2() const = 0;
   virtual arma::vec Grad3() const = 0;
 
@@ -143,8 +142,8 @@ class JmcmBase : public roptim::Functor {
 
   // Matrix D refers to the diagonal matrix in MCD/ACD/HPC
   // Matrix T refers to the lower-triangular matrix in MCD/ACD/HPC
-  virtual arma::mat get_D(arma::uword i) const = 0;
-  virtual arma::mat get_T(arma::uword i) const = 0;
+  virtual arma::mat get_D(arma::uword i, bool inv = false) const = 0;
+  virtual arma::mat get_T(arma::uword i, bool inv = false) const = 0;
 
  public:
   const arma::vec m_, Y_;
@@ -358,7 +357,7 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
       break;
 
     case 23:
-      grad = Grad23();
+      grad = arma::join_cols(Grad2(), Grad3());
       break;
 
     default:

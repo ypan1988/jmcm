@@ -44,25 +44,23 @@ class MCD : public JmcmBase {
 
   double CalcLogDetSigma() const override { return arma::sum(get_Zlmd()); }
   arma::mat get_Sigma(arma::uword i) const override {
-    arma::mat Ti_inv = get_invT(i), Di = get_D(i);
+    arma::mat Ti_inv = get_T(i, true), Di = get_D(i);
     return Ti_inv * Di * Ti_inv.t();
   }
   arma::mat get_Sigma_inv(arma::uword i) const override {
-    arma::mat Ti = get_T(i), Di_inv = get_invD(i);
+    arma::mat Ti = get_T(i), Di_inv = get_D(i, true);
     return Ti.t() * Di_inv * Ti;
   }
 
-  arma::mat get_D(arma::uword i) const override {
-    return arma::diagmat(arma::exp(get_Zlmd(i)));
+  arma::mat get_D(arma::uword i, bool inv = false) const override {
+    arma::vec elem = inv ? -get_Zlmd(i) : get_Zlmd(i);
+    return arma::diagmat(arma::exp(elem));
   }
-  arma::mat get_invD(arma::uword i) const {
-    return arma::diagmat(arma::exp(-get_Zlmd(i)));
+  arma::mat get_T(arma::uword i, bool inv = false) const override {
+    if (m_(i) == 1) return arma::eye(m_(i), m_(i));
+    arma::mat Ti = get_ltrimatrix(m_(i), -get_Wgma(i), false);
+    return inv ? arma::pinv(Ti) : Ti;
   }
-  arma::mat get_T(arma::uword i) const override {
-    return m_(i) == 1 ? arma::eye(m_(i), m_(i))
-                      : get_ltrimatrix(m_(i), -get_Wgma(i), false);
-  }
-  arma::mat get_invT(arma::uword i) const { return arma::pinv(get_T(i)); }
 
  private:
   arma::mat G_;
@@ -93,7 +91,7 @@ inline void MCD::UpdateGamma() {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = get_G(i);
     arma::vec ri = get_Resid(i);
-    arma::mat Di_inv = get_invD(i);
+    arma::mat Di_inv = get_D(i, true);
 
     GDG += Gi.t() * Di_inv * Gi;
     GDr += Gi.t() * (Di_inv * ri);
@@ -127,7 +125,7 @@ inline arma::vec MCD::Grad2() const {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
-    arma::mat Di_inv = get_invD(i);
+    arma::mat Di_inv = get_D(i, true);
     arma::vec ei = arma::pow(get_TResid(i), 2);
 
     grad2 += Zi.t() * (Di_inv * ei - one);
@@ -140,7 +138,7 @@ inline arma::vec MCD::Grad3() const {
   arma::vec grad3 = arma::zeros<arma::vec>(n_gma_);
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = get_G(i);
-    arma::mat Di_inv = get_invD(i);
+    arma::mat Di_inv = get_D(i, true);
     arma::vec Tiri = get_TResid(i);
 
     grad3 += Gi.t() * (Di_inv * Tiri);
