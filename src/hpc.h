@@ -208,19 +208,11 @@ inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
                                     const arma::mat& Phii,
                                     const arma::mat& Ti) const {
   arma::vec result = arma::zeros<arma::vec>(n_gma_);
-  if (k < j) {
-    result = Ti(j, k) * (-std::tan(Phii(j, k)) * Wijk(i, j, k));
-    for (arma::uword l = 0; l != k; ++l) {
-      result += Ti(j, k) * Wijk(i, j, l) / std::tan(Phii(j, l));
-    }
-    return result;
-  } else if (k == j) {
-    for (arma::uword l = 0; l != k; ++l) {
-      result += Ti(j, k) * Wijk(i, j, l) / std::tan(Phii(j, l));
-    }
-    return result;
+  if (k > j) return result;
+  if (k < j) result = Ti(j, k) * (-std::tan(Phii(j, k)) * Wijk(i, j, k));
+  for (arma::uword l = 0; l != k; ++l) {
+    result += Ti(j, k) * Wijk(i, j, l) / std::tan(Phii(j, l));
   }
-
   return result;
 }
 

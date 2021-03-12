@@ -73,25 +73,21 @@ class JmcmBase : public roptim::Functor {
     mean_ = mean;
   }
 
+  // clang-format off
   // A unified function to get parameters. fp is used as a temp value
   // for free_param_ to specify the parameter you want to get.
   arma::vec get_param(int fp) const {
     switch (fp) {
-      case 0:
-        return theta_;
-      case 1:
-        return beta_;
-      case 2:
-        return lambda_;
-      case 3:
-        return gamma_;
-      case 23:
-        return lmdgma_;
-      default:
-        Rcpp::Rcout << "Wrong fp value" << std::endl;
+      case  0: return theta_;
+      case  1: return beta_;
+      case  2: return lambda_;
+      case  3: return gamma_;
+      case 23: return lmdgma_;
+      default: Rcpp::Rcout << "Wrong fp value" << std::endl;
     }
     return arma::vec();
   }
+  // clang-format on
 
   // A unified function to set parameters. fp is used as a temp value
   // for free_param_ to specify the parameter you want to change.
@@ -336,34 +332,20 @@ inline double JmcmBase::operator()(const arma::vec& x) {
   return result;
 }
 
+// clang-format off
 inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
   UpdateJmcm(x);
 
   switch (free_param_) {
-    case 0:
-      grad = arma::join_cols(Grad1(), Grad2(), Grad3());
-      break;
-
-    case 1:
-      grad = Grad1();
-      break;
-
-    case 2:
-      grad = Grad2();
-      break;
-
-    case 3:
-      grad = Grad3();
-      break;
-
-    case 23:
-      grad = arma::join_cols(Grad2(), Grad3());
-      break;
-
-    default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+    case  0: { grad = arma::join_cols(Grad1(), Grad2(), Grad3()); break; }
+    case  1: { grad = Grad1(); break; }
+    case  2: { grad = Grad2(); break; }
+    case  3: { grad = Grad3(); break; }
+    case 23: { grad = arma::join_cols(Grad2(), Grad3()); break; }
+    default: Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
   }
 }
+// clang-format on
 
 inline arma::vec JmcmBase::Grad1() const {
   arma::vec grad1 = arma::zeros<arma::vec>(n_bta_);
