@@ -89,12 +89,13 @@ inline void MCD::UpdateGamma() {
   arma::vec GDr = arma::zeros<arma::vec>(n_gma_);
 
   for (arma::uword i = 0; i < n_sub_; ++i) {
-    arma::mat Gi = get_G(i);
     arma::vec ri = get_Resid(i);
     arma::mat Di_inv = get_D(i, true);
+    arma::mat Gi = get_G(i);
+    arma::mat Gi_Di_inv = Gi.t() * Di_inv;
 
-    GDG += Gi.t() * Di_inv * Gi;
-    GDr += Gi.t() * (Di_inv * ri);
+    GDG += Gi_Di_inv * Gi;
+    GDr += Gi_Di_inv * ri;
   }
 
   set_param(GDG.i() * GDr, 3);
