@@ -53,6 +53,11 @@ install.packages("jmcm")
 
 ## Usage
 
-Check the JSS paper with the corresponding R replication code [v82i09.R](https://github.com/ypan1988/jmcm-demo/blob/main/v82i09.R).
+Check the JSS paper with the corresponding R replication code [v82i09.R](https://github.com/ypan1988/jmcm-demo/releases/download/v1.0/v82i09.R) (this file is part of [jmcm-demo](https://github.com/ypan1988/jmcm-demo)).
 
-For benchmarking of jmcm package, use the R script [jmcm-benchmark.R](https://github.com/ypan1988/jmcm-demo/blob/main/jmcm-benchmark.R).
+## Benchmarks
+
+For benchmarking of jmcm package, use the R script [jmcm-benchmark.R](https://github.com/ypan1988/jmcm-demo/releases/download/v1.0/jmcm-benchmark.R) (this file is part of [jmcm-demo](https://github.com/ypan1988/jmcm-demo)) with the following command in `R`:
+```R
+source("~/jmcm-benchmark.R") # you may need to change the directory
+```
