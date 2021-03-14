@@ -205,15 +205,11 @@ ldFormula <- function(formula, data = NULL, triple = c(3,3,3),
   Z <- cbind(Z, Ztmp)
 
   W <- NULL
+  curr_idx <- 1
   for (i in 1:length(m))
   {
-    if (i == 1) {
-      ti <- time[1:m[1]]
-    } else {
-      first_index <- 1+sum(m[1:(i-1)])
-      last_index <- sum(m[1:i])
-      ti <- time[first_index:last_index]
-    }
+    ti <- time[curr_idx:(curr_idx+m[i]-1)]
+    curr_idx <- curr_idx+m[i]
 
     if(m[i] != 1) {
       for (j in 2:m[i])
