@@ -196,18 +196,9 @@ ldFormula <- function(formula, data = NULL, triple = c(3,3,3),
   Xtmp <- X[index, -1]
   Ztmp <- Z[index, -1]
 
-  # covariates based on polynomials of time
-  X <- rep(1, length(time))
-  Z <- rep(1, length(time))
-  if (triple[1] != 0)
-    for (i in 1:triple[1]) X = cbind(X, time^i)
-  else
-    X <- as.matrix(X, ncol = 1)
-  
-  if (triple[2] != 0)
-    for (i in 1:triple[2]) Z = cbind(Z, time^i)
-  else
-    Z <- as.matrix(Z, ncol = 1)
+  # covariates based on polynomials of time (Vandermonde matrix)
+  X <- outer(time, seq(0, triple[1]), `^`)
+  Z <- outer(time, seq(0, triple[2]), `^`)
 
   # combine two parts of the covariates
   X <- cbind(X, Xtmp)
