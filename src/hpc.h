@@ -47,13 +47,13 @@ class HPC : public JmcmBase {
   double CalcLogDetSigma() const override {
     return 2 * log_det_T_ + arma::sum(get_Zlmd());
   }
-  arma::mat get_Sigma(arma::uword i) const override {
-    arma::mat DiTi = get_D(i) * get_T(i);
-    return DiTi * DiTi.t();
-  }
-  arma::mat get_Sigma_inv(arma::uword i) const override {
-    arma::mat Ti_inv_Di_inv = get_T(i, true) * get_D(i, true);
-    return Ti_inv_Di_inv.t() * Ti_inv_Di_inv;
+
+  // Sigma = Di * Ti * Ti.t() * Di
+  // Sigma_inv = Di_inv * Ti_inv.t() * Ti_inv * Di_inv
+  arma::mat get_Sigma(arma::uword i, bool inv = false) const override {
+    arma::mat Di = get_D(i, inv), Ti = get_T(i, inv);
+    arma::mat tmp = inv ? Ti * Di : Di * Ti;
+    return inv ? arma::mat(tmp.t() * tmp) : arma::mat(tmp * tmp.t());
   }
 
   arma::mat get_D(arma::uword i, bool inv = false) const override {

@@ -43,13 +43,12 @@ class MCD : public JmcmBase {
   arma::vec Grad3() const override;
 
   double CalcLogDetSigma() const override { return arma::sum(get_Zlmd()); }
-  arma::mat get_Sigma(arma::uword i) const override {
-    arma::mat Ti_inv = get_T(i, true), Di = get_D(i);
-    return Ti_inv * Di * Ti_inv.t();
-  }
-  arma::mat get_Sigma_inv(arma::uword i) const override {
-    arma::mat Ti = get_T(i), Di_inv = get_D(i, true);
-    return Ti.t() * Di_inv * Ti;
+
+  // Sigma = Ti_inv * Di * Ti_inv.t()
+  // Sigma_inv = Ti.t() * Di_inv * Ti
+  arma::mat get_Sigma(arma::uword i, bool inv = true) const override {
+    arma::mat Ti = get_T(i, !inv), Di = get_D(i, inv);
+    return inv ? arma::mat(Ti.t() * Di * Ti) : arma::mat(Ti * Di * Ti.t());
   }
 
   arma::mat get_D(arma::uword i, bool inv = false) const override {

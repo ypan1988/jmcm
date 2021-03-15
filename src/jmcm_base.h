@@ -133,8 +133,7 @@ class JmcmBase : public roptim::Functor {
   virtual arma::vec Grad3() const = 0;
 
   virtual double CalcLogDetSigma() const = 0;
-  virtual arma::mat get_Sigma(arma::uword i) const = 0;
-  virtual arma::mat get_Sigma_inv(arma::uword i) const = 0;
+  virtual arma::mat get_Sigma(arma::uword i, bool inv = false) const = 0;
 
   // Matrix D refers to the diagonal matrix in MCD/ACD/HPC
   // Matrix T refers to the lower-triangular matrix in MCD/ACD/HPC
@@ -255,7 +254,7 @@ inline void JmcmBase::UpdateBeta() {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec yi = get_Y(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    arma::mat Sigmai_inv = get_Sigma(i, true);
 
     XSX += Xi.t() * Sigmai_inv * Xi;
     XSy += Xi.t() * (Sigmai_inv * yi);
@@ -324,7 +323,7 @@ inline double JmcmBase::operator()(const arma::vec& x) {
   double result = 0.0;
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    arma::mat Sigmai_inv = get_Sigma(i, true);
     result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
   }
 
@@ -352,7 +351,7 @@ inline arma::vec JmcmBase::Grad1() const {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
-    arma::mat Sigmai_inv = get_Sigma_inv(i);
+    arma::mat Sigmai_inv = get_Sigma(i, true);
     grad1 += Xi.t() * (Sigmai_inv * ri);
   }
 
