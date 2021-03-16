@@ -37,12 +37,6 @@ class JmcmBase : public roptim::Functor {
   JmcmBase(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
            const arma::mat& Z, const arma::mat& W, const arma::uword method_id);
 
-  arma::vec get_m() const { return m_; }
-  arma::vec get_Y() const { return Y_; }
-  arma::mat get_X() const { return X_; }
-  arma::mat get_Z() const { return Z_; }
-  arma::mat get_W() const { return W_; }
-
   arma::uword get_m(arma::uword i) const { return m_(i); }
   arma::vec get_Y(arma::uword i) const {
     return Y_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);

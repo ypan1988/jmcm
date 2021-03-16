@@ -27,6 +27,38 @@
 #include "jmcm_fit.h"
 // clang-format on
 
+template <typename JMCM>
+Rcpp::List jmcm_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
+                           arma::mat W, arma::vec start, arma::vec mean,
+                           bool trace = false, bool profile = true,
+                           bool errormsg = false, bool covonly = false,
+                           std::string optim_method = "default") {
+  JmcmFit<JMCM> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
+                    covonly, optim_method);
+  arma::vec x = fit.Optimize();
+  double f_min = fit.get_f_min();
+  arma::uword n_iters = fit.get_n_iters();
+
+  int n_bta = X.n_cols;
+  int n_lmd = Z.n_cols;
+  int n_gma = W.n_cols;
+
+  arma::vec beta = x.rows(0, n_bta - 1);
+  arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
+  arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+
+  int n_par = n_bta + n_lmd + n_gma;
+  int n_sub = m.n_rows;
+
+  return Rcpp::List::create(
+      Rcpp::Named("par") = x, Rcpp::Named("beta") = beta,
+      Rcpp::Named("lambda") = lambda, Rcpp::Named("gamma") = gamma,
+      Rcpp::Named("loglik") = -f_min / 2,
+      Rcpp::Named("BIC") =
+          f_min / n_sub + n_par * log(static_cast<double>(n_sub)) / n_sub,
+      Rcpp::Named("iter") = n_iters);
+}
+
 //'@title Fit Joint Mean-Covariance Models based on MCD
 //'@description Fit joint mean-covariance models based on MCD.
 //'@param m an integer vector of numbers of measurements for subject.
@@ -54,30 +86,8 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
-  JmcmFit<jmcm::MCD> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly, optim_method);
-  arma::vec x = fit.Optimize();
-  double f_min = fit.get_f_min();
-  arma::uword n_iters = fit.get_n_iters();
-
-  int n_bta = X.n_cols;
-  int n_lmd = Z.n_cols;
-  int n_gma = W.n_cols;
-
-  arma::vec beta = x.rows(0, n_bta - 1);
-  arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
-  arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
-
-  int n_par = n_bta + n_lmd + n_gma;
-  int n_sub = m.n_rows;
-
-  return Rcpp::List::create(
-      Rcpp::Named("par") = x, Rcpp::Named("beta") = beta,
-      Rcpp::Named("lambda") = lambda, Rcpp::Named("gamma") = gamma,
-      Rcpp::Named("loglik") = -f_min / 2,
-      Rcpp::Named("BIC") =
-          f_min / n_sub + n_par * log(static_cast<double>(n_sub)) / n_sub,
-      Rcpp::Named("iter") = n_iters);
+  return jmcm_estimation<jmcm::MCD>(m, Y, X, Z, W, start, mean, trace, profile,
+                                    errormsg, covonly);
 }
 
 //'@title Fit Joint Mean-Covariance Models based on ACD
@@ -107,30 +117,8 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
-  JmcmFit<jmcm::ACD> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly, optim_method);
-  arma::vec x = fit.Optimize();
-  double f_min = fit.get_f_min();
-  arma::uword n_iters = fit.get_n_iters();
-
-  int n_bta = X.n_cols;
-  int n_lmd = Z.n_cols;
-  int n_gma = W.n_cols;
-
-  arma::vec beta = x.rows(0, n_bta - 1);
-  arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
-  arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
-
-  int n_par = n_bta + n_lmd + n_gma;
-  int n_sub = m.n_rows;
-
-  return Rcpp::List::create(
-      Rcpp::Named("par") = x, Rcpp::Named("beta") = beta,
-      Rcpp::Named("lambda") = lambda, Rcpp::Named("gamma") = gamma,
-      Rcpp::Named("loglik") = -f_min / 2,
-      Rcpp::Named("BIC") =
-          f_min / n_sub + n_par * log(static_cast<double>(n_sub)) / n_sub,
-      Rcpp::Named("iter") = n_iters);
+  return jmcm_estimation<jmcm::ACD>(m, Y, X, Z, W, start, mean, trace, profile,
+                                    errormsg, covonly);
 }
 
 //'@title Fit Joint Mean-Covariance Models based on HPC
@@ -160,30 +148,8 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
-  JmcmFit<jmcm::HPC> fit(m, Y, X, Z, W, start, mean, trace, profile, errormsg,
-                         covonly, optim_method);
-  arma::vec x = fit.Optimize();
-  double f_min = fit.get_f_min();
-  arma::uword n_iters = fit.get_n_iters();
-
-  int n_bta = X.n_cols;
-  int n_lmd = Z.n_cols;
-  int n_gma = W.n_cols;
-
-  arma::vec beta = x.rows(0, n_bta - 1);
-  arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
-  arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
-
-  int n_par = n_bta + n_lmd + n_gma;
-  int n_sub = m.n_rows;
-
-  return Rcpp::List::create(
-      Rcpp::Named("par") = x, Rcpp::Named("beta") = beta,
-      Rcpp::Named("lambda") = lambda, Rcpp::Named("gamma") = gamma,
-      Rcpp::Named("loglik") = -f_min / 2,
-      Rcpp::Named("BIC") =
-          f_min / n_sub + n_par * log(static_cast<double>(n_sub)) / n_sub,
-      Rcpp::Named("iter") = n_iters);
+  return jmcm_estimation<jmcm::HPC>(m, Y, X, Z, W, start, mean, trace, profile,
+                                    errormsg, covonly);
 }
 
 RcppExport SEXP MCD__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
@@ -262,7 +228,6 @@ RcppExport SEXP get_D(SEXP xp, SEXP x_, SEXP i_) {
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
-
   ptr->UpdateJmcm(x);
 
   return Rcpp::wrap(ptr->get_D(i));
@@ -273,7 +238,6 @@ RcppExport SEXP get_T(SEXP xp, SEXP x_, SEXP i_) {
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
-
   ptr->UpdateJmcm(x);
 
   return Rcpp::wrap(ptr->get_T(i));
@@ -284,7 +248,6 @@ RcppExport SEXP get_mu(SEXP xp, SEXP x_, SEXP i_) {
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
-
   ptr->UpdateJmcm(x);
 
   return Rcpp::wrap(ptr->get_mu(i));
@@ -295,9 +258,6 @@ RcppExport SEXP get_Sigma(SEXP xp, SEXP x_, SEXP i_) {
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
-
-  arma::mat Sigmai;
-
   ptr->UpdateJmcm(x);
 
   return Rcpp::wrap(ptr->get_Sigma(i));
@@ -307,7 +267,6 @@ RcppExport SEXP n2loglik(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
-
   double result = ptr->operator()(x);
 
   return Rcpp::wrap(result);
@@ -317,7 +276,6 @@ RcppExport SEXP grad(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
-
   arma::vec grad;
   ptr->Gradient(x, grad);
 
@@ -328,7 +286,6 @@ RcppExport SEXP hess(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
 
   arma::vec x = Rcpp::as<arma::vec>(x_);
-
   arma::mat hess;
   ptr->Hessian(x, hess);
 
