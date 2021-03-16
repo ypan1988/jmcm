@@ -53,7 +53,34 @@ install.packages("jmcm")
 
 ## Usage
 
-Check the JSS paper with the corresponding R replication code [v82i09.R](https://github.com/ypan1988/jmcm-demo/releases/download/v1.0/v82i09.R) (this file is part of [jmcm-demo](https://github.com/ypan1988/jmcm-demo)).
+Fit a joint mean-covariance model to longitudinal data, via maximum likelihood:
+```R
+jmcm(formula, data = NULL, triple = c(3, 3, 3), cov.method = c("mcd", "acd", "hpc"),
+  optim.method = c("default", "BFGS"), control = jmcmControl(), start = NULL)
+```
+
+* formula:
+a two-sided linear formula object describing the covariates for both the mean and covariance matrix part of the model, with the response, the corresponding subject id and measurement time on the left of a operator~, divided by vertical bars ("|").
+
+* data:
+a data frame containing the variables named in formula.
+
+* triple:
+an integer vector of length three containing the degrees of the three polynomial functions for the mean structure, the log innovation -variances and the autoregressive or moving average coefficients when 'mcd' or 'acd' is specified for cov.method. It refers to the degree for the mean structure, variances and angles when 'hpc' is specified for cov.method.
+
+* cov.method:
+covariance structure modelling method, choose 'mcd' (Pourahmadi 1999), 'acd' (Chen and Dunson 2013) or 'hpc' (Zhang et al. 2015).
+
+* optim.method:
+optimization method, choose 'default' or 'BFGS' (vmmin in R).
+
+* control:
+a list (of correct class, resulting from jmcmControl()) containing control parameters, see the jmcmControl documentation for details.
+
+* start:
+starting values for the parameters in the model.
+
+Check the JSS paper with the corresponding R replication code [v82i09.R](https://github.com/ypan1988/jmcm-demo/releases/download/v1.0/v82i09.R) (this file is part of [jmcm-demo](https://github.com/ypan1988/jmcm-demo)) for details.
 
 ## Benchmarks
 
