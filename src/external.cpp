@@ -152,142 +152,112 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
                                     errormsg, covonly);
 }
 
-RcppExport SEXP MCD__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
+template <typename JMCM>
+SEXP JMCM__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
   arma::vec m = Rcpp::as<arma::vec>(m_);
   arma::vec Y = Rcpp::as<arma::vec>(Y_);
   arma::mat X = Rcpp::as<arma::mat>(X_);
   arma::mat Z = Rcpp::as<arma::mat>(Z_);
   arma::mat W = Rcpp::as<arma::mat>(W_);
 
-  Rcpp::XPtr<jmcm::JmcmBase> ptr(new jmcm::MCD(m, Y, X, Z, W), true);
+  Rcpp::XPtr<jmcm::JmcmBase> ptr(new JMCM(m, Y, X, Z, W), true);
 
   return ptr;
+}
+
+RcppExport SEXP MCD__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
+  return JMCM__new<jmcm::MCD>(m_, Y_, X_, Z_, W_);
 }
 
 RcppExport SEXP ACD__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
-  arma::vec m = Rcpp::as<arma::vec>(m_);
-  arma::vec Y = Rcpp::as<arma::vec>(Y_);
-  arma::mat X = Rcpp::as<arma::mat>(X_);
-  arma::mat Z = Rcpp::as<arma::mat>(Z_);
-  arma::mat W = Rcpp::as<arma::mat>(W_);
-
-  Rcpp::XPtr<jmcm::JmcmBase> ptr(new jmcm::ACD(m, Y, X, Z, W), true);
-
-  return ptr;
+  return JMCM__new<jmcm::ACD>(m_, Y_, X_, Z_, W_);
 }
 
 RcppExport SEXP HPC__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
-  arma::vec m = Rcpp::as<arma::vec>(m_);
-  arma::vec Y = Rcpp::as<arma::vec>(Y_);
-  arma::mat X = Rcpp::as<arma::mat>(X_);
-  arma::mat Z = Rcpp::as<arma::mat>(Z_);
-  arma::mat W = Rcpp::as<arma::mat>(W_);
-
-  Rcpp::XPtr<jmcm::JmcmBase> ptr(new jmcm::HPC(m, Y, X, Z, W), true);
-
-  return ptr;
+  return JMCM__new<jmcm::HPC>(m_, Y_, X_, Z_, W_);
 }
 
 RcppExport SEXP get_m(SEXP xp, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
   int i = Rcpp::as<int>(i_) - 1;
-
   return Rcpp::wrap(ptr->get_m(i));
 }
 
 RcppExport SEXP get_Y(SEXP xp, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
   int i = Rcpp::as<int>(i_) - 1;
-
   return Rcpp::wrap(ptr->get_Y(i));
 }
 
 RcppExport SEXP get_X(SEXP xp, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
   int i = Rcpp::as<int>(i_) - 1;
-
   return Rcpp::wrap(ptr->get_X(i));
 }
 
 RcppExport SEXP get_Z(SEXP xp, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
   int i = Rcpp::as<int>(i_) - 1;
-
   return Rcpp::wrap(ptr->get_Z(i));
 }
 
 RcppExport SEXP get_W(SEXP xp, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
   int i = Rcpp::as<int>(i_) - 1;
-
   return Rcpp::wrap(ptr->get_W(i));
 }
 
 RcppExport SEXP get_D(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
   ptr->UpdateJmcm(x);
-
   return Rcpp::wrap(ptr->get_D(i));
 }
 
 RcppExport SEXP get_T(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
   ptr->UpdateJmcm(x);
-
   return Rcpp::wrap(ptr->get_T(i));
 }
 
 RcppExport SEXP get_mu(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
   ptr->UpdateJmcm(x);
-
   return Rcpp::wrap(ptr->get_mu(i));
 }
 
 RcppExport SEXP get_Sigma(SEXP xp, SEXP x_, SEXP i_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   int i = Rcpp::as<int>(i_) - 1;
   ptr->UpdateJmcm(x);
-
   return Rcpp::wrap(ptr->get_Sigma(i));
 }
 
 RcppExport SEXP n2loglik(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   double result = ptr->operator()(x);
-
   return Rcpp::wrap(result);
 }
 
 RcppExport SEXP grad(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   arma::vec grad;
   ptr->Gradient(x, grad);
-
   return Rcpp::wrap(grad);
 }
 
 RcppExport SEXP hess(SEXP xp, SEXP x_) {
   Rcpp::XPtr<jmcm::JmcmBase> ptr(xp);
-
   arma::vec x = Rcpp::as<arma::vec>(x_);
   arma::mat hess;
   ptr->Hessian(x, hess);
-
   return Rcpp::wrap(hess);
 }
