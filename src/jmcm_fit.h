@@ -160,15 +160,10 @@ arma::vec JmcmFit<JMCM>::Optimize() {
       jmcm_.set_free_param(free_param);
       optim_method_ == "default" ? bfgs.minimize(jmcm_, param) : optim.minimize(jmcm_, param);
       jmcm_.set_free_param(0);
-
       if (trace_) Rcpp::Rcout << line_ << std::endl;
 
-      if (method_id_ == 0) {
-        jmcm_.set_param(param, 2);
-        jmcm_.UpdateGamma();
-      } else {
-        jmcm_.set_param(param, 23);
-      }
+      jmcm_.set_param(param, free_param);
+      if (method_id_ == 0) jmcm_.UpdateGamma();
 
       arma::vec xnew = jmcm_.get_param(0);
       h = xnew - x;
