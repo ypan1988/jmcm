@@ -113,8 +113,6 @@ class JmcmBase : public roptim::Functor {
   }
 
   void UpdateBeta();
-  void UpdateLambda(const arma::vec& x) { set_param(x, 2); }
-  void UpdateLambdaGamma(const arma::vec& x) { set_param(x, 23); }
   virtual void UpdateGamma() {}
 
   // Preparation work needed for the Functors to:

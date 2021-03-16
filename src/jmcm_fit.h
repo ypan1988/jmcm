@@ -169,7 +169,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
           Rcpp::Rcout << line_ << std::endl;
         }
 
-        jmcm_.UpdateLambda(lmd);
+        jmcm_.set_param(lmd, 2);
         jmcm_.UpdateGamma();
 
       } else if (method_id_ == 1 || method_id_ == 2) {
@@ -202,7 +202,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
           Rcpp::Rcout << line_ << std::endl;
         }
 
-        jmcm_.UpdateLambdaGamma(lmdgma);
+        jmcm_.set_param(lmdgma, 23);
       }
 
       arma::vec xnew = jmcm_.get_param(0);
