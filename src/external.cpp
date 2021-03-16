@@ -20,10 +20,12 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
+// clang-format off
+#include "mcd.h"
 #include "acd.h"
 #include "hpc.h"
 #include "jmcm_fit.h"
-#include "mcd.h"
+// clang-format on
 
 //'@title Fit Joint Mean-Covariance Models based on MCD
 //'@description Fit joint mean-covariance models based on MCD.
