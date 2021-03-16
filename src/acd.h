@@ -17,13 +17,11 @@
 //  A copy of the GNU General Public License is available at
 //  https://www.R-project.org/Licenses/
 
-#ifndef JMCM_SRC_ACD_H_
-#define JMCM_SRC_ACD_H_
-
-#define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
+#ifndef _JMCM_ACD_H_
+#define _JMCM_ACD_H_
 
 #include "jmcm_base.h"
+#include "jmcm_config.h"
 
 namespace jmcm {
 
@@ -178,4 +176,4 @@ inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) const {
 
 }  // namespace jmcm
 
-#endif  // JMCM_ACD_H_
+#endif  // _JMCM_ACD_H_

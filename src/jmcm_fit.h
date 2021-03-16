@@ -17,16 +17,16 @@
 //  A copy of the GNU General Public License is available at
 //  https://www.R-project.org/Licenses/
 
-#ifndef JMCM_SRC_JMCM_FIT_H_
-#define JMCM_SRC_JMCM_FIT_H_
+#ifndef _JMCM_FIT_H_
+#define _JMCM_FIT_H_
 
 #include <string>
 
-#define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
-
+// clang-format off
+#include "jmcm_config.h"
 #include "bfgs.h"
 #include "roptim.h"
+// clang-format on
 
 template <typename JMCM>
 class JmcmFit {
@@ -187,4 +187,4 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 }
 // clang-format on
 
-#endif  // JMCM_SRC_JMCM_FIT_H_
+#endif  // _JMCM_FIT_H_

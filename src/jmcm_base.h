@@ -16,14 +16,12 @@
 //  A copy of the GNU General Public License is available at
 //  https://www.R-project.org/Licenses/
 
-#ifndef JMCM_SRC_JMCM_BASE_H_
-#define JMCM_SRC_JMCM_BASE_H_
+#ifndef _JMCM_BASE_H_
+#define _JMCM_BASE_H_
 
 #include <algorithm>
 
-#define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
-
+#include "jmcm_config.h"
 #include "roptim.h"
 
 namespace jmcm {

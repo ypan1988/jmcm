@@ -1,12 +1,12 @@
 #ifndef BFGS_H_
 #define BFGS_H_
 
-#include <RcppArmadillo.h>
-
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <limits>
+
+#include "jmcm_config.h"
 
 namespace pan {
 
@@ -212,4 +212,4 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
 
 }  // namespace pan
 
-#endif  // JMCM_BFGS_H_
+#endif  // BFGS_H_

@@ -17,13 +17,11 @@
 //  A copy of the GNU General Public License is available at
 //  https://www.R-project.org/Licenses/
 
-#ifndef JMCM_SRC_MCD_H_
-#define JMCM_SRC_MCD_H_
-
-#define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
+#ifndef _JMCM_MCD_H_
+#define _JMCM_MCD_H_
 
 #include "jmcm_base.h"
+#include "jmcm_config.h"
 
 namespace jmcm {
 
@@ -179,4 +177,4 @@ inline void MCD::UpdateTResid() {
 
 }  // namespace jmcm
 
-#endif  // JMCM_SRC_MCD_H_
+#endif  // _JMCM_MCD_H_

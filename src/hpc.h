@@ -18,15 +18,13 @@
 //  A copy of the GNU General Public License is available at
 //  https://www.R-project.org/Licenses/
 
-#ifndef JMCM_SRC_HPC_H_
-#define JMCM_SRC_HPC_H_
+#ifndef _JMCM_HPC_H_
+#define _JMCM_HPC_H_
 
 #include <cmath>
 
-#define ARMA_DONT_PRINT_ERRORS
-#include <RcppArmadillo.h>
-
 #include "jmcm_base.h"
+#include "jmcm_config.h"
 
 namespace jmcm {
 
@@ -231,4 +229,4 @@ inline arma::mat HPC::CalcTransTiDeriv(arma::uword i, const arma::mat& Phii,
 
 }  // namespace jmcm
 
-#endif  // JMCM_SRC_HPC_H_
+#endif  // _JMCM_HPC_H_
