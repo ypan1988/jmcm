@@ -20,6 +20,8 @@
 #ifndef JMCM_SRC_JMCM_FIT_H_
 #define JMCM_SRC_JMCM_FIT_H_
 
+#include <string>
+
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
@@ -68,6 +70,7 @@ class JmcmFit {
   arma::uword n_iters_;
 };
 
+// clang-format off
 template <typename JMCM>
 arma::vec JmcmFit<JMCM>::Optimize() {
   int n_bta = jmcm_.n_bta_;
@@ -83,23 +86,15 @@ arma::vec JmcmFit<JMCM>::Optimize() {
   }
 
   pan::BFGS<JMCM> bfgs;
+  bfgs.set_trace(trace_);
   bfgs.set_message(errormsg_);
-  roptim::Roptim<JMCM> optim;
 
-  if (optim_method_ == "default") {
-  } else if (optim_method_ == "Nelder-Mead" || optim_method_ == "BFGS" ||
-             optim_method_ == "CG" || optim_method_ == "L-BFGS-B") {
-    optim.set_method(optim_method_);
-  }
+  roptim::Roptim<JMCM> optim("BFGS");
+  optim.control.trace = trace_;
 
   arma::vec x = start_;
 
   if (profile_) {
-    bfgs.set_trace(trace_);
-    bfgs.set_message(errormsg_);
-
-    optim.control.trace = trace_;
-
     const int n_pars = x.n_rows;  // number of parameters
 
     double f = jmcm_(x);
@@ -133,8 +128,7 @@ arma::vec JmcmFit<JMCM>::Optimize() {
       f_min_ = f;
 
       if (trace_) {
-        Rcpp::Rcout << std::setw(5) << iter << ": " << std::setw(10) << jmcm_(x)
-                    << ": ";
+        Rcpp::Rcout << std::setw(5) << iter << ": " << std::setw(10) << jmcm_(x) << ": ";
         x.t().print();
       }
 
@@ -149,75 +143,42 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
       if (!covonly_) jmcm_.UpdateBeta();
 
+      arma::vec param = (method_id_ == 0) ? x.rows(n_bta, n_bta + n_lmd - 1) : x.rows(n_bta, n_bta + n_lmd + n_gma - 1);
+      if (trace_) {
+        std::string str = "Updating ";
+        switch (method_id_) {
+          case 0: { str += "Innovation Variance "; break; }
+          case 1: { str += "Innovation Variance and Moving Average "; break; }
+          case 2: { str += "Variance and Angle "; break;}
+          default:;
+        }
+        str += "Parameters...";
+        Rcpp::Rcout << line_ << "\n" << str << std::endl;
+      }
+
+      arma::uword free_param = (method_id_ == 0) ? 2 : 23;
+      jmcm_.set_free_param(free_param);
+      optim_method_ == "default" ? bfgs.minimize(jmcm_, param) : optim.minimize(jmcm_, param);
+      jmcm_.set_free_param(0);
+
+      if (trace_) Rcpp::Rcout << line_ << std::endl;
+
       if (method_id_ == 0) {
-        arma::vec lmd = x.rows(n_bta, n_bta + n_lmd - 1);
-
-        if (trace_) {
-          Rcpp::Rcout << line_
-                      << "\n Updating Innovation Variance Parameters..."
-                      << std::endl;
-        }
-
-        jmcm_.set_free_param(2);
-        if (optim_method_ == "default")
-          bfgs.minimize(jmcm_, lmd);
-        else
-          optim.minimize(jmcm_, lmd);
-        jmcm_.set_free_param(0);
-
-        if (trace_) {
-          Rcpp::Rcout << line_ << std::endl;
-        }
-
-        jmcm_.set_param(lmd, 2);
+        jmcm_.set_param(param, 2);
         jmcm_.UpdateGamma();
-
-      } else if (method_id_ == 1 || method_id_ == 2) {
-        arma::vec lmdgma = x.rows(n_bta, n_bta + n_lmd + n_gma - 1);
-
-        if (trace_) {
-          switch (method_id_) {
-            case 1: {
-              Rcpp::Rcout << line_
-                          << "\n Updating Innovation Variance Parameters"
-                          << " and Moving Average Parameters..." << std::endl;
-              break;
-            }
-            case 2: {
-              Rcpp::Rcout << line_ << "\n Updating Variance Parameters"
-                          << " and Angle Parameters..." << std::endl;
-              break;
-            }
-            default: {
-            }
-          }
-        }
-        jmcm_.set_free_param(23);
-        if (optim_method_ == "default")
-          bfgs.minimize(jmcm_, lmdgma);
-        else
-          optim.minimize(jmcm_, lmdgma);
-        jmcm_.set_free_param(0);
-        if (trace_) {
-          Rcpp::Rcout << line_ << std::endl;
-        }
-
-        jmcm_.set_param(lmdgma, 23);
+      } else {
+        jmcm_.set_param(param, 23);
       }
 
       arma::vec xnew = jmcm_.get_param(0);
-
       h = xnew - x;
     }
   } else {
     if (optim_method_ == "default") {
-      bfgs.set_trace(trace_);
-      bfgs.set_message(errormsg_);
       bfgs.minimize(jmcm_, x);
       f_min_ = bfgs.f_min();
       n_iters_ = bfgs.n_iters();
     } else {
-      optim.control.trace = trace_;
       optim.minimize(jmcm_, x);
       f_min_ = optim.value();
     }
@@ -225,5 +186,6 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
   return x;
 }
+// clang-format on
 
 #endif  // JMCM_SRC_JMCM_FIT_H_
