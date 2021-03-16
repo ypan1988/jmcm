@@ -63,11 +63,14 @@ class JmcmFit {
   arma::vec start_, mean_;
   bool trace_, profile_, errormsg_, covonly_;
   std::string optim_method_;
-  const std::string line_ =
-      "--------------------------------------------------";
 
   double f_min_;
   arma::uword n_iters_;
+
+  void print_line() const {
+    Rcpp::Rcout << "--------------------------------------------------"
+                << std::endl;
+  }
 };
 
 // clang-format off
@@ -153,14 +156,15 @@ arma::vec JmcmFit<JMCM>::Optimize() {
           default:;
         }
         str += "Parameters...";
-        Rcpp::Rcout << line_ << "\n" << str << std::endl;
+        print_line();
+        Rcpp::Rcout << str << std::endl;
       }
 
       arma::uword free_param = (method_id_ == 0) ? 2 : 23;
       jmcm_.set_free_param(free_param);
       optim_method_ == "default" ? bfgs.minimize(jmcm_, param) : optim.minimize(jmcm_, param);
       jmcm_.set_free_param(0);
-      if (trace_) Rcpp::Rcout << line_ << std::endl;
+      if (trace_) print_line();
 
       jmcm_.set_param(param, free_param);
       if (method_id_ == 0) jmcm_.UpdateGamma();
