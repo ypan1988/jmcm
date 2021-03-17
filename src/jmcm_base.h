@@ -68,10 +68,10 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_param(int fp) const {
     switch (fp) {
       case  0: return theta_;
-      case  1: return beta_;
-      case  2: return lambda_;
-      case  3: return gamma_;
-      case 23: return lmdgma_;
+      case  1: return theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1); // beta
+      case  2: return theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1); // lambda
+      case  3: return theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1); // gamma
+      case 23: return theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1); // lambda + gamma
       default: Rcpp::Rcout << "Wrong fp value" << std::endl;
     }
     return arma::vec();
@@ -162,8 +162,7 @@ class JmcmBase : public roptim::Functor {
   bool cov_only_;
   arma::vec mean_;
 
-  arma::vec theta_, beta_, lambda_, gamma_, lmdgma_;
-  arma::vec Xbta_, Zlmd_, Wgma_, Resid_;
+  arma::vec theta_, Xbta_, Zlmd_, Wgma_, Resid_;
 
  protected:
   // Some useful data members to avoid duplicate index calculation.
@@ -213,10 +212,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       cov_only_(false),
       mean_(Y),
       theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
-      beta_(n_bta_, arma::fill::zeros),
-      lambda_(n_lmd_, arma::fill::zeros),
-      gamma_(n_gma_, arma::fill::zeros),
-      lmdgma_(n_lmd_ + n_gma_, arma::fill::zeros),
       Xbta_(N_, arma::fill::zeros),
       Zlmd_(N_, arma::fill::zeros),
       Wgma_(W_.n_rows, arma::fill::zeros),
@@ -251,46 +246,32 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
   switch (free_param_) {
     case 0:
       theta_ = x;
-      beta_ = x.rows(cumsum_param_(0), cumsum_param_(1) - 1);
-      lambda_ = x.rows(cumsum_param_(1), cumsum_param_(2) - 1);
-      gamma_ = x.rows(cumsum_param_(2), cumsum_param_(3) - 1);
-
-      Xbta_ = cov_only_ ? mean_ : X_ * beta_;
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
+      Xbta_ = cov_only_ ? mean_ : X_ * get_param(1);
+      Zlmd_ = Z_ * get_param(2);
+      Wgma_ = W_ * get_param(3);
       Resid_ = Y_ - Xbta_;
       break;
 
     case 1:
       theta_.rows(cumsum_param_(0), cumsum_param_(1) - 1) = x;
-      beta_ = x;
-
-      Xbta_ = cov_only_ ? mean_ : X_ * beta_;
+      Xbta_ = cov_only_ ? mean_ : X_ * get_param(1);
       Resid_ = Y_ - Xbta_;
       break;
 
     case 2:
       theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1) = x;
-      lambda_ = x;
-
-      Zlmd_ = Z_ * lambda_;
+      Zlmd_ = Z_ * get_param(2);
       break;
 
     case 3:
       theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1) = x;
-      gamma_ = x;
-
-      Wgma_ = W_ * gamma_;
+      Wgma_ = W_ * get_param(3);
       break;
 
     case 23:
       theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1) = x;
-      lambda_ = x.rows(0, n_lmd_ - 1);
-      gamma_ = x.rows(n_lmd_, n_lmdgma_ - 1);
-      lmdgma_ = x;
-
-      Zlmd_ = Z_ * lambda_;
-      Wgma_ = W_ * gamma_;
+      Zlmd_ = Z_ * get_param(2);
+      Wgma_ = W_ * get_param(3);
       break;
 
     default:

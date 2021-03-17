@@ -56,8 +56,9 @@ class JmcmFit {
   double get_f_min() const { return f_min_; }
   arma::uword get_n_iters() const { return n_iters_; }
 
- private:
   JMCM jmcm_;
+
+ private:
   arma::vec start_, mean_;
   bool trace_, profile_, errormsg_, covonly_;
   std::string optim_method_;

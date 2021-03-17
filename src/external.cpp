@@ -47,7 +47,7 @@ Rcpp::List jmcm_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
   arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
 
-  int n_par = n_bta + n_lmd + n_gma;
+  int n_par = x.n_elem;
   int n_sub = m.n_rows;
 
   return Rcpp::List::create(
