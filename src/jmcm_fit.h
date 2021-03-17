@@ -48,7 +48,6 @@ class JmcmFit {
         errormsg_(errormsg),
         covonly_(covonly),
         optim_method_(optim_method) {
-    method_id_ = jmcm_.get_method_id();
     f_min_ = 0.0;
     n_iters_ = 0;
   }
@@ -59,7 +58,6 @@ class JmcmFit {
 
  private:
   JMCM jmcm_;
-  arma::uword method_id_;
   arma::vec start_, mean_;
   bool trace_, profile_, errormsg_, covonly_;
   std::string optim_method_;
@@ -146,10 +144,10 @@ arma::vec JmcmFit<JMCM>::Optimize() {
 
       if (!covonly_) jmcm_.UpdateBeta();
 
-      arma::vec param = (method_id_ == 0) ? x.rows(n_bta, n_bta + n_lmd - 1) : x.rows(n_bta, n_bta + n_lmd + n_gma - 1);
+      arma::vec param = (jmcm_.method_id_ == 0) ? x.rows(n_bta, n_bta + n_lmd - 1) : x.rows(n_bta, n_bta + n_lmd + n_gma - 1);
       if (trace_) {
         std::string str = "Updating ";
-        switch (method_id_) {
+        switch (jmcm_.method_id_) {
           case 0: { str += "Innovation Variance "; break; }
           case 1: { str += "Innovation Variance and Moving Average "; break; }
           case 2: { str += "Variance and Angle "; break;}
@@ -160,14 +158,14 @@ arma::vec JmcmFit<JMCM>::Optimize() {
         Rcpp::Rcout << str << std::endl;
       }
 
-      arma::uword free_param = (method_id_ == 0) ? 2 : 23;
+      arma::uword free_param = (jmcm_.method_id_ == 0) ? 2 : 23;
       jmcm_.set_free_param(free_param);
       optim_method_ == "default" ? bfgs.minimize(jmcm_, param) : optim.minimize(jmcm_, param);
       jmcm_.set_free_param(0);
       if (trace_) print_line();
 
       jmcm_.set_param(param, free_param);
-      if (method_id_ == 0) jmcm_.UpdateGamma();
+      if (jmcm_.method_id_ == 0) jmcm_.UpdateGamma();
 
       arma::vec xnew = jmcm_.get_param(0);
       h = xnew - x;

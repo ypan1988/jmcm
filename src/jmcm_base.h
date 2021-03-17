@@ -56,7 +56,6 @@ class JmcmBase : public roptim::Functor {
                : arma::vec(W_.row(cumsum_trim_(i) + j * (j - 1) / 2 + k).t());
   }
 
-  arma::uword get_method_id() const { return method_id_; }
   arma::uword get_free_param() const { return free_param_; }
   void set_free_param(arma::uword n) { free_param_ = n; }
 
@@ -135,12 +134,12 @@ class JmcmBase : public roptim::Functor {
   const arma::mat X_, Z_, W_;
   const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_, n_lmdgma_;
 
- private:
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
   // method_id_ == 2 ---- HPC
   const arma::uword method_id_;
 
+ private:
   // free_param_ == 0  ---- beta + lambda + gamma
   // free_param_ == 1  ---- beta
   // free_param_ == 2  ---- lambda
