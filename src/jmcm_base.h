@@ -130,7 +130,7 @@ class JmcmBase : public roptim::Functor {
  public:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
-  const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_, n_lmdgma_;
+  const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_;
 
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
@@ -206,7 +206,6 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       n_bta_(X_.n_cols),
       n_lmd_(Z_.n_cols),
       n_gma_(W_.n_cols),
-      n_lmdgma_(n_lmd_ + n_gma_),
       method_id_(method_id),
       free_param_(0),
       cov_only_(false),
