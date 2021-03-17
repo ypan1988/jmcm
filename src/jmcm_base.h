@@ -19,8 +19,6 @@
 #ifndef _JMCM_BASE_H_
 #define _JMCM_BASE_H_
 
-#include <algorithm>
-
 #include "jmcm_config.h"
 #include "roptim.h"
 
@@ -194,11 +192,6 @@ class JmcmBase : public roptim::Functor {
     M(arma::trimatu_ind(arma::size(M), k)) = x;
     return M.t();
   }
-
- private:
-  bool is_same(const arma::vec& x, int fp) const {
-    return std::equal(x.cbegin(), x.cend(), get_param(fp).cbegin());
-  }
 };
 
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
@@ -253,7 +246,7 @@ inline void JmcmBase::UpdateBeta() {
 }
 
 inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
-  if (is_same(x, free_param_)) return;
+  if (arma::all(x - get_param(free_param_) == 0.0)) return;
 
   switch (free_param_) {
     case 0:
