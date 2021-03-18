@@ -20,7 +20,6 @@
 #define _JMCM_BASE_H_
 
 #include "jmcm_config.h"
-#include "roptim.h"
 
 namespace jmcm {
 

@@ -22,4 +22,7 @@
 #define ARMA_DONT_PRINT_ERRORS
 #include <RcppArmadillo.h>
 
+#include "bfgs.h"
+#include "roptim.h"
+
 #endif

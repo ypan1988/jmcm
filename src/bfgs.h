@@ -6,7 +6,8 @@
 #include <iomanip>
 #include <limits>
 
-#include "jmcm_config.h"
+#define ARMA_DONT_PRINT_ERRORS
+#include <RcppArmadillo.h>
 
 namespace pan {
 

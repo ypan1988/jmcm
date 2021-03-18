@@ -22,11 +22,7 @@
 
 #include <string>
 
-// clang-format off
 #include "jmcm_config.h"
-#include "bfgs.h"
-#include "roptim.h"
-// clang-format on
 
 template <typename JMCM>
 class JmcmFit {
