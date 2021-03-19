@@ -39,13 +39,9 @@ Rcpp::List jmcm_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
   double f_min = fit.get_f_min();
   arma::uword n_iters = fit.get_n_iters();
 
-  int n_bta = X.n_cols;
-  int n_lmd = Z.n_cols;
-  int n_gma = W.n_cols;
-
-  arma::vec beta = x.rows(0, n_bta - 1);
-  arma::vec lambda = x.rows(n_bta, n_bta + n_lmd - 1);
-  arma::vec gamma = x.rows(n_bta + n_lmd, n_bta + n_lmd + n_gma - 1);
+  arma::vec beta = fit.jmcm_.get_param(1);
+  arma::vec lambda = fit.jmcm_.get_param(2);
+  arma::vec gamma = fit.jmcm_.get_param(3);
 
   int n_par = x.n_elem;
   int n_sub = m.n_rows;
