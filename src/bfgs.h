@@ -163,9 +163,6 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
   // Initialize the inverse Hessian to a unit matrix
   arma::mat D = arma::eye<arma::mat>(n_pars, n_pars);
 
-  // Initialize Newton Step
-  arma::vec h = -D * g;
-
   // Calculate the maximum step length
   double delta = kScaStepMax_ * std::max(arma::norm(x, 2), double(n_pars));
 
