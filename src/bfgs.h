@@ -72,7 +72,7 @@ double BFGS<T>::linesearch(T &fun, const arma::vec &xx, arma::vec &h, double F,
 
   double dphi0 = dot(h, g);
   if (dphi0 >= 0.0 && message_)
-    Rcpp::Rcerr << "Roundoff problem in linesearch." << std::endl;
+    arma::get_cerr_stream() << "Roundoff problem in linesearch." << std::endl;
 
   // Calculate the minimum step length
   arma::vec xtmp = x;
@@ -178,8 +178,8 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
     x += alpha * h;
 
     if (trace_) {
-      Rcpp::Rcout << std::setw(5) << n_iters_ << ": " << std::setw(10) << F
-                  << ": ";
+      arma::get_cout_stream()
+          << std::setw(5) << n_iters_ << ": " << std::setw(10) << F << ": ";
       x.t().print();
     }
 
@@ -204,7 +204,7 @@ void BFGS<T>::minimize(T &fun, arma::vec &x, const double grad_tol) {
     if (test_grad(x, F, g) || test_diff_x(x, h)) return;
   } while (++n_iters_ != kIterMax_);
   if (message_) {
-    Rcpp::Rcerr << "too many iterations in bfgs" << std::endl;
+    arma::get_cerr_stream() << "too many iterations in bfgs" << std::endl;
   }
 }
 
