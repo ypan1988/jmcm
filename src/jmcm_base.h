@@ -54,10 +54,7 @@ class JmcmBase : public roptim::Functor {
   arma::uword get_free_param() const { return free_param_; }
   void set_free_param(arma::uword n) { free_param_ = n; }
 
-  void set_mean(const arma::vec& mean) {
-    cov_only_ = true;
-    mean_ = mean;
-  }
+  void set_mean(const arma::vec& mean) { cov_only_ = true, mean_ = mean; }
 
   // clang-format off
   // A unified function to get parameters. fp is used as a temp value
@@ -188,28 +185,16 @@ class JmcmBase : public roptim::Functor {
   }
 };
 
+// clang-format off
 inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
-    : m_(m),
-      Y_(Y),
-      X_(X),
-      Z_(Z),
-      W_(W),
-      N_(Y_.n_rows),
-      n_sub_(m_.n_elem),
-      n_bta_(X_.n_cols),
-      n_lmd_(Z_.n_cols),
-      n_gma_(W_.n_cols),
-      method_id_(method_id),
-      free_param_(0),
-      cov_only_(false),
-      mean_(Y),
+    : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), N_(Y_.n_rows), n_sub_(m_.n_elem),
+      n_bta_(X_.n_cols), n_lmd_(Z_.n_cols), n_gma_(W_.n_cols),
+      method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y),
       theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
-      Xbta_(N_, arma::fill::zeros),
-      Zlmd_(N_, arma::fill::zeros),
-      Wgma_(W_.n_rows, arma::fill::zeros),
-      Resid_(N_, arma::fill::zeros),
+      Xbta_(N_, arma::fill::zeros), Zlmd_(N_, arma::fill::zeros),
+      Wgma_(W_.n_rows, arma::fill::zeros), Resid_(N_, arma::fill::zeros),
       cumsum_m_(arma::cumsum(arma::join_cols(arma::vec({0}), m_))),
       cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {
   cumsum_trim_ = arma::zeros<arma::vec>(n_sub_ + 1);
@@ -218,6 +203,7 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
   cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_ + 1);
   cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_ % (m_ + 1) / 2);
 }
+// clang-format on
 
 inline void JmcmBase::UpdateBeta() {
   arma::mat XSX = arma::zeros<arma::mat>(n_bta_, n_bta_);
