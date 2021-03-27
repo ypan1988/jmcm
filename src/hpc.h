@@ -43,7 +43,7 @@ class HPC : public JmcmBase {
   arma::vec Grad3() const override;
 
   double CalcLogDetSigma() const override {
-    return 2 * log_det_T_ + arma::sum(get_Zlmd());
+    return 2 * log_det_T_ + arma::sum(Zlmd_);
   }
 
   // Sigma = Di * Ti * Ti.t() * Di

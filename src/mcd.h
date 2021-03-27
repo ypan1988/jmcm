@@ -40,7 +40,7 @@ class MCD : public JmcmBase {
   arma::vec Grad2() const override;
   arma::vec Grad3() const override;
 
-  double CalcLogDetSigma() const override { return arma::sum(get_Zlmd()); }
+  double CalcLogDetSigma() const override { return arma::sum(Zlmd_); }
 
   // Sigma = Ti_inv * Di * Ti_inv.t()
   // Sigma_inv = Ti.t() * Di_inv * Ti

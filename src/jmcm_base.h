@@ -87,7 +87,6 @@ class JmcmBase : public roptim::Functor {
   arma::vec get_mu(arma::uword i) const {
     return Xbta_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
-  arma::vec get_Zlmd() const { return Zlmd_; }
   arma::vec get_Zlmd(arma::uword i) const {
     return Zlmd_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
   }
@@ -134,7 +133,7 @@ class JmcmBase : public roptim::Functor {
   // method_id_ == 2 ---- HPC
   const arma::uword method_id_;
 
- private:
+ protected:
   // free_param_ == 0  ---- beta + lambda + gamma
   // free_param_ == 1  ---- beta
   // free_param_ == 2  ---- lambda
@@ -161,7 +160,6 @@ class JmcmBase : public roptim::Functor {
 
   arma::vec theta_, Xbta_, Zlmd_, Wgma_, Resid_;
 
- protected:
   // Some useful data members to avoid duplicate index calculation.
   // cumsum_m_ == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
   // cumsum_trim_ == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
