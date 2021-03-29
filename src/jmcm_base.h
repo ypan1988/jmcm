@@ -66,7 +66,7 @@ class JmcmBase : public roptim::Functor {
       case  2: return theta_.rows(cumsum_param_(1), cumsum_param_(2) - 1); // lambda
       case  3: return theta_.rows(cumsum_param_(2), cumsum_param_(3) - 1); // gamma
       case 23: return theta_.rows(cumsum_param_(1), cumsum_param_(3) - 1); // lambda + gamma
-      default: Rcpp::Rcout << "Wrong fp value" << std::endl;
+      default: arma::get_cerr_stream() << "Wrong fp value" << std::endl;
     }
     return arma::vec();
   }
@@ -255,7 +255,7 @@ inline void JmcmBase::UpdateJmcm(const arma::vec& x) {
       break;
 
     default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+      arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
   }
   UpdateModel();  // specific MCD/ACD/HPC preparation work
 }
@@ -284,7 +284,7 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
     case  2: { grad = Grad2(); break; }
     case  3: { grad = Grad3(); break; }
     case 23: { grad = arma::join_cols(Grad2(), Grad3()); break; }
-    default: Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+    default: arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
   }
 }
 // clang-format on
