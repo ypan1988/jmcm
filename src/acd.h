@@ -100,7 +100,7 @@ inline void ACD::UpdateModel() {
       break;
 
     default:
-      Rcpp::Rcout << "Wrong value for free_param_" << std::endl;
+      arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
   }
   UpdateTDResid();
 }
