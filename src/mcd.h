@@ -157,21 +157,14 @@ inline void MCD::UpdateG() {
       Gi.row(j) = ri.subvec(0, j - 1).t() * Wi.rows(index, index + j - 1);
     }
 
-    arma::uword first_index = cumsum_m_(i);
-    arma::uword last_index = cumsum_m_(i + 1) - 1;
-
-    G_.rows(first_index, last_index) = Gi;
+    G_.rows(cumsum_m_(i), cumsum_m_(i + 1) - 1) = Gi;
   }
 }
 
 inline void MCD::UpdateTResid() {
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Tiri = get_T(i) * get_Resid(i);
-
-    arma::uword first_index = cumsum_m_(i);
-    arma::uword last_index = cumsum_m_(i + 1) - 1;
-
-    TResid_.subvec(first_index, last_index) = Tiri;
+    TResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) = Tiri;
   }
 }
 
