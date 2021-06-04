@@ -155,11 +155,16 @@ class JmcmBase : public roptim::Functor {
   bool cov_only_;
   arma::vec mean_;
 
+  // theta_ == c(beta, lambda, gamma)
+  // Xbta_  == X * beta
+  // Zlmd_  == Z * lambda
+  // Wgma_  == W * gamma
+  // Resid_ == Y - X * beta
   arma::vec theta_, Xbta_, Zlmd_, Wgma_, Resid_;
 
   // Some useful data members to avoid duplicate index calculation.
-  // cumsum_m_ == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
-  // cumsum_trim_ == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
+  // cumsum_m_     == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
+  // cumsum_trim_  == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
   // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
   // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
   const arma::vec cumsum_m_;
