@@ -123,6 +123,12 @@ class JmcmBase : public roptim::Functor {
  public:
   const arma::vec m_, Y_;
   const arma::mat X_, Z_, W_;
+
+  //     N_: number of all measurements m(0) + m(1) + m(2) + ... + m(n_sub-1)
+  // n_sub_: number of subjects
+  // n_bta_: number of elements in parameter beta
+  // n_lmd_: number of elements in parameter lambda
+  // n_gma_: number of elements in parameter gamma
   const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_;
 
   // method_id_ == 0 ---- MCD
