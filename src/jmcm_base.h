@@ -173,8 +173,7 @@ class JmcmBase : public roptim::Functor {
   // cumsum_trim_  == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
   // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
   // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
-  const arma::vec cumsum_m_;
-  arma::vec cumsum_trim_, cumsum_trim2_;
+  const arma::vec cumsum_m_, cumsum_trim_, cumsum_trim2_;
   const arma::uvec cumsum_param_;
 
   // Return a column vector containing the elements that form the
@@ -207,13 +206,9 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       Xbta_(N_, arma::fill::zeros), Zlmd_(N_, arma::fill::zeros),
       Wgma_(W_.n_rows, arma::fill::zeros), Resid_(N_, arma::fill::zeros),
       cumsum_m_(arma::cumsum(arma::join_cols(arma::vec({0}), m_))),
-      cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {
-  cumsum_trim_ = arma::zeros<arma::vec>(n_sub_ + 1);
-  cumsum_trim_.tail(n_sub_) = arma::cumsum(m_ % (m_ - 1) / 2);
-
-  cumsum_trim2_ = arma::zeros<arma::vec>(n_sub_ + 1);
-  cumsum_trim2_.tail(n_sub_) = arma::cumsum(m_ % (m_ + 1) / 2);
-}
+      cumsum_trim_(arma::join_cols(arma::vec({0}), arma::cumsum(m_%(m_-1)/2))),
+      cumsum_trim2_(arma::join_cols(arma::vec({0}), arma::cumsum(m_%(m_+1)/2))),
+      cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {}
 // clang-format on
 
 inline void JmcmBase::UpdateBeta() {
