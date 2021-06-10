@@ -152,8 +152,7 @@ inline void MCD::UpdateG() {
     arma::mat Wi = get_W(i);
     arma::vec ri = get_Resid(i);
     for (arma::uword j = 1; j != m_(i); ++j) {
-      arma::uword index = 0;
-      if (j != 1) index = (j - 1) * j / 2;
+      arma::uword index = (j - 1) * j / 2;
       Gi.row(j) = ri.subvec(0, j - 1).t() * Wi.rows(index, index + j - 1);
     }
 
