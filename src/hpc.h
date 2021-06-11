@@ -145,7 +145,7 @@ inline arma::vec HPC::Grad3() const {
     arma::vec ei = get_TDResid(i);
 
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i, Phii, Ti);
-    for (arma::uword j = 0; j != m_(i); ++j) {
+    for (arma::uword j = 0; j < m_(i); ++j) {
       grad3 += -1 / Ti(j, j) * CalcTijkDeriv(i, j, j, Phii, Ti);
     }
     grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
@@ -162,10 +162,10 @@ inline void HPC::UpdateTelem() {
     arma::mat Ti = arma::eye(m_(i), m_(i));
 
     Ti(0, 0) = 1;
-    for (arma::uword j = 1; j != m_(i); ++j) {
+    for (arma::uword j = 1; j < m_(i); ++j) {
       Ti(j, 0) = std::cos(Phii(j, 0));
       double cumsin = std::sin(Phii(j, 0));
-      for (arma::uword l = 1; l != j; ++l) {
+      for (arma::uword l = 1; l < j; ++l) {
         Ti(j, l) = std::cos(Phii(j, l)) * cumsin;
         cumsin *= std::sin(Phii(j, l));
       }
@@ -208,7 +208,7 @@ inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
   arma::vec result = arma::zeros<arma::vec>(n_gma_);
   if (k > j) return result;
   if (k < j) result = Ti(j, k) * (-std::tan(Phii(j, k)) * Wijk(i, j, k));
-  for (arma::uword l = 0; l != k; ++l) {
+  for (arma::uword l = 0; l < k; ++l) {
     result += Ti(j, k) * Wijk(i, j, l) / std::tan(Phii(j, l));
   }
   return result;
@@ -217,7 +217,7 @@ inline arma::vec HPC::CalcTijkDeriv(arma::uword i, arma::uword j, arma::uword k,
 inline arma::mat HPC::CalcTransTiDeriv(arma::uword i, const arma::mat& Phii,
                                        const arma::mat& Ti) const {
   arma::mat result = arma::zeros<arma::mat>(n_gma_ * m_(i), m_(i));
-  for (arma::uword k = 1; k != m_(i); ++k) {
+  for (arma::uword k = 1; k < m_(i); ++k) {
     for (arma::uword j = 0; j <= k; ++j) {
       result.submat(j * n_gma_, k, (j * n_gma_ + n_gma_ - 1), k) =
           CalcTijkDeriv(i, k, j, Phii, Ti);

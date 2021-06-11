@@ -164,7 +164,7 @@ inline void ACD::UpdateTDResid() {
 
 inline arma::mat ACD::CalcTransTiDeriv(arma::uword i) const {
   arma::mat result = arma::zeros<arma::mat>(n_gma_ * m_(i), m_(i));
-  for (arma::uword k = 1; k != m_(i); ++k) {
+  for (arma::uword k = 1; k < m_(i); ++k) {
     for (arma::uword j = 0; j <= k; ++j) {
       result.submat(j * n_gma_, k, (j * n_gma_ + n_gma_ - 1), k) =
           CalcTijkDeriv(i, k, j);
