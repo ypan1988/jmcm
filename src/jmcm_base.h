@@ -276,8 +276,7 @@ inline double JmcmBase::operator()(const arma::vec& x) {
     result += arma::as_scalar(ri.t() * (Sigmai_inv * ri));
   }
 
-  result += CalcLogDetSigma();
-  return result;
+  return result + CalcLogDetSigma();
 }
 
 // clang-format off
