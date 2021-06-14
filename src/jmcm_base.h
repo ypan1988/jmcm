@@ -270,7 +270,7 @@ inline double JmcmBase::operator()(const arma::vec& x) {
   UpdateJmcm(x);
 
   double result = 0.0;
-#pragma omp parallel for reduction (+:result)
+#pragma omp parallel for reduction(+ : result)
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
     arma::mat Sigmai_inv = get_Sigma(i, true);
