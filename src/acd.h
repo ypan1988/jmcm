@@ -27,10 +27,6 @@ namespace jmcm {
 
 class ACD : public JmcmBase {
  public:
-  ACD() = delete;
-  ACD(const ACD&) = delete;
-  ~ACD() = default;
-
   ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
@@ -62,9 +58,7 @@ class ACD : public JmcmBase {
   }
 
  private:
-  arma::vec invTelem_;
-  arma::vec TDResid_;
-  arma::vec TDResid2_;
+  arma::vec invTelem_, TDResid_, TDResid2_;
 
   arma::vec get_TDResid(arma::uword i) const {
     return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
@@ -89,21 +83,17 @@ inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       TDResid_(N_, arma::fill::zeros),
       TDResid2_(N_, arma::fill::zeros) {}
 
+// clang-format off
 inline void ACD::UpdateModel() {
   switch (get_free_param()) {
-    case 1:
-      break;
-
-    case 0:
-    case 23:
-      UpdateTelem();
-      break;
-
-    default:
-      arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
+    case  1: { break; }
+    case  0:
+    case 23: { UpdateTelem(); break; }
+    default: { arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl; }
   }
   UpdateTDResid();
 }
+// clang-format on
 
 inline arma::vec ACD::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);

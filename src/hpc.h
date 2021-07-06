@@ -30,10 +30,6 @@ namespace jmcm {
 
 class HPC : public JmcmBase {
  public:
-  HPC() = delete;
-  HPC(const HPC&) = delete;
-  ~HPC() = default;
-
   HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
@@ -77,10 +73,7 @@ class HPC : public JmcmBase {
 
  private:
   double log_det_T_ = 0.0;
-  arma::vec Telem_;  // elements for the lower triangular matrix T
-  arma::vec invTelem_;
-  arma::vec TDResid_;
-  arma::vec TDResid2_;
+  arma::vec Telem_, invTelem_, TDResid_, TDResid2_;
 
   arma::vec get_TDResid(arma::uword i) const {
     return TDResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1);
@@ -107,21 +100,17 @@ inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       TDResid_(N_, arma::fill::zeros),
       TDResid2_(N_, arma::fill::zeros) {}
 
+// clang-format off
 inline void HPC::UpdateModel() {
   switch (get_free_param()) {
-    case 1:
-      break;
-
-    case 0:
-    case 23:
-      UpdateTelem();
-      break;
-
-    default:
-      arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
+    case  1: { break; }
+    case  0:
+    case 23: { UpdateTelem(); break; }
+    default: { arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl; }
   }
   UpdateTDResid();
 }
+// clang-format on
 
 inline arma::vec HPC::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);

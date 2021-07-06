@@ -27,10 +27,6 @@ namespace jmcm {
 
 class MCD : public JmcmBase {
  public:
-  MCD() = delete;
-  MCD(const MCD&) = delete;
-  ~MCD() = default;
-
   MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
@@ -98,25 +94,17 @@ inline void MCD::UpdateGamma() {
   set_param(GDG.i() * GDr, 3);
 }
 
+// clang-format off
 inline void MCD::UpdateModel() {
   switch (get_free_param()) {
-    case 0:
-    case 1:
-      UpdateG();
-      UpdateTResid();
-      break;
-
-    case 2:
-      break;
-
-    case 3:
-      UpdateTResid();
-      break;
-
-    default:
-      arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
+    case 0 :
+    case 1 : { UpdateG(); UpdateTResid(); break; }
+    case 2 : { break; }
+    case 3 : { UpdateTResid(); break; }
+    default: { arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl; }
   }
 }
+// clang-format on
 
 inline arma::vec MCD::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);

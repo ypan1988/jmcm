@@ -25,10 +25,6 @@ namespace jmcm {
 
 class JmcmBase : public roptim::Functor {
  public:
-  JmcmBase() = delete;
-  JmcmBase(const JmcmBase&) = delete;
-  virtual ~JmcmBase() = default;
-
   JmcmBase(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
            const arma::mat& Z, const arma::mat& W, const arma::uword method_id);
 
