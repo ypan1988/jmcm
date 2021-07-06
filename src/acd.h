@@ -127,10 +127,8 @@ inline void ACD::UpdateTelem() {
     arma::mat Ti = get_T(i);
     arma::mat Ti_inv;
     if (!arma::inv(Ti_inv, Ti)) Ti_inv = arma::pinv(Ti);
-
-    arma::uword first_index = cumsum_trim2_(i);
-    arma::uword last_index = cumsum_trim2_(i + 1) - 1;
-    invTelem_.subvec(first_index, last_index) = get_lower_part(Ti_inv);
+    invTelem_.subvec(cumsum_trim2_(i), cumsum_trim2_(i + 1) - 1) =
+        get_lower_part(Ti_inv);
   }
 }
 
@@ -144,11 +142,8 @@ inline void ACD::UpdateTDResid() {
     arma::vec TiDiri = Ti_inv * Diri;
     arma::vec TiDiri2 = arma::diagvec(Ti_inv.t() * TiDiri * Diri.t());
 
-    arma::uword first_index = cumsum_m_(i);
-    arma::uword last_index = cumsum_m_(i + 1) - 1;
-
-    TDResid_.subvec(first_index, last_index) = TiDiri;
-    TDResid2_.subvec(first_index, last_index) = TiDiri2;
+    TDResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) = TiDiri;
+    TDResid2_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) = TiDiri2;
   }
 }
 
