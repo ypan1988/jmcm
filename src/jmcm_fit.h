@@ -31,7 +31,7 @@ class JmcmFit {
   JmcmFit(const JmcmFit&) = delete;
   ~JmcmFit() = default;
 
-  JmcmFit(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+  JmcmFit(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
           const arma::mat& Z, const arma::mat& W, arma::vec start,
           arma::vec mean, bool trace = false, bool profile = true,
           bool errormsg = false, bool covonly = false,

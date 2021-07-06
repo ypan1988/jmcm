@@ -28,7 +28,7 @@
 // clang-format on
 
 template <typename JMCM>
-Rcpp::List jmcm_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
+Rcpp::List jmcm_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                            arma::mat W, arma::vec start, arma::vec mean,
                            bool trace = false, bool profile = true,
                            bool errormsg = false, bool covonly = false,
@@ -77,7 +77,7 @@ Rcpp::List jmcm_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
-Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
+Rcpp::List mcd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
@@ -108,7 +108,7 @@ Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'         model fitting based on HPC.
 //'@export
 // [[Rcpp::export]]
-Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
+Rcpp::List acd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
@@ -139,7 +139,7 @@ Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 //'         model fitting based on ACD.
 //'@export
 // [[Rcpp::export]]
-Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
+Rcpp::List hpc_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           arma::mat W, arma::vec start, arma::vec mean,
                           bool trace = false, bool profile = true,
                           bool errormsg = false, bool covonly = false,
@@ -150,7 +150,7 @@ Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z,
 
 template <typename JMCM>
 SEXP JMCM__new(SEXP m_, SEXP Y_, SEXP X_, SEXP Z_, SEXP W_) {
-  arma::vec m = Rcpp::as<arma::vec>(m_);
+  arma::uvec m = Rcpp::as<arma::uvec>(m_);
   arma::vec Y = Rcpp::as<arma::vec>(Y_);
   arma::mat X = Rcpp::as<arma::mat>(X_);
   arma::mat Z = Rcpp::as<arma::mat>(Z_);

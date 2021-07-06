@@ -27,7 +27,7 @@ namespace jmcm {
 
 class MCD : public JmcmBase {
  public:
-  MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+  MCD(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
   void UpdateGamma() override;
@@ -71,7 +71,7 @@ class MCD : public JmcmBase {
 
 };  // class MCD
 
-inline MCD::MCD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+inline MCD::MCD(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 0),
       G_(N_, n_gma_, arma::fill::zeros),

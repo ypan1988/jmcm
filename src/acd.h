@@ -27,7 +27,7 @@ namespace jmcm {
 
 class ACD : public JmcmBase {
  public:
-  ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+  ACD(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
   void UpdateModel() override;
@@ -76,7 +76,7 @@ class ACD : public JmcmBase {
   arma::mat CalcTransTiDeriv(arma::uword i) const;
 };  // class ACD
 
-inline ACD::ACD(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+inline ACD::ACD(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 1),
       invTelem_(W_.n_rows + N_, arma::fill::zeros),

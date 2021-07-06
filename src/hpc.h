@@ -30,7 +30,7 @@ namespace jmcm {
 
 class HPC : public JmcmBase {
  public:
-  HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+  HPC(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
       const arma::mat& Z, const arma::mat& W);
 
   void UpdateModel() override;
@@ -92,7 +92,7 @@ class HPC : public JmcmBase {
 
 };  // class HPC
 
-inline HPC::HPC(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+inline HPC::HPC(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
                 const arma::mat& Z, const arma::mat& W)
     : JmcmBase(m, Y, X, Z, W, 2),
       Telem_(W_.n_rows + N_, arma::fill::zeros),

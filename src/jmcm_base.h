@@ -25,7 +25,7 @@ namespace jmcm {
 
 class JmcmBase : public roptim::Functor {
  public:
-  JmcmBase(const arma::vec& m, const arma::vec& Y, const arma::mat& X,
+  JmcmBase(const arma::uvec& m, const arma::vec& Y, const arma::mat& X,
            const arma::mat& Z, const arma::mat& W, const arma::uword method_id);
 
   arma::uword get_m(arma::uword i) const { return m_(i); }
@@ -117,7 +117,8 @@ class JmcmBase : public roptim::Functor {
   virtual arma::mat get_T(arma::uword i, bool inv = false) const = 0;
 
  public:
-  const arma::vec m_, Y_;
+  const arma::uvec m_;
+  const arma::vec Y_;
   const arma::mat X_, Z_, W_;
 
   //     N_: number of all measurements m(0) + m(1) + m(2) + ... + m(n_sub-1)
@@ -169,8 +170,7 @@ class JmcmBase : public roptim::Functor {
   // cumsum_trim_  == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
   // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
   // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
-  const arma::vec cumsum_m_, cumsum_trim_, cumsum_trim2_;
-  const arma::uvec cumsum_param_;
+  const arma::uvec cumsum_m_, cumsum_trim_, cumsum_trim2_, cumsum_param_;
 
   // Return a column vector containing the elements that form the
   // lower triangle part (include diagonal elements) of matrix M.
@@ -192,7 +192,7 @@ class JmcmBase : public roptim::Functor {
 };
 
 // clang-format off
-inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
+inline JmcmBase::JmcmBase(const arma::uvec& m, const arma::vec& Y,
                           const arma::mat& X, const arma::mat& Z,
                           const arma::mat& W, const arma::uword method_id)
     : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), N_(Y_.n_rows), n_sub_(m_.n_elem),
@@ -201,9 +201,9 @@ inline JmcmBase::JmcmBase(const arma::vec& m, const arma::vec& Y,
       theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
       Xbta_(N_, arma::fill::zeros), Zlmd_(N_, arma::fill::zeros),
       Wgma_(W_.n_rows, arma::fill::zeros), Resid_(N_, arma::fill::zeros),
-      cumsum_m_(arma::cumsum(arma::join_cols(arma::vec({0}), m_))),
-      cumsum_trim_(arma::join_cols(arma::vec({0}), arma::cumsum(m_%(m_-1)/2))),
-      cumsum_trim2_(arma::join_cols(arma::vec({0}), arma::cumsum(m_%(m_+1)/2))),
+      cumsum_m_(arma::cumsum(arma::join_cols(arma::uvec({0}), m_))),
+      cumsum_trim_(arma::join_cols(arma::uvec({0}), arma::cumsum(m_%(m_-1)/2))),
+      cumsum_trim2_(arma::join_cols(arma::uvec({0}), arma::cumsum(m_%(m_+1)/2))),
       cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {}
 // clang-format on
 
