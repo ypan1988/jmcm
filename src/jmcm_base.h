@@ -117,9 +117,9 @@ class JmcmBase : public roptim::Functor {
   virtual arma::mat get_T(arma::uword i, bool inv = false) const = 0;
 
  public:
-  const arma::uvec m_;
-  const arma::vec Y_;
-  const arma::mat X_, Z_, W_;
+  const arma::uvec m_;         // number of measurements
+  const arma::vec Y_;          // longitudinal measurements
+  const arma::mat X_, Z_, W_;  // three model matrices
 
   //     N_: number of all measurements m(0) + m(1) + m(2) + ... + m(n_sub-1)
   // n_sub_: number of subjects
