@@ -128,6 +128,13 @@ class JmcmBase : public roptim::Functor {
   // n_gma_: number of elements in parameter gamma
   const arma::uword N_, n_sub_, n_bta_, n_lmd_, n_gma_;
 
+  // Some useful data members to avoid duplicate index calculation.
+  // cumsum_m_     == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
+  // cumsum_trim_  == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
+  // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
+  // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
+  const arma::uvec cumsum_m_, cumsum_trim_, cumsum_trim2_, cumsum_param_;
+
   // method_id_ == 0 ---- MCD
   // method_id_ == 1 ---- ACD
   // method_id_ == 2 ---- HPC
@@ -165,13 +172,6 @@ class JmcmBase : public roptim::Functor {
   // Resid_ == Y - X * beta
   arma::vec theta_, Xbta_, Zlmd_, Wgma_, Resid_;
 
-  // Some useful data members to avoid duplicate index calculation.
-  // cumsum_m_     == {0, m(0), m(0)+m(1), m(0)+m(1)+m(2), ...}
-  // cumsum_trim_  == {0, m(0)*(m(0)-1)/2, m(0)*(m(0)-1)/2+m(1)*(m(1)-1)/2, ...}
-  // cumsum_trim2_ == {0, m(0)*(m(0)+1)/2, m(0)*(m(0)+1)/2+m(1)*(m(1)+1)/2, ...}
-  // cumsum_param_ == {0, n_bta_, n_bta_ + n_lmd_, n_bta_ + n_lmd_ + n_gma_}
-  const arma::uvec cumsum_m_, cumsum_trim_, cumsum_trim2_, cumsum_param_;
-
   // Return a column vector containing the elements that form the
   // lower triangle part (include diagonal elements) of matrix M.
   arma::vec get_lower_part(const arma::mat& M) const {
@@ -197,14 +197,14 @@ inline JmcmBase::JmcmBase(const arma::uvec& m, const arma::vec& Y,
                           const arma::mat& W, const arma::uword method_id)
     : m_(m), Y_(Y), X_(X), Z_(Z), W_(W), N_(Y_.n_rows), n_sub_(m_.n_elem),
       n_bta_(X_.n_cols), n_lmd_(Z_.n_cols), n_gma_(W_.n_cols),
-      method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y),
-      theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
-      Xbta_(N_, arma::fill::zeros), Zlmd_(N_, arma::fill::zeros),
-      Wgma_(W_.n_rows, arma::fill::zeros), Resid_(N_, arma::fill::zeros),
       cumsum_m_(arma::cumsum(arma::join_cols(arma::uvec({0}), m_))),
       cumsum_trim_(arma::join_cols(arma::uvec({0}), arma::cumsum(m_%(m_-1)/2))),
       cumsum_trim2_(arma::join_cols(arma::uvec({0}), arma::cumsum(m_%(m_+1)/2))),
-      cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))) {}
+      cumsum_param_(arma::cumsum(arma::uvec({0, n_bta_, n_lmd_, n_gma_}))),
+      method_id_(method_id), free_param_(0), cov_only_(false), mean_(Y),
+      theta_(n_bta_ + n_lmd_ + n_gma_, arma::fill::zeros),
+      Xbta_(N_, arma::fill::zeros), Zlmd_(N_, arma::fill::zeros),
+      Wgma_(W_.n_rows, arma::fill::zeros), Resid_(N_, arma::fill::zeros) {}
 // clang-format on
 
 inline void JmcmBase::UpdateBeta() {
