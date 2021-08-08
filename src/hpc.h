@@ -146,6 +146,7 @@ inline arma::vec HPC::Grad3() const {
 
 inline void HPC::UpdateTelem() {
   log_det_T_ = 0.0;
+#pragma omp parallel for reduction(+ : log_det_T_)
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Phii = get_Phi(i);
     arma::mat Ti = arma::eye(m_(i), m_(i));
@@ -173,6 +174,7 @@ inline void HPC::UpdateTelem() {
 }
 
 inline void HPC::UpdateTDResid() {
+#pragma omp parallel for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
     arma::mat Ti_inv = get_T(i, true);

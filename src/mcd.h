@@ -134,6 +134,7 @@ inline arma::vec MCD::Grad3() const {
 }
 
 inline void MCD::UpdateG() {
+#pragma omp parallel for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = arma::zeros<arma::mat>(m_(i), n_gma_);
 
@@ -149,6 +150,7 @@ inline void MCD::UpdateG() {
 }
 
 inline void MCD::UpdateTResid() {
+#pragma omp parallel for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Tiri = get_T(i) * get_Resid(i);
     TResid_.subvec(cumsum_m_(i), cumsum_m_(i + 1) - 1) = Tiri;

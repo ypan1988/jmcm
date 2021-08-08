@@ -123,6 +123,7 @@ inline arma::vec ACD::Grad3() const {
 }
 
 inline void ACD::UpdateTelem() {
+#pragma omp parallel for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Ti = get_T(i);
     arma::mat Ti_inv;
@@ -133,6 +134,7 @@ inline void ACD::UpdateTelem() {
 }
 
 inline void ACD::UpdateTDResid() {
+#pragma omp parallel for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ri = get_Resid(i);
     arma::mat Ti_inv = get_T(i, true);
