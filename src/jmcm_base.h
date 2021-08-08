@@ -289,19 +289,26 @@ inline void JmcmBase::Gradient(const arma::vec& x, arma::vec& grad) {
     default: arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl;
   }
 }
-// clang-format on
 
 inline arma::vec JmcmBase::Grad1() const {
   arma::vec grad1 = arma::zeros<arma::vec>(n_bta_);
+#pragma omp parallel
+{
+  arma::vec local = arma::zeros<arma::vec>(n_bta_);
+#pragma omp for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Xi = get_X(i);
     arma::vec ri = get_Resid(i);
     arma::mat Sigmai_inv = get_Sigma(i, true);
-    grad1 += Xi.t() * (Sigmai_inv * ri);
+    local += Xi.t() * (Sigmai_inv * ri);
   }
+#pragma omp critical
+  grad1 += local;
+}
 
   return (-2 * grad1);
 }
+// clang-format on
 
 }  // namespace jmcm
 

@@ -93,34 +93,48 @@ inline void ACD::UpdateModel() {
   }
   UpdateTDResid();
 }
-// clang-format on
 
 inline arma::vec ACD::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);
+#pragma omp parallel
+{
+  arma::vec local = arma::zeros<arma::vec>(n_lmd_);
+#pragma omp for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
     arma::vec hi = get_TDResid2(i);
 
-    grad2 += Zi.t() * (hi - one);  // cancel the 0.5 in front and 2 in return
+    local += Zi.t() * (hi - one);  // cancel the 0.5 in front and 2 in return
   }
+#pragma omp critical
+  grad2 += local;
+}
 
   return (-grad2);
 }
 
 inline arma::vec ACD::Grad3() const {
   arma::vec grad3 = arma::zeros<arma::vec>(n_gma_);
+#pragma omp parallel
+{
+  arma::vec local = arma::zeros<arma::vec>(n_gma_);
+#pragma omp for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec ei = get_TDResid(i);
     arma::mat Ti_trans_deriv = CalcTransTiDeriv(i);
     arma::mat Ti_inv = get_T(i, true);
 
-    grad3 += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
+    local += arma::kron(ei.t(), arma::eye(n_gma_, n_gma_)) *
              (Ti_trans_deriv * (Ti_inv.t() * ei));
   }
+#pragma omp critical
+  grad3 += local;
+}
 
   return (-2 * grad3);
 }
+// clang-format on
 
 inline void ACD::UpdateTelem() {
 #pragma omp parallel for

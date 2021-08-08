@@ -104,34 +104,48 @@ inline void MCD::UpdateModel() {
     default: { arma::get_cerr_stream() << "Wrong value for free_param_" << std::endl; }
   }
 }
-// clang-format on
 
 inline arma::vec MCD::Grad2() const {
   arma::vec grad2 = arma::zeros<arma::vec>(n_lmd_);
+#pragma omp parallel
+{
+  arma::vec local = arma::zeros<arma::vec>(n_lmd_);
+#pragma omp for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::vec one = arma::ones<arma::vec>(m_(i));
     arma::mat Zi = get_Z(i);
     arma::mat Di_inv = get_D(i, true);
     arma::vec ei = arma::pow(get_TResid(i), 2);
 
-    grad2 += Zi.t() * (Di_inv * ei - one);
+    local += Zi.t() * (Di_inv * ei - one);
   }
+#pragma omp critical
+  grad2 += local;
+}
 
   return (-grad2);  // 2 is cancelled with the 0.5 in the for loop
 }
 
 inline arma::vec MCD::Grad3() const {
   arma::vec grad3 = arma::zeros<arma::vec>(n_gma_);
+#pragma omp parallel
+{
+  arma::vec local = arma::zeros<arma::vec>(n_gma_);
+#pragma omp for
   for (arma::uword i = 0; i < n_sub_; ++i) {
     arma::mat Gi = get_G(i);
     arma::mat Di_inv = get_D(i, true);
     arma::vec Tiri = get_TResid(i);
 
-    grad3 += Gi.t() * (Di_inv * Tiri);
+    local += Gi.t() * (Di_inv * Tiri);
   }
+#pragma omp critical
+  grad3 += local;
+}
 
   return (-2 * grad3);
 }
+// clang-format on
 
 inline void MCD::UpdateG() {
 #pragma omp parallel for
