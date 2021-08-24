@@ -2,6 +2,17 @@
 \title{jmcm News}
 \encoding{UTF-8}
 
+\section{CHANGES IN VERSION 0.2.5}{
+  \subsection{USER-VISIBLE CHANGES}{
+    \itemize{
+      \item improve readability of the code.
+      \item add some useful comments.
+      \item speedup MCD/ACD/HPC method by paralleling code of objective function 
+      / gradient computation using OpenMP.
+    }
+  }
+}
+
 \section{CHANGES IN VERSION 0.2.4}{
   \subsection{USER-VISIBLE CHANGES}{
     \itemize{
