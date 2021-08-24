@@ -83,7 +83,7 @@ Rcpp::List mcd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
   return jmcm_estimation<jmcm::MCD>(m, Y, X, Z, W, start, mean, trace, profile,
-                                    errormsg, covonly);
+                                    errormsg, covonly, optim_method);
 }
 
 //'@title Fit Joint Mean-Covariance Models based on ACD
@@ -114,7 +114,7 @@ Rcpp::List acd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
   return jmcm_estimation<jmcm::ACD>(m, Y, X, Z, W, start, mean, trace, profile,
-                                    errormsg, covonly);
+                                    errormsg, covonly, optim_method);
 }
 
 //'@title Fit Joint Mean-Covariance Models based on HPC
@@ -145,7 +145,7 @@ Rcpp::List hpc_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z,
                           bool errormsg = false, bool covonly = false,
                           std::string optim_method = "default") {
   return jmcm_estimation<jmcm::HPC>(m, Y, X, Z, W, start, mean, trace, profile,
-                                    errormsg, covonly);
+                                    errormsg, covonly, optim_method);
 }
 
 template <typename JMCM>
