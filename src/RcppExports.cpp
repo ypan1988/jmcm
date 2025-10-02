@@ -6,13 +6,18 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // mcd_estimation
-Rcpp::List mcd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
+Rcpp::List mcd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
 RcppExport SEXP _jmcm_mcd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP, SEXP optim_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type m(mSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Y(YSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
@@ -29,12 +34,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // acd_estimation
-Rcpp::List acd_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
+Rcpp::List acd_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
 RcppExport SEXP _jmcm_acd_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP, SEXP optim_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type m(mSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Y(YSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
@@ -51,12 +56,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpc_estimation
-Rcpp::List hpc_estimation(arma::vec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
+Rcpp::List hpc_estimation(arma::uvec m, arma::vec Y, arma::mat X, arma::mat Z, arma::mat W, arma::vec start, arma::vec mean, bool trace, bool profile, bool errormsg, bool covonly, std::string optim_method);
 RcppExport SEXP _jmcm_hpc_estimation(SEXP mSEXP, SEXP YSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP WSEXP, SEXP startSEXP, SEXP meanSEXP, SEXP traceSEXP, SEXP profileSEXP, SEXP errormsgSEXP, SEXP covonlySEXP, SEXP optim_methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type m(mSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type m(mSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type Y(YSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Z(ZSEXP);
