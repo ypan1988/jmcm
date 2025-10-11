@@ -2,11 +2,11 @@ Package: jmcm
 Type: Package
 Title: Joint Mean-Covariance Models using 'Armadillo' and S4
 Version: 0.2.5
-Authors@R: c(person("Jianxin", "Pan", email = "Jianxin.Pan@manchester.ac.uk",
+Authors@R: c(person("Jianxin", "Pan", email = "jianxinpan@uic.edu.cn",
                   role = c("aut", "cre")),
              person("Yi", "Pan", email = "ypan1988@gmail.com",
                   role = c("aut")))
-Maintainer: Jianxin Pan <Jianxin.Pan@manchester.ac.uk>
+Maintainer: Jianxin Pan <jianxinpan@uic.edu.cn>
 Description: Fit joint mean-covariance models for longitudinal data. The models
     and their components are represented using S4 classes and methods. The core
     computational algorithms are implemented using the 'Armadillo' C++ library
